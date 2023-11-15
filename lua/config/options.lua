@@ -1,0 +1,24 @@
+vim.cmd('filetype plugin indent on')
+vim.opt.number = true
+vim.opt.numberwidth=1
+vim.opt.showcmd=true
+vim.opt.clipboard = "unnamedplus"
+vim.opt.encoding = 'utf-8'
+vim.opt.expandtab = true
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.softtabstop = 4
+vim.opt.smartindent = true
+vim.opt.ignorecase = true
+vim.opt.rnu = true
+vim.opt.cursorline = true
+vim.opt.incsearch = true
+vim.opt.backup = false
+vim.opt.writebackup = false
+vim.opt.updatetime = 400
+vim.opt.timeoutlen = 400
+vim.opt.scrolloff = 10
+vim.wo.wrap = false
+vim.opt.whichwrap = 'b,s,<,>,[,],h,l'
+vim.opt.ignorecase = true
+vim.opt.spell = false
