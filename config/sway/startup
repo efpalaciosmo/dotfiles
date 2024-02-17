@@ -1,0 +1,7 @@
+# Enable waybar
+bar {
+    swaybar_command waybar
+}
+
+# Enable polkit
+exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
