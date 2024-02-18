@@ -30,6 +30,7 @@ export XDG_SESSION_DESKTOP=sway
 export XDG_SESSION_TYPE=wayland
 export SDL_VIDEODRIVER=wayland
 export CLUTTER_BACKEND=wayland
+export GTK_THEME='Adwaita:dark'
 export MOZ_ENABLE_WAYLAND=1
 export EDITOR=/usr/bin/nvim
 export VISUAL=/usr/bin/nvim

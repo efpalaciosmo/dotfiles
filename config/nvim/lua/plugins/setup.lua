@@ -29,11 +29,7 @@ require("lazy").setup({
     version = "*", 
     dependencies = 'nvim-tree/nvim-web-devicons'
   },
-  {
-    "Mofiqul/adwaita.nvim",
-    lazy = false,
-    priority = 1000,
-  },
+  { 'Everblush/nvim', name = 'everblush' },
   {
     "nvim-treesitter/nvim-treesitter",
     dependencies = {

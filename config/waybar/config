@@ -1,45 +1,59 @@
 {
-    "layer": "top",
+    "layer": "botton",
+    "position": "botton",
+    "gtk-layer-shell": true,
     "modules-left": [
-	"custom/launcher",
-	"sway/workspaces",
+        "custom/launcher",
+    "sway/workspaces",
     ],
     "modules-center": [
-	"clock",
-	"mpris",
+        "clock",
     ],
     "modules-right": [
-	"custom/updates",
-	"network",
-	"pulseaudio",
-	"cpu","memory",
-	"custom/media",
-	"privacy",
-	"temperature",
-	"tray",
-	"custom/power"
+        "custom/updates",
+        "pulseaudio",
+        "network",
+        "custom/timer",
+        "cpu","memory",
+        "privacy",
+        "temperature",
+        "custom/powermenu",
+        "tray",
     ],
 
     "sway/workspaces": {
-	"disable-scroll": true,
-	"format": "{name}"
+        "disable-scroll": true,
+        "all-outputs": true,
+        "format": "{name}",
+        "format-icons": {
+            "1": "1",
+            "2": "2",
+            "3": "",
+            "4": "",
+            "5": "",
+            "6": "",
+            "7": "",
+            "urgent": "",
+            "focused": "",
+            "default": ""
+        }
     },
-	
     "pulseaudio": {
-	"tooltip": false,
-	"scroll-step": 5,
-	"format": "{icon} {volume}%",
-	"format-muted": "{icon} {volume}%",
-	"on-click":"pactl set-sink-mute @DEFAULT_SINK@ toggle",
-	"format-icons": {
-		"default": ["", "", ""]
-	}
+        "tooltip": false,
+        "scroll-step": 5,
+        "format": "{icon} {volume}%",
+        "format-muted": "{icon} {volume}%",
+        "on-click": "pavucontrol",
+        "format-icons": {
+            "default": ["", "", ""]
+        },
+        "on-click-right": "qpwgraph",
     },
 
     "network": {
-	"tooltip": false,
-	"format-wifi": "  {essid}",
-	"format-ethernet": ""
+        "tooltip": false,
+        "format-wifi": "  {essid}",
+        "format-ethernet": ""
     },
 
     "battery": {
@@ -56,16 +70,16 @@
     },
 
     "tray":{
-	"icon-size":18,
-	"spacing": 10
+        "icon-size":18,
+        "spacing": 10
     },
 
     "clock": {
-        "format": "{: %I:%M %p   %d/%m/%Y}",
-	 "format-alt": "{:%A, %B %d, %Y (%R)}  ",
+        "format": "{: %I:%M %p  󰸗 %d/%m/%Y}",
+        "format-alt": "{:%A, %B %d, %Y (%R)}  ",
         "tooltip-format": "<tt><small>{calendar}</small></tt>",
         "calendar": {
-	    "mode": "month",
+            "mode": "month",
             "mode-mon-col"  : 3,
             "weeks-pos"     : "right",
             "on-scroll"     : 1,
@@ -87,19 +101,6 @@
         }
     },
 
-    "mpris": {
-	"format": "DEFAULT: {player_icon} {title}",
-	"format-paused": "DEFAULT: {status_icon} <i>{dynamic}</i>",
-	"player-icons": {
-		"default": "▶",
-		"mpv": "🎵"
-	},
-	"status-icons": {
-		"paused": "⏸"
-	},
-	// "ignored-players": ["firefox"]
-    },
-
     "cpu": {
         "interval": 15,
         "format": " {load}%",
@@ -112,66 +113,44 @@
         "max-length": 10
     },
 
-    "custom/media": {
-        "interval": 30,
-        "format": "{icon} {}",
-        "return-type": "json",
-        "max-length": 20,
-        "format-icons": {
-            "spotify": " ",
-            "default": " "
-        },
-        "escape": true,
-        "exec": "$HOME/.config/system_scripts/mediaplayer.py 2> /dev/null",
-        "on-click": "playerctl play-pause"
-    },
-
-    "custom/launcher":{
-        "format": " ",
-        "on-click": "wofi --show=drun",
-        "on-click-right": "killall rofi"
-    },
-
-    "custom/power":{
-        "format": " ",
-        "on-click": "bash ~/.config/rofi/leave/leave.sh",
-    },
-
     "custom/updates":{
-        "format": "{} Update(s)",
+        "format": "󰚰 {} Update(s)",
         "exec": "checkupdates | wc -l",
         "exec-if": "[[ $(checkupdates | wc -l) != 0 ]]",
         "interval": 15,
-        "on-click": "kitty -e pacman -Syu && notify-send 'The system has been updated' "
+        "on-click": "foot -e pacman -Syu && notify-send 'The system has been updated' "
     },
 
     "privacy": {
-	"icon-spacing": 4,
-	"icon-size": 18,
-	"transition-duration": 250,
-	"modules": [
-		{
-			"type": "screenshare",
-			"tooltip": true,
-			"tooltip-icon-size": 24
-		},
-		{
-			"type": "audio-out",
-			"tooltip": true,
-			"tooltip-icon-size": 24
-		},
-		{
-			"type": "audio-in",
-			"tooltip": true,
-			"tooltip-icon-size": 24
-		}
-	]
+        "icon-spacing": 4,
+        "icon-size": 18,
+        "transition-duration": 250,
+        "modules": [
+        {
+            "type": "screenshare",
+            "tooltip": true,
+            "tooltip-icon-size": 24
+        },
+        {
+            "type": "audio-out",
+            "tooltip": true,
+            "tooltip-icon-size": 24
+        },
+        {
+            "type": "audio-in",
+            "tooltip": true,
+            "tooltip-icon-size": 24
+        }
+        ]
     },
-     "temperature": {
-    // "thermal-zone": 2,
-    // "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
-    // "critical-threshold": 80,
-    // "format-critical": "{temperatureC}°C ",
-    "format": "{temperatureC}°C "
-}
+    "temperature": {
+        "format": "{temperatureC}°C "
+    },
+    "custom/powermenu": {
+        "format": "⏻",
+        "tooltip": false,
+        "scroll-step": 5,
+        "max-length": 6,
+        "on-click": "$HOME/.config/wofi/scripts/powermenu.sh"
+    },
 }

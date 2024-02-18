@@ -1,36 +1,31 @@
 ### Includes
 include ./bar
 include ./startup
+include /etc/sway/config.d/*
 
 ### Variables
-#
-# Logo key. Use Mod1 for Alt.
 set $mod Mod4
+
 # Home row direction keys, like vim
 set $left h
 set $down j
 set $up k
 set $right l
+
 # Your preferred terminal emulator
 set $term foot
-# Your preferred application launcher
-# Note: pass the final command to swaymsg so that the resulting window can be opened
-# on the original workspace that the command was run on.
+
+# Launch applications
 set $menu wofi --show=drun
 
 ### Output configuration
-
 output eDP-1 pos 0 2160
 output HDMI-A-1 pos 0 1080
 
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg /home/efpalaciosmo/.config/wallpapers/wallpaper.png fill
+output * bg "/home/efpalaciosmo/.config/wallpapers/wallpaper.png" stretch
 
 font JetBrainsMono Nerd Font 8
-
-#
-# You can get the names of your inputs by running: swaymsg -t get_inputs
-# Read `man 5 sway-input` for more information about this section.
 
 ### Key bindings
 #
@@ -137,21 +132,39 @@ for_window [app_id="pavucontrol"] floating enable
 for_window [app_id="thunar"] floating enable
 for_window [app_id="virt-manager"] floating enable
 for_window [app_id="telegram-desktop"] floating enable
-for_window [app_id="telegram.desktop"] resize set 650 800
+for_window [app_id="telegram-desktop"] resize set 650 800
+for_window [app_id="org.gnome.Calculator"] floating enable
+
+
+
 
 # gaps 
 gaps inner 10
 
 # border color
-client.focused #e28743 #89b4fa #e28743
+set $base #141b1e
+set $title #67b0e8
+set $text #141b1e
+set $indicator #c47fd5
+set $peach #e57474
+set $overlay #b3b9b8
+set $border #8ccf7e
 
-set $gnome-schema org.gnome.desktop.interface
+# target                 title     bg    text   indicator  border
+client.focused           $title  $base $text  $indicator $border
+client.focused_inactive  $overlay $base $text  $indicator $overlay
+client.unfocused         $overlay $base $text  $indicator $overlay
+client.urgent            $peach    $base $peach $overlay  $peach
+client.placeholder       $overlay $base $text  $overlay  $overlay
+client.background        $base
+
+set $gnome-schema "org.gnome.desktop.interface"
 
 exec_always {
     gsettings set org.gtk.Settings.FileChooser window-size '(1000, 500)'
-    gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark
-    gsettings set org.gnome.desktop.interface color-scheme prefer-dark
-    gsettings set org.gnome.desktop.interface.wm.preferences theme Adwaita-Dark
-    gsettings set org.gnome.desktop.interface cursor-size 20
-    gsettings set org.gnome.desktop.interface font-name 'JetBrainsMono Nerd Font'
+    gsettings set $gnome-schema gtk-theme Adwaita-dark
+    gsettings set $gnome-schema gtk-application-prefer-dark-theme true
+    gsettings set org.gnome.desktop.wm.preferences button-layout :
+    gsettings set $gnome-schema cursor-size 20
+    gsettings set $gnome-schema font-name 'JetBrainsMono Nerd Font'
 }

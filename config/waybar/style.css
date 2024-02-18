@@ -2,15 +2,14 @@
 	margin: 0px;
 	padding: 0px;
 	margin-bottom: -1;
+  margin-left: 5px;
+  margin-right: 5px;
 	padding-bottom: 0;
 	border: none;
 	border-radius: 5px;
+  background: #141b1e;
 	font-family: "JetbrainsMono Nerd Font" ;
 	font-size: 15px;
-}
-
-window#waybar {
-	background: transparent;
 }
 
 window#waybar.hidden {
@@ -84,6 +83,7 @@ window#waybar.hidden {
 	padding-right: 10px;
 	border-radius: 3px;
 	font-weight: bold;
+	color: #161320;
 	background: #FAE3B0;
 }
 
@@ -168,25 +168,21 @@ window#waybar.hidden {
 	background: #161320;
 }
 
-#custom-launcher {
+#workspaces button {
 	margin: 5px 2px;
-	padding-left: 10px;
-	padding-right: 10px;
-	border-radius: 3px;
+  padding: 0 5px;
 	font-weight: bold;
-	color: #89DCEB;
-	background: #161320;
+	border-radius: 3px;
+  background: none;
 }
 
-#workspaces {
-	margin: 5px 2px;
-	padding-left: 10px;
-	padding-right: 10px;
-	border-radius: 3px;
+#workspaces button.focused {
+	color: #B5E8E0;
+	background: none;
 	font-weight: bold;
-	color: #89DCEB;
-	background: #161320;
+  border-bottom: none;
 }
+
 
 #custom-power {
 	margin: 5px 2px;
@@ -216,6 +212,16 @@ window#waybar.hidden {
 	font-weight: bold;
 	color: #161320;
 	background: #F2CDCD;
+}
+
+#custom-powermenu {
+	margin: 5px 2px;
+	padding-left: 10px;
+	padding-right: 10px;
+	border-radius: 3px;
+	font-weight: bold;
+	color: #161320;
+	background: #67b0e8;
 }
 
 #mpris {
