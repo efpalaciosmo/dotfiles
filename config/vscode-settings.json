@@ -1,0 +1,30 @@
+{
+    "workbench.startupEditor": "none",
+    "workbench.colorTheme": "Adwaita Dark",
+    "files.autoSave": "afterDelay",
+    "jupyter.askForKernelRestart": false,
+    "editor.fontFamily": "'JetBrains Mono Nerd Font', 'monospace', monospace",
+    "editor.tabSize": 2,
+    "editor.fontLigatures": true,
+    "editor.detectIndentation": false,
+    "editor.indentSize": "tabSize",
+    "[javascript]": {
+      "editor.defaultFormatter": "vscode.typescript-language-features",
+      "editor.formatOnSave": true,
+      "editor.tabSize": 2,
+      "editor.insertSpaces": false,
+      "editor.detectIndentation": false,
+      "editor.wrappingIndent": "deepIndent", 
+      "editor.autoIndent": "full"
+  },
+  "[typescript]": {
+      "editor.defaultFormatter": "vscode.typescript-language-features",
+      "editor.formatOnSave": true,
+      "editor.tabSize": 2,
+      "editor.insertSpaces": false,
+      "editor.detectIndentation": false,
+      "editor.wrappingIndent": "deepIndent", 
+      "editor.autoIndent": "full"
+  },
+  "editor.minimap.enabled": false
+}
