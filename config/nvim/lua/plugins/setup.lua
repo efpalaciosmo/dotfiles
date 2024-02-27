@@ -87,12 +87,19 @@ require("lazy").setup({
       }
     }
   },
-  {"ellisonleao/glow.nvim", config = true, cmd = "Glow"}, {{
+  {"ellisonleao/glow.nvim", config = true, cmd = "Glow"},
+  {
     "folke/twilight.nvim",
     opts = {
       -- your configuration comes here
       -- or leave it empty to use the default settings
       -- refer to the configuration section below
     }
-  }}
+  },
+  {
+    "williamboman/mason.nvim",
+    "williamboman/mason-lspconfig.nvim",
+    "neovim/nvim-lspconfig",
+    "Hoffs/omnisharp-extended-lsp.nvim"
+  }
 })
