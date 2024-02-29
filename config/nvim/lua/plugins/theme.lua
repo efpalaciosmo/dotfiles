@@ -1,2 +1,2 @@
 -- Lua:
-vim.cmd([[colorscheme everblush]])
+vim.cmd([[colorscheme adwaita]])

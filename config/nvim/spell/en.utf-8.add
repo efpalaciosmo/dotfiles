@@ -280,3 +280,8 @@ version
 microsoft
 mcr
 StringIO
+requestBody
+openapi
+api
+bearerAuth
+invalid

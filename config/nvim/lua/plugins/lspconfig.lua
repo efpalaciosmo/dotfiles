@@ -10,6 +10,7 @@ vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist)
 -- after the language server attaches to the current buffer
 local on_attach = function(_, bufnr)
 	local opts = { noremap = true, silent = true, buffer = bufnr }
+  local bufopts = { noremap=true, silent=true, buffer=bufnr }
 	vim.keymap.set("n", "<leader>bo", "<cmd>lua vim.lsp.buf.document_symbol()<CR>", opts)
 	vim.keymap.set("n", "gd", "<Cmd>lua vim.lsp.buf.definition()<CR>", opts)
 	vim.keymap.set("n", "gD", "<Cmd>lua vim.lsp.buf.declaration()<CR>", opts)
@@ -27,6 +28,8 @@ local on_attach = function(_, bufnr)
 	vim.keymap.set("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
 	vim.keymap.set("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<CR>", opts)
 	vim.keymap.set("n", "<leader>dl", "<cmd>lua vim.lsp.diagnostic.setloclist()<CR>", opts)
+  vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, bufopts)
+
 end
 
 require("mason").setup()
@@ -39,6 +42,7 @@ require("mason-lspconfig").setup({
     "volar",
     "tailwindcss",
     "ruff_lsp",
+    "pyright",
     "dockerls",
     "bashls",
     "angularls",
@@ -109,4 +113,32 @@ require("mason-lspconfig").setup_handlers({
 			},
 		})
 	end,
+  ["ruff_lsp"] = function()
+    require("lspconfig")["ruff_lsp"].setup({
+      on_attach = on_attach,
+      init_options = {
+        settings = {
+          args = {},
+        }
+      }
+    })
+  end,
+  ["pyright"] = function()
+    require("lspconfig")["pyright"].setup({
+      on_attach = on_attach,
+      capabilities = capabilities,
+    })
+  end,
+})
+
+require 'lspconfig'.eslint.setup({
+  settings = {
+    packageManager = 'npm'
+  },
+  on_attach = function(client, bufnr)
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      buffer = bufnr,
+      command = "EslintFixAll",
+    })
+  end,
 })

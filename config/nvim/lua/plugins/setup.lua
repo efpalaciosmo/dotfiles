@@ -29,7 +29,6 @@ require("lazy").setup({
     version = "*", 
     dependencies = 'nvim-tree/nvim-web-devicons'
   },
-  { 'Everblush/nvim', name = 'everblush' },
   {
     "nvim-treesitter/nvim-treesitter",
     dependencies = {
