@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# Setup github
+git config --global user.name "Efrain Palacios Mosquera"
+git config --global user.email "efpalaciosmo@unal.edu.co"
+
+
+# Setup links
 rm $HOME/.bashrc
 ln -s $HOME/.dotfiles/bashrc $HOME/.bashrc
 ln -s $HOME/.dotfiles/ssh $HOME/.ssh
