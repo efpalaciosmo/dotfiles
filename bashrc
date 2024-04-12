@@ -24,9 +24,24 @@ if [ -d ~/.bashrc.d ]; then
 fi
 unset rc
 
+# Enable bash_completion
+ [ "x${BASH_VERSION-}" != x -a "x${PS1-}" != x -a "x${BASH_COMPLETION_VERSINFO-}" = x ]; then
 
-export XDG_CURRENT_DESKTOP=sway
-export XDG_SESSION_DESKTOP=sway
+    # Check for recent enough version of bash.
+    if [ "${BASH_VERSINFO[0]}" -gt 4 ] ||
+        [ "${BASH_VERSINFO[0]}" -eq 4 -a "${BASH_VERSINFO[1]}" -ge 2 ]; then
+        [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/bash_completion" ] &&
+            . "${XDG_CONFIG_HOME:-$HOME/.config}/bash_completion"
+        if shopt -q progcomp && [ -r /usr/share/bash-completion/bash_completion ]; then
+            # Source completion code.
+            . /usr/share/bash-completion/bash_completion
+        fi
+    fi
+
+fi
+
+
+
 export XDG_SESSION_TYPE=wayland
 export SDL_VIDEODRIVER=wayland
 export CLUTTER_BACKEND=wayland
@@ -36,9 +51,10 @@ export EDITOR=/usr/bin/nvim
 export VISUAL=/usr/bin/nvim
 export _JAVA_AWT_WM_NONREPARENTING=1
 export GDK_BACKEND=wayland
-
+export DOCKER_HOST=/run/user/1000/podman/podman.sock
 export PATH="$HOME/.local/bin/go/bin:$PATH"
-export PATH="$HOME/go/bin:$PATH"
+export PATH="$HOME/.go/bin:$PATH"
+
 
 
 export NVM_DIR="$HOME/.config/nvm"
@@ -55,3 +71,8 @@ alias copy_ssh="scp -r efpalaciosmo@34.139.160.76:/home/$1 $2"
 # podman push 00193de339ab docker://docker.io/metnetd/python_lunia:1.0.0
 alias tree_ex="tree -f -I $1"
 eval "$(starship init bash)"
+alias pi="podman image"
+alias pc="podman container"
+pp(){
+    podman $1 prune
+}
