@@ -11,6 +11,7 @@ $c\
 $elixir\
 $elm\
 $golang\
+$python\
 $haskell\
 $java\
 $julia\
@@ -18,7 +19,6 @@ $nodejs\
 $nim\
 $rust\
 [](fg:#86BBD8 bg:#06969A)\
-$docker_context\
 [](fg:#06969A bg:#33658A)\
 $time\
 [ ](fg:#33658A)\
@@ -58,10 +58,10 @@ symbol = " "
 style = "bg:#86BBD8"
 format = '[ $symbol ($version) ]($style)'
 
-[docker_context]
-symbol = " "
-style = "bg:#06969A"
-format = '[ $symbol $context ]($style) $path'
+#[docker_context]
+#symbol = " "
+#style = "bg:#06969A"
+#format = '[ $symbol $context ]($style) $path'
 
 [elixir]
 symbol = " "
@@ -114,6 +114,12 @@ format = '[ $symbol ($version) ]($style)'
 
 [rust]
 symbol = ""
+style = "bg:#86BBD8"
+format = '[ $symbol ($version) ]($style)'
+
+[python]
+symbol = "Poetry "
+pyenv_version_name = true
 style = "bg:#86BBD8"
 format = '[ $symbol ($version) ]($style)'
 

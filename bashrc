@@ -24,23 +24,6 @@ if [ -d ~/.bashrc.d ]; then
 fi
 unset rc
 
-# Enable bash_completion
- [ "x${BASH_VERSION-}" != x -a "x${PS1-}" != x -a "x${BASH_COMPLETION_VERSINFO-}" = x ]; then
-
-    # Check for recent enough version of bash.
-    if [ "${BASH_VERSINFO[0]}" -gt 4 ] ||
-        [ "${BASH_VERSINFO[0]}" -eq 4 -a "${BASH_VERSINFO[1]}" -ge 2 ]; then
-        [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/bash_completion" ] &&
-            . "${XDG_CONFIG_HOME:-$HOME/.config}/bash_completion"
-        if shopt -q progcomp && [ -r /usr/share/bash-completion/bash_completion ]; then
-            # Source completion code.
-            . /usr/share/bash-completion/bash_completion
-        fi
-    fi
-
-fi
-
-
 
 export XDG_SESSION_TYPE=wayland
 export SDL_VIDEODRIVER=wayland
@@ -51,28 +34,31 @@ export EDITOR=/usr/bin/nvim
 export VISUAL=/usr/bin/nvim
 export _JAVA_AWT_WM_NONREPARENTING=1
 export GDK_BACKEND=wayland
-export DOCKER_HOST=/run/user/1000/podman/podman.sock
+export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
 export PATH="$HOME/.local/bin/go/bin:$PATH"
 export PATH="$HOME/.go/bin:$PATH"
 
 
-
-export NVM_DIR="$HOME/.config/nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 alias skg="ssh -i $HOME/.ssh/id_rsa efpalaciosmo@34.139.160.76"
 alias logs="podman logs $1"
 alias copy_ssh="scp -r efpalaciosmo@34.139.160.76:/home/$1 $2"
 # scp -r efpalaciosmo@34.139.160.76:/home/efpalaciosmo/HCEU_V3/ /home/efpalaciosmo/Desktop/metnet/direct/hceu/
 # docker push imageID docker://docker.io/username/ImageName:tag
-# podman login -u metnetd -p FZm@V8g}iHjsFK~ -v docker.io
-# podman build -t lunia_python .
-# podman push 00193de339ab docker://docker.io/metnetd/python_lunia:1.0.0
-alias tree_ex="tree -f -I $1"
-eval "$(starship init bash)"
+alias tree_ex="tree -f -I $1 docker://docker.io/metnetd/$2"
+alias plogin="podman login -u metnetd -p FZm@V8g}iHjsFK~ -v docker.io"
+alias ppush="podman push $1"
+alias pb="podman build"
 alias pi="podman image"
 alias pc="podman container"
 pp(){
     podman $1 prune
 }
+
+# fnm
+export PATH="/var/home/efpalaciosmo/Desktop/work/.local/share/fnm:$PATH"
+eval "`fnm env`"
+
+bind 'set show-all-if-ambiguous on'
+bind 'TAB:menu-complete'
+eval "$(starship init bash)"
