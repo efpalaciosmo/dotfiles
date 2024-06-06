@@ -4,13 +4,17 @@ vim.lsp.diagnostic.on_publish_diagnostics,
   underline = true,
   virtual_text = {
     spacing = 5,
-    severity_limit = 'Warning',
+    min = 'severity',
   },
   update_in_insert = true,
 }
 )
 
 require'nvim-treesitter.configs'.setup {
+  sync_install = true,
+  auto_install = true,
+  modules = {},
+  ignore_install = {},
   ensure_installed = {
     "css",
     "html",

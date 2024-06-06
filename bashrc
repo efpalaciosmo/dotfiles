@@ -56,7 +56,7 @@ pp(){
 }
 
 # fnm
-export PATH="/var/home/efpalaciosmo/Desktop/work/.local/share/fnm:$PATH"
+export PATH="$HOME/.local/share/fnm:$PATH"
 eval "`fnm env`"
 
 bind 'set show-all-if-ambiguous on'
