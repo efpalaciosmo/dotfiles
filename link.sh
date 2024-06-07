@@ -16,3 +16,12 @@ ln -s $HOME/.dotfiles/config/tmux $HOME/.config/tmux
 ln -s $HOME/.dotfiles/config/kitty $HOME/.config/kitty
 ln -s $HOME/.dotfiles/config/starship.toml $HOME/.config/starship.toml
 ln -s $HOME/.dotfiles/config/electron25-flags.conf $HOME/.config/electron25-flags.conf
+
+#unlink $HOME/.bashrc 
+#unlink $HOME/.ssh
+#unlink $HOME/.config/bat
+#unlink $HOME/.config/nvim
+#unlink $HOME/.config/tmux
+#unlink $HOME/.config/kitty
+#unlink $HOME/.config/starship.toml
+#unlink $HOME/.config/electron25-flags.conf
