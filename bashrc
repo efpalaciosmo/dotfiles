@@ -34,9 +34,9 @@ export EDITOR=/usr/bin/nvim
 export VISUAL=/usr/bin/nvim
 export _JAVA_AWT_WM_NONREPARENTING=1
 export GDK_BACKEND=wayland
-export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
 export PATH="$HOME/.local/bin/go/bin:$PATH"
 export PATH="$HOME/.go/bin:$PATH"
+export PATH="$HOME/.amplify/bin:$PATH"
 
 
 
@@ -61,4 +61,11 @@ eval "`fnm env`"
 
 bind 'set show-all-if-ambiguous on'
 bind 'TAB:menu-complete'
-eval "$(starship init bash)"
+
+# fnm
+FNM_PATH="/home/efpalaciosmo/.local/share/fnm"
+if [ -d "$FNM_PATH" ]; then
+  export PATH="$FNM_PATH:$PATH"
+  eval "`fnm env`"
+fi
+
