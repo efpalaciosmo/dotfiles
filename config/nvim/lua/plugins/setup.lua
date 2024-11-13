@@ -20,6 +20,11 @@ require("lazy").setup({
       event = "VeryLazy",
     },
     {
+      'stevearc/conform.nvim',
+      opts = {},
+      event = { "BufReadPre", "BufNewFile" },
+    },
+    {
       "zbirenbaum/copilot.lua",
       dependencies = {
         "zbirenbaum/copilot-cmp",

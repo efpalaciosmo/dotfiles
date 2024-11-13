@@ -36,16 +36,13 @@ require("mason").setup()
 require("mason-lspconfig").setup({
 	ensure_installed = {
 		"lua_ls",
-		"omnisharp",
-		"zls",
-    "tsserver",
+    "ts_ls",
     "volar",
     "tailwindcss",
     "ruff_lsp",
     "pyright",
     "dockerls",
     "bashls",
-    "angularls",
     "eslint",
     "html"
 	},

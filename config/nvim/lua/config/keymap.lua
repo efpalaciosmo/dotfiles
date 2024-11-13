@@ -36,6 +36,14 @@ map('i', '<Down>', '<Nop>', opts)
 map('i', '<Right>', '<Nop>', opts)
 map('i', '<Left>', '<Nop>', opts)
 
+vim.keymap.set({ "n", "v" }, "<leader>mp", function()
+  require("conform").format({
+    lsp_fallback = true,
+    async = false,
+    timeout_ms = 500,
+  })
+end, { desc = "Format file or range (in visual mode)" })
+
 vim.keymap.set("n", "[c", function()
   require("treesitter-context").go_to_context(vim.v.count1)
 end, { silent = true })
