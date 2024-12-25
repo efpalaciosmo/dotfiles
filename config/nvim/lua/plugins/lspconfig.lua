@@ -39,7 +39,7 @@ require("mason-lspconfig").setup({
     "ts_ls",
     "volar",
     "tailwindcss",
-    "ruff_lsp",
+    "ruff",
     "pyright",
     "dockerls",
     "bashls",
@@ -110,8 +110,8 @@ require("mason-lspconfig").setup_handlers({
 			},
 		})
 	end,
-  ["ruff_lsp"] = function()
-    require("lspconfig")["ruff_lsp"].setup({
+  ["ruff"] = function()
+    require("lspconfig")["ruff"].setup({
       on_attach = on_attach,
       init_options = {
         settings = {
