@@ -69,3 +69,5 @@ if [ -d "$FNM_PATH" ]; then
   eval "`fnm env`"
 fi
 
+# Load Angular CLI autocompletion.
+source <(ng completion script)
