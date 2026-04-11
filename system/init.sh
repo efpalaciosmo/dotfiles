@@ -33,7 +33,7 @@ run_as_root() {
 }
 
 get_package_manager() {
-    printf "dnf"
+    printf "pacman"
 }
 
 ensure_package_manager_available() {
@@ -54,7 +54,7 @@ install_packages() {
 
     printf "%b\n" "${CYAN}Installing packages with ${package_manager}...${RC}"
 
-    run_as_root dnf install -y --setopt=install_weak_deps=False $packages
+    run_as_root pacman -S --noconfirm --needed $packages
 }
 
 verify_script_permissions() {

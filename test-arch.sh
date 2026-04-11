@@ -7,11 +7,11 @@ if ! command -v podman >/dev/null 2>&1; then
 fi
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-IMAGE="${IMAGE:-registry.fedoraproject.org/fedora:44}"
-CONTAINER_NAME="${CONTAINER_NAME:-dotfiles-fedora44-test}"
+IMAGE="${IMAGE:-docker.io/library/archlinux:latest}"
+CONTAINER_NAME="${CONTAINER_NAME:-dotfiles-arch-test}"
 CONTAINER_USER="${CONTAINER_USER:-dev}"
 CONTAINER_PASSWORD="${CONTAINER_PASSWORD:-password}"
-CUSTOM_IMAGE="${CUSTOM_IMAGE:-dotfiles-fedora44-user}"
+CUSTOM_IMAGE="${CUSTOM_IMAGE:-dotfiles-arch-user}"
 
 printf "Using image: %s\n" "$IMAGE"
 printf "Custom image: %s\n" "$CUSTOM_IMAGE"
@@ -23,7 +23,7 @@ if podman container exists "$CONTAINER_NAME"; then
     podman rm -f "$CONTAINER_NAME" >/dev/null
 fi
 
-printf "Pulling Fedora image...\n"
+printf "Pulling Arch Linux image...\n"
 podman pull "$IMAGE"
 
 printf "Building custom image with non-root user...\n"
@@ -32,7 +32,7 @@ podman build \
     --build-arg "CONTAINER_USER=$CONTAINER_USER" \
     --build-arg "CONTAINER_PASSWORD=$CONTAINER_PASSWORD" \
     -t "$CUSTOM_IMAGE" \
-    -f "$ROOT_DIR/system/Containerfile.fedora44-test" \
+    -f "$ROOT_DIR/system/Containerfile.arch-test" \
     "$ROOT_DIR" >/dev/null
 
 printf "Starting container as non-root user...\n"

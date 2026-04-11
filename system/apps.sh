@@ -6,9 +6,9 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$SCRIPT_DIR/init.sh"
 
 install_cli_dependencies() {
-    DEPENDENCIES='tree unzip cmake make jq fd-find ripgrep zig neovim git zsh curl fastfetch btop gh fzf bat eza tldr clang llvm lldb'
+    DEPENDENCIES='tree unzip cmake make jq fd ripgrep zig neovim git zsh curl fastfetch btop github-cli fzf bat eza tldr clang llvm lldb'
 
-    printf "%b\n" "${YELLOW}Installing CLI dependencies for Fedora...${RC}"
+    printf "%b\n" "${YELLOW}Installing CLI dependencies for Arch Linux...${RC}"
     install_packages $DEPENDENCIES
 }
 

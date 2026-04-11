@@ -141,7 +141,7 @@ show_completion_message() {
     printf "  ✅ CLI productivity tools (git, fzf, bat, btop, etc.)\n"
     printf "  ✅ Neovim installation\n"
     printf "  ✅ Starship prompt\n"
-    printf "  ✅ Fedora package setup\n\n"
+    printf "  ✅ Arch Linux package setup\n\n"
 
     printf "${YELLOW}Next Steps:${NC}\n"
     printf "  1. ${CYAN}Restart your terminal${NC} or run: source ~/.zshrc\n"

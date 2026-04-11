@@ -1,15 +1,14 @@
-ARG BASE_IMAGE=registry.fedoraproject.org/fedora:44
+ARG BASE_IMAGE=docker.io/library/archlinux:latest
 FROM ${BASE_IMAGE}
 
 ARG CONTAINER_USER=dev
 ARG CONTAINER_PASSWORD=password
 
-RUN dnf install -y sudo shadow-utils passwd bash zsh curl git && \
+RUN pacman -Syu --noconfirm --needed sudo shadow bash zsh curl git && \
     useradd -m -s /bin/bash ${CONTAINER_USER} && \
     echo "${CONTAINER_USER}:${CONTAINER_PASSWORD}" | chpasswd && \
     usermod -aG wheel ${CONTAINER_USER} && \
     printf '%%wheel ALL=(ALL) ALL\n' > /etc/sudoers.d/99-wheel && \
-    chmod 0440 /etc/sudoers.d/99-wheel && \
-    dnf clean all
+    chmod 0440 /etc/sudoers.d/99-wheel
 
 WORKDIR /home/${CONTAINER_USER}
