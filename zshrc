@@ -139,3 +139,15 @@ if [ -d "$HOME/.opencode" ]; then
   path=("$HOME/.opencode/bin" $path)
   export PATH
 fi
+
+eval "$(fnm env --use-on-cd --shell zsh)"
+# opencode
+export PATH=/home/efpalaciosmo/.opencode/bin:$PATH
+
+# pnpm
+export PNPM_HOME="/home/efpalaciosmo/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

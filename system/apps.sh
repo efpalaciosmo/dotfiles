@@ -6,10 +6,19 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$SCRIPT_DIR/init.sh"
 
 install_cli_dependencies() {
-    DEPENDENCIES='tree unzip cmake make jq fd-find ripgrep zig neovim git zsh curl fastfetch btop gh fzf bat eza tldr clang llvm lldb'
+    REQUIRED_DEPENDENCIES='tree unzip findutils cmake make jq fd ripgrep neovim git zsh awk curl btop fzf bat clang llvm lldb tar'
+    OPTIONAL_DEPENDENCIES='zig fastfetch gh eza wget'
 
-    printf "%b\n" "${YELLOW}Installing CLI dependencies for Fedora...${RC}"
-    install_packages $DEPENDENCIES
+    printf "%b\n" "${YELLOW}Installing CLI dependencies for openSUSE...${RC}"
+    install_packages $REQUIRED_DEPENDENCIES
+
+    for pkg in $OPTIONAL_DEPENDENCIES; do
+        if install_packages "$pkg"; then
+            :
+        else
+            printf "%b\n" "${YELLOW}Optional package '$pkg' is not available, skipping...${RC}"
+        fi
+    done
 }
 
 installUV() {

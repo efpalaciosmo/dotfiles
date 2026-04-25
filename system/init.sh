@@ -33,19 +33,19 @@ run_as_root() {
 }
 
 get_package_manager() {
-    printf "dnf"
+    printf "zypper"
 }
 
 ensure_package_manager_available() {
     package_manager="$(get_package_manager)"
     if ! is_command_available "$package_manager"; then
-        printf "%b\n" "${RED}Error: '$package_manager' is not available on this system${RC}"
+        printf "%b\n" "${RED}Error: 'zypper' is required on openSUSE but is not available${RC}"
         exit 1
     fi
 }
 
 install_packages() {
-    package_manager="$(get_package_manager)"
+    package_manager="zypper"
     packages="$*"
 
     if [ -z "$packages" ]; then
@@ -54,7 +54,7 @@ install_packages() {
 
     printf "%b\n" "${CYAN}Installing packages with ${package_manager}...${RC}"
 
-    run_as_root dnf install -y --setopt=install_weak_deps=False $packages
+    run_as_root zypper --non-interactive install --no-recommends $packages
 }
 
 verify_script_permissions() {
