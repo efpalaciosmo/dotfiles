@@ -135,13 +135,13 @@ if [ -d "$HOME/.local/opt/gradle-8.14.3" ]; then
   esac
 fi
 
+# opencode
 if [ -d "$HOME/.opencode" ]; then
   path=("$HOME/.opencode/bin" $path)
   export PATH
 fi
 
 eval "$(fnm env --use-on-cd --shell zsh)"
-# opencode
 export PATH=/home/efpalaciosmo/.opencode/bin:$PATH
 
 # pnpm
