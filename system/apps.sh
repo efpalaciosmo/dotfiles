@@ -6,19 +6,11 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$SCRIPT_DIR/init.sh"
 
 install_cli_dependencies() {
-    REQUIRED_DEPENDENCIES='tree unzip findutils cmake make jq fd ripgrep neovim git zsh awk curl btop fzf bat clang llvm lldb tar'
-    OPTIONAL_DEPENDENCIES='zig fastfetch gh eza wget'
+    REQUIRED_DEPENDENCIES='tree unzip fastfetch  gh wget findutils cmake make jq fd ripgrep neovim zsh awk curl btop fzf bat clang llvm lldb tar'
 
     printf "%b\n" "${YELLOW}Installing CLI dependencies for openSUSE...${RC}"
     install_packages $REQUIRED_DEPENDENCIES
 
-    for pkg in $OPTIONAL_DEPENDENCIES; do
-        if install_packages "$pkg"; then
-            :
-        else
-            printf "%b\n" "${YELLOW}Optional package '$pkg' is not available, skipping...${RC}"
-        fi
-    done
 }
 
 installUV() {
@@ -35,23 +27,6 @@ installUV() {
     fi
 }
 
-installPythonLTS() {
-    ## Install latest stable Python via uv
-    printf "%b\n" "${YELLOW}Installing Python LTS via uv...${RC}"
-    
-    # Source uv for current session
-    export PATH="$HOME/.cargo/bin:$PATH"
-    
-    if command -v uv >/dev/null 2>&1; then
-        # Install latest stable Python
-        printf "%b\n" "${CYAN}Installing latest stable Python...${RC}"
-        uv python install 3.12
-        printf "%b\n" "${GREEN}Python 3.12 installed via uv${RC}"
-        
-    else
-        printf "%b\n" "${RED}uv not found, please restart your terminal and run this script again${RC}"
-    fi
-}
 
 installJulia() {
     ## Install latest stable Julia
@@ -255,7 +230,6 @@ main() {
     installGradle
     
     # Install language versions
-    installPythonLTS
 
     setupShellEnhancements
     
