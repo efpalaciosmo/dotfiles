@@ -10,7 +10,6 @@ $golang\
 $java\
 $c\
 $haskell\
-$rust\
 $ruby\
 $package\
 $aws\
@@ -69,10 +68,6 @@ symbol = ' '
 [haskell]
 style = 'blue'
 symbol = ' '
-
-[rust]
-style = 'orange'
-symbol = ' '
 
 [ruby]
 style = 'blue'

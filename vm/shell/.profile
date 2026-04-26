@@ -17,9 +17,9 @@ _prepend_path() {
 _prepend_path "$HOME/bin"
 _prepend_path "$HOME/.local/bin"
 
-# ---- Go --------------------------------------------------------------
-# Dot-prefixed GOPATH keeps $HOME tidy. GOROOT only exists when Go is
-# installed locally by scripts/vm/languages.sh.
+# ---- Go (managed by gvm via scripts/vm/languages.sh) ----------------
+# Dot-prefixed GOPATH keeps $HOME tidy. gvm exposes the active toolchain
+# at $HOME/.local/go (versionless symlink) so this profile stays portable.
 GOPATH="$HOME/.go"
 GOBIN="$GOPATH/bin"
 _prepend_path "$GOBIN"
@@ -29,6 +29,12 @@ if [ -d "$HOME/.local/go" ]; then
     export GOROOT
 fi
 export GOPATH GOBIN
+# gvm itself (only used when switching versions interactively).
+if [ -s "$HOME/.gvm/scripts/gvm" ]; then
+    # gvm references unbound vars internally; isolate the source.
+    # shellcheck disable=SC1090
+    . "$HOME/.gvm/scripts/gvm" 2>/dev/null || true
+fi
 
 # ---- fnm (Fast Node Manager) ----------------------------------------
 # The binary lives in $HOME/.local/share/fnm. Node versions live under
@@ -38,11 +44,21 @@ _prepend_path "$HOME/.local/share/fnm"
 # ---- Juliaup ---------------------------------------------------------
 _prepend_path "$HOME/.juliaup/bin"
 
-# ---- Java (JDK managed by languages.sh, versionless symlink) ---------
+# ---- Java (JDK managed by SDKMAN!, versionless symlink) -------------
+# scripts/vm/languages.sh installs the JDK with SDKMAN! into
+# $HOME/.sdkman/candidates/java/<version> and points the dotfile-managed
+# symlink $HOME/.local/lib/jdk at $HOME/.sdkman/candidates/java/current.
 if [ -d "$HOME/.local/lib/jdk" ]; then
     JAVA_HOME="$HOME/.local/lib/jdk"
     _prepend_path "$JAVA_HOME/bin"
     export JAVA_HOME
+fi
+# SDKMAN! init (exposes `sdk` for managing Java/Gradle/etc.).
+SDKMAN_DIR="$HOME/.sdkman"
+if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
+    export SDKMAN_DIR
+    # shellcheck disable=SC1090,SC1091
+    . "$SDKMAN_DIR/bin/sdkman-init.sh"
 fi
 
 # ---- Gradle (symlink versionless) -----------------------------------
@@ -58,9 +74,6 @@ export GRADLE_USER_HOME
 PNPM_HOME="$HOME/.local/share/pnpm"
 _prepend_path "$PNPM_HOME"
 export PNPM_HOME
-
-# ---- Rust / cargo ---------------------------------------------------
-_prepend_path "$HOME/.cargo/bin"
 
 # ---- opencode --------------------------------------------------------
 _prepend_path "$HOME/.opencode/bin"

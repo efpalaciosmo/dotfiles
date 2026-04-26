@@ -44,7 +44,16 @@ validate_environment() {
 
 ensure_local_bin_path() {
   ensure_dir "$HOME/.local/bin"
-  ensure_path_line "$HOME/.profile" 'export PATH="$HOME/.local/bin:$PATH"'
+
+  # Only seed ~/.profile with a literal `export PATH=...` line when no
+  # existing reference to `.local/bin` is found. The dotfile-managed
+  # ~/.profile uses `_prepend_path "$HOME/.local/bin"` which is functionally
+  # equivalent but does not match `ensure_path_line`'s exact-string check;
+  # without this guard, every re-run would append a redundant duplicate to
+  # the symlinked dotfile (polluting the repo).
+  if ! grep -q '\.local/bin' "$HOME/.profile" 2>/dev/null; then
+    ensure_path_line "$HOME/.profile" 'export PATH="$HOME/.local/bin:$PATH"'
+  fi
 
   if [[ ":${PATH:-}:" != *":$HOME/.local/bin:"* ]]; then
     export PATH="$HOME/.local/bin:$PATH"
@@ -84,16 +93,18 @@ main() {
   # python-user-tools installs 'stown' (via pip --user). It must run BEFORE
   # stown/apply.sh. The script lives in scripts/home/ but is profile-agnostic.
   run_step "Python user tools"       "$SCRIPT_DIR/../home/python-user-tools.sh"
-  # podman-compose is a Python tool, so install it with pip after stown/pip are ready.
-  run_step "podman-compose"          "$SCRIPT_DIR/podman-compose.sh"
   run_step "Fonts (vm)"              "$SCRIPT_DIR/fonts.sh"
   run_step "VS Code Insiders"        "$SCRIPT_DIR/vscode-insiders.sh"
-  # Languages and runtimes (Go, fnm, Julia, Java JDK, uv, Rust, Gradle, pnpm)
-  # are user-local. Zig intentionally comes from Fedora packages above.
+  # Languages and runtimes (Go via gvm, fnm, Julia, Java via SDKMAN, uv,
+  # Gradle, pnpm) are user-local. Zig intentionally comes from Fedora
+  # packages above.
   run_step "Languages (vm)"          "$SCRIPT_DIR/languages.sh"
   # oh-my-zsh + plugins (autosuggestions, syntax-highlighting).
   run_step "Shell plugins (vm)"      "$SCRIPT_DIR/shell-plugins.sh"
   run_step "Apply dotfiles (stown)"  "$SCRIPT_DIR/../stown/apply.sh" vm
+  # podman-compose is a Python tool installed with pip --user; run it AFTER
+  # stown so dotfile-managed configuration is already in place.
+  run_step "podman-compose"          "$SCRIPT_DIR/podman-compose.sh"
 
   print_summary "make vm" || true
 

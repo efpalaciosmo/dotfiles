@@ -156,8 +156,6 @@ check_languages() {
     "java:-version"
     "javac:-version"
     "uv:--version"
-    "rustc:--version"
-    "cargo:--version"
     "gradle:--version"
     "pnpm:--version"
     "starship:--version"
@@ -204,15 +202,19 @@ check_dotfiles_links() {
   fi
 
   log "Dotfile symlinks ($profile):"
-  local src target rel
+  local src target rel link link_canon src_canon
+  src_canon=""
   while IFS= read -r -d '' src; do
-    rel="${src#$REPO_ROOT/$profile/}"
+    rel="${src#"$REPO_ROOT/$profile/"}"
     rel="${rel#*/}"  # strip <package>/ prefix
     target="$HOME/$rel"
     if [[ -L "$target" ]]; then
-      local link
       link="$(readlink "$target")"
-      if [[ "$link" == "$src" ]]; then
+      # stown writes RELATIVE symlinks; canonicalize both sides so the
+      # comparison works regardless of the literal target string.
+      link_canon="$(readlink -f "$target" 2>/dev/null || true)"
+      src_canon="$(readlink -f "$src" 2>/dev/null || echo "$src")"
+      if [[ -n "$link_canon" && "$link_canon" == "$src_canon" ]]; then
         log "  ✓ $target -> $link"
       else
         warn "  ! $target -> $link (does not point to the repo)"

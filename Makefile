@@ -69,7 +69,7 @@ podman-compose: ## Install podman-compose into ~/.local/bin (container)
 starship-vm: ## Install starship (prompt) into ~/.local/bin (container)
 	@bash scripts/vm/starship.sh
 
-languages-vm: ## Install Go/fnm/Julia/JDK/uv/Rust/Gradle/pnpm into ~/.local (container)
+languages-vm: ## Install Go(gvm)/fnm/Julia/JDK(SDKMAN)/uv/Gradle/pnpm into ~/.local (container)
 	@bash scripts/vm/languages.sh
 
 shell-plugins-vm: ## Install oh-my-zsh + zsh-autosuggestions/syntax-highlighting (container)

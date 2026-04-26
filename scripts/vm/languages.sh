@@ -7,7 +7,8 @@
 # Idempotent. Each installer:
 #   - dynamically resolves the latest stable version from the upstream
 #     project's official endpoint (when applicable);
-#   - keeps a per-version marker file so re-runs are no-ops;
+#   - keeps a per-version marker file or upstream marker so re-runs
+#     are no-ops;
 #   - caches downloaded archives under $HOME/.cache/dotfiles/<lang>/.
 #
 # Honors DRY_RUN=1.
@@ -26,25 +27,9 @@ LOCAL_OPT="$HOME/.local/opt"
 # Each installer can be skipped by exporting e.g. SKIP_GO=1.
 # ---------------------------------------------------------------------
 
-LANGUAGES=(go fnm julia java uv rust gradle pnpm)
+LANGUAGES=(go fnm julia java uv gradle pnpm)
 
 # ---------- Helpers ---------------------------------------------------
-
-arch_go() {
-  case "$(uname -m)" in
-    x86_64) printf 'amd64\n' ;;
-    aarch64|arm64) printf 'arm64\n' ;;
-    *) die "Unsupported architecture for Go: $(uname -m)" ;;
-  esac
-}
-
-arch_adoptium() {
-  case "$(uname -m)" in
-    x86_64) printf 'x64\n' ;;
-    aarch64|arm64) printf 'aarch64\n' ;;
-    *) die "Unsupported architecture for JDK: $(uname -m)" ;;
-  esac
-}
 
 # Write a symlink idempotently. Keeping a stable symlink lets shell config
 # point at versionless paths while installers replace versioned directories.
@@ -78,50 +63,101 @@ skip_if_env() {
   [[ "${!var:-0}" == "1" ]]
 }
 
-# ---------- Go --------------------------------------------------------
-# https://go.dev/dl/ - latest stable version via https://go.dev/VERSION?m=text
+# ---------- Progress bar ---------------------------------------------
+# Renders a simple ASCII progress bar on stderr. Width is 30 cells.
+# Usage: progress_bar <step> <total> <label>
+progress_bar() {
+  local step="$1" total="$2" label="$3"
+  local width=30
+  local filled=$(( step * width / total ))
+  local pct=$(( step * 100 / total ))
+  local bar="" i
+  for (( i = 0; i < filled; i++ )); do bar+="#"; done
+  for (( i = filled; i < width; i++ )); do bar+="-"; done
+  printf '%s[%d/%d] [%s] %3d%% %s%s\n' \
+    "$_DOTFILES_CLR_INFO" "$step" "$total" "$bar" "$pct" "$label" "$_DOTFILES_CLR_RESET"
+}
+
+# ---------- Go (via gvm) ---------------------------------------------
+# https://github.com/moovweb/gvm
+# gvm needs: bison, gcc, make, glibc-devel (provided by packages-fedora.sh).
+# Layout: ~/.gvm/scripts/gvm + ~/.gvm/gos/<version>.
+
+GVM_DIR="$HOME/.gvm"
+
+ensure_gvm() {
+  if [[ -s "$GVM_DIR/scripts/gvm" ]]; then
+    return 0
+  fi
+
+  if is_dry_run; then
+    printf '[DRY-RUN] curl -fsSL https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer | bash\n'
+    return 0
+  fi
+
+  if ! has_cmd bison; then
+    warn "bison is missing; gvm needs it to build Go from source. Install it with packages-fedora.sh."
+  fi
+
+  if ! run_installer gvm bash -c 'curl -fsSL https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer | bash'; then
+    return 1
+  fi
+}
+
+gvm_latest_go() {
+  curl -fsSL https://go.dev/VERSION?m=text 2>/dev/null | head -n1 | sed 's/^go//'
+}
 
 install_go() {
   if skip_if_env go; then summary_skip "go (SKIP_GO=1)"; return 0; fi
 
-  local latest_version target marker tarball url goarch
-  if ! latest_version="$(curl -fsSL https://go.dev/VERSION?m=text 2>/dev/null | head -n1)"; then
-    summary_fail "go: could not resolve the latest version"
+  local latest binary_pkg
+  latest="$(gvm_latest_go || true)"
+  if [[ -z "$latest" ]]; then
+    summary_fail "go: could not resolve the latest Go version"
     return 1
   fi
-  [[ "$latest_version" =~ ^go ]] || { summary_fail "go: unexpected response from go.dev: $latest_version"; return 1; }
+  binary_pkg="go${latest}"
 
-  target="$HOME/.local/go"
-  marker="$target/.dotfiles-installed-${latest_version}"
-
-  if [[ -f "$marker" ]] && command -v go >/dev/null 2>&1; then
-    log "go is already at latest version: $latest_version"
-    summary_skip "go ${latest_version} already installed"
-    return 0
+  if ! ensure_gvm; then
+    summary_fail "go: could not install gvm"
+    return 1
   fi
-
-  goarch="$(arch_go)"
-  tarball="$CACHE_ROOT/go/${latest_version}.linux-${goarch}.tar.gz"
-  url="https://go.dev/dl/${latest_version}.linux-${goarch}.tar.gz"
-
-  ensure_dir "$CACHE_ROOT/go"
-  download "$url" "$tarball"
 
   if is_dry_run; then
-    printf '[DRY-RUN] rm -rf %q && tar -C %q -xzf %q && touch %q\n' \
-      "$target" "$HOME/.local" "$tarball" "$marker"
-    summary_ok "go ${latest_version} (dry-run)"
+    printf '[DRY-RUN] gvm install %s -B && gvm use %s --default\n' "$binary_pkg" "$binary_pkg"
+    summary_ok "go ${binary_pkg} via gvm (dry-run)"
     return 0
   fi
 
-  rm -rf "$target"
-  ensure_dir "$HOME/.local"
-  if ! tar -C "$HOME/.local" -xzf "$tarball"; then
-    summary_fail "go: extraction failed"
+  # Versioned marker so re-runs are cheap.
+  local marker="$GVM_DIR/.dotfiles-installed-${binary_pkg}"
+  if [[ -f "$marker" ]] && [[ -d "$GVM_DIR/gos/${binary_pkg}" ]]; then
+    log "go ${binary_pkg} already installed via gvm"
+    atomic_symlink "$GVM_DIR/gos/${binary_pkg}" "$HOME/.local/go"
+    summary_skip "go ${binary_pkg} already installed"
+    return 0
+  fi
+
+  # gvm sources files that reference unbound vars; relax 'set -u' for it.
+  if ! run_installer gvm-go bash -c "
+    set +u
+    source '$GVM_DIR/scripts/gvm'
+    gvm install '$binary_pkg' -B || gvm install '$binary_pkg'
+    gvm use '$binary_pkg' --default
+  "; then
+    summary_fail "go: gvm install ${binary_pkg} failed"
     return 1
   fi
+
+  if [[ ! -d "$GVM_DIR/gos/${binary_pkg}" ]]; then
+    summary_fail "go: gvm finished but ${binary_pkg} is missing"
+    return 1
+  fi
+
   touch "$marker"
-  summary_ok "go ${latest_version} installed at $target"
+  atomic_symlink "$GVM_DIR/gos/${binary_pkg}" "$HOME/.local/go"
+  summary_ok "go ${binary_pkg} installed via gvm (symlink: \$HOME/.local/go -> gos/${binary_pkg})"
 }
 
 # ---------- fnm (Fast Node Manager) ----------------------------------
@@ -192,77 +228,98 @@ install_julia() {
   fi
 }
 
-# ---------- Java (Eclipse Temurin / Adoptium JDK 21 LTS) -------------
-# API: https://api.adoptium.net/q/swagger-ui/
+# ---------- Java (via SDKMAN!) ---------------------------------------
+# https://sdkman.io
+# SDKMAN! manages the JDK in ~/.sdkman/candidates/java/<version> with a
+# `current` symlink that the dotfiles point JAVA_HOME at.
 
+SDKMAN_DIR="$HOME/.sdkman"
 JDK_FEATURE_VERSION="${JDK_FEATURE_VERSION:-21}"
+JDK_DISTRIBUTION="${JDK_DISTRIBUTION:-tem}"   # Eclipse Temurin
 
-jdk_latest_release_name() {
-  local arch
-  arch="$(arch_adoptium)"
-  curl -fsSL \
-    "https://api.adoptium.net/v3/info/release_versions?architecture=${arch}&heap_size=normal&image_type=jdk&jvm_impl=hotspot&lts=true&os=linux&page=0&page_size=1&project=jdk&release_type=ga&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse&version=%5B${JDK_FEATURE_VERSION}%2C${JDK_FEATURE_VERSION}.999.999%5D" \
-    2>/dev/null \
-    | { has_cmd jq && jq -r '.versions[0].openjdk_version' 2>/dev/null \
-        || python3 -c 'import json,sys;d=json.load(sys.stdin);print(d["versions"][0]["openjdk_version"])' 2>/dev/null; }
+ensure_sdkman() {
+  if [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]]; then
+    return 0
+  fi
+
+  if is_dry_run; then
+    printf '[DRY-RUN] curl -fsSL https://get.sdkman.io | bash\n'
+    return 0
+  fi
+
+  # SDKMAN's installer respects $SDKMAN_DIR.
+  if ! run_installer sdkman bash -c "
+    export SDKMAN_DIR='$SDKMAN_DIR'
+    curl -fsSL https://get.sdkman.io | bash -s -- -y
+  "; then
+    return 1
+  fi
+}
+
+sdkman_latest_java_id() {
+  # Asks SDKMAN for the latest version matching <feature>.* and the desired
+  # distribution (e.g. 21.0.5-tem).
+  bash -c "
+    set +u
+    export SDKMAN_DIR='$SDKMAN_DIR'
+    source '$SDKMAN_DIR/bin/sdkman-init.sh'
+    sdk list java 2>/dev/null \
+      | awk -v dist='$JDK_DISTRIBUTION' -v feat='$JDK_FEATURE_VERSION' '
+          \$NF ~ (\"^\" feat \"[.\\\\-].*-\" dist \"\$\") {print \$NF; exit}
+        '
+  "
 }
 
 install_java() {
   if skip_if_env java; then summary_skip "java (SKIP_JAVA=1)"; return 0; fi
 
-  local release tag versioned_dir marker tarball url arch
-  release="$(jdk_latest_release_name || true)"
-  if [[ -z "$release" ]]; then
-    summary_fail "java: could not resolve latest JDK ${JDK_FEATURE_VERSION} release (Adoptium)"
-    return 1
-  fi
-
-  # 'release' comes back as '21.0.5+11'; use it as the version tag.
-  tag="$release"
-  versioned_dir="$LOCAL_LIB/jdk-${tag}"
-  marker="$versioned_dir/.dotfiles-installed"
-  arch="$(arch_adoptium)"
-
-  if [[ -f "$marker" ]] && [[ -x "$versioned_dir/bin/java" ]]; then
-    log "JDK ${tag} already installed at $versioned_dir"
-    atomic_symlink "$versioned_dir" "$LOCAL_LIB/jdk"
-    summary_skip "java ${tag} already installed (symlink jdk -> ${versioned_dir##*/})"
-    return 0
-  fi
-
-  tarball="$CACHE_ROOT/java/temurin-${tag}-linux-${arch}.tar.gz"
-  ensure_dir "$CACHE_ROOT/java"
-
-  url="https://api.adoptium.net/v3/binary/version/jdk-${tag}/linux/${arch}/jdk/hotspot/normal/eclipse?project=jdk"
-  log "Downloading JDK ${tag} (Eclipse Temurin) -> $tarball"
-  if ! curl -fsSL --retry 3 -o "$tarball" "$url"; then
-    summary_fail "java: download failed ($url)"
+  if ! ensure_sdkman; then
+    summary_fail "java: could not install SDKMAN!"
     return 1
   fi
 
   if is_dry_run; then
-    printf '[DRY-RUN] extract %q -> %q + symlink\n' "$tarball" "$versioned_dir"
-    summary_ok "java ${tag} (dry-run)"
+    printf '[DRY-RUN] sdk install java <latest-%s-%s>\n' "$JDK_FEATURE_VERSION" "$JDK_DISTRIBUTION"
+    summary_ok "java via SDKMAN (dry-run)"
     return 0
   fi
 
-  local tmp extracted
-  tmp="$(mktemp -d)"
-  if ! tar -C "$tmp" -xzf "$tarball"; then
-    rm -rf "$tmp"
-    summary_fail "java: extraction failed"
+  local jid
+  jid="$(sdkman_latest_java_id || true)"
+  if [[ -z "$jid" ]]; then
+    summary_fail "java: could not resolve a JDK ${JDK_FEATURE_VERSION}-${JDK_DISTRIBUTION} candidate via SDKMAN"
     return 1
   fi
-  extracted="$(find "$tmp" -mindepth 1 -maxdepth 1 -type d | head -n1)"
+
+  local cdir="$SDKMAN_DIR/candidates/java/$jid"
+  if [[ -d "$cdir" ]]; then
+    log "JDK $jid already installed via SDKMAN at $cdir"
+  else
+    if ! run_installer sdkman-java bash -c "
+      set +u
+      export SDKMAN_DIR='$SDKMAN_DIR'
+      source '$SDKMAN_DIR/bin/sdkman-init.sh'
+      yes n | sdk install java '$jid' || sdk install java '$jid' < /dev/null
+    "; then
+      summary_fail "java: SDKMAN failed installing $jid"
+      return 1
+    fi
+  fi
+
+  # Ensure the SDKMAN 'current' symlink points to our version, then expose
+  # it via the path the dotfiles already expect.
+  if ! run_installer sdkman-default bash -c "
+    set +u
+    export SDKMAN_DIR='$SDKMAN_DIR'
+    source '$SDKMAN_DIR/bin/sdkman-init.sh'
+    sdk default java '$jid'
+  "; then
+    warn "java: could not set $jid as the SDKMAN default"
+  fi
 
   ensure_dir "$LOCAL_LIB"
-  rm -rf "$versioned_dir"
-  mv "$extracted" "$versioned_dir"
-  rm -rf "$tmp"
-  touch "$marker"
-
-  atomic_symlink "$versioned_dir" "$LOCAL_LIB/jdk"
-  summary_ok "java ${tag} installed (symlink: $LOCAL_LIB/jdk -> ${versioned_dir##*/})"
+  atomic_symlink "$SDKMAN_DIR/candidates/java/current" "$LOCAL_LIB/jdk"
+  summary_ok "java $jid installed via SDKMAN (symlink: $LOCAL_LIB/jdk -> sdkman/current)"
 }
 
 # ---------- uv (Astral) ----------------------------------------------
@@ -292,36 +349,6 @@ install_uv() {
     summary_ok "uv installed"
   else
     summary_fail "uv: binary is missing after install"
-    return 1
-  fi
-}
-
-# ---------- Rust (rustup) --------------------------------------------
-
-install_rust() {
-  if skip_if_env rust; then summary_skip "rust (SKIP_RUST=1)"; return 0; fi
-
-  if command -v rustc >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1; then
-    log "rust already installed: $(rustc --version 2>/dev/null)"
-    summary_skip "rust already installed"
-    return 0
-  fi
-
-  if is_dry_run; then
-    printf '[DRY-RUN] curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain stable\n'
-    summary_ok "rust (dry-run)"
-    return 0
-  fi
-
-  if ! run_installer rustup bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain stable"; then
-    summary_fail "rust: rustup failed"
-    return 1
-  fi
-
-  if [[ -x "$HOME/.cargo/bin/rustc" ]]; then
-    summary_ok "rust installed via rustup"
-  else
-    summary_fail "rust: rustup finished but rustc is missing"
     return 1
   fi
 }
@@ -402,7 +429,8 @@ install_pnpm() {
   fi
 
   if is_dry_run; then
-    printf '[DRY-RUN] curl -fsSL https://get.pnpm.io/install.sh | sh -s -- ENV="$HOME/.profile" SHELL=$(command -v sh)\n'
+    printf '[DRY-RUN] PNPM_HOME=%q SHELL=$(command -v sh) curl -fsSL https://get.pnpm.io/install.sh | sh -s -- -y\n' \
+      "$HOME/.local/share/pnpm"
     summary_ok "pnpm (dry-run)"
     return 0
   fi
@@ -428,11 +456,12 @@ install_pnpm() {
 # ---------- Orchestrator ----------------------------------------------
 
 run_one() {
-  local lang="$1"
-  printf '\n%s>> Installing %s%s\n' "$_DOTFILES_CLR_INFO" "$lang" "$_DOTFILES_CLR_RESET"
+  local step="$1" total="$2" lang="$3"
+  progress_bar "$((step - 1))" "$total" "starting $lang"
   if ! "install_${lang}"; then
     warn "${lang} installer failed (continuing with the rest)"
   fi
+  progress_bar "$step" "$total" "$lang done"
 }
 
 main() {
@@ -442,9 +471,11 @@ main() {
   ensure_dir "$LOCAL_OPT"
   ensure_dir "$CACHE_ROOT"
 
-  local lang
+  local total="${#LANGUAGES[@]}"
+  local i=0 lang
   for lang in "${LANGUAGES[@]}"; do
-    run_one "$lang"
+    i=$((i + 1))
+    run_one "$i" "$total" "$lang"
   done
 
   if print_summary "Languages (vm)"; then

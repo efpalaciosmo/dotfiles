@@ -54,6 +54,8 @@ PKG_BUILD=(
   pkgconf-pkg-config
   gawk
   findutils
+  # gvm builds Go from source by default; bison is required.
+  bison
 )
 
 PKG_LANGUAGES=(

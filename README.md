@@ -123,8 +123,11 @@ make vm
 5. Instala las mismas Nerd Fonts en `~/.local/share/fonts/nerd-fonts/`.
 6. Instala **VS Code Insiders** desde el repo RPM oficial de Microsoft
    y lo asocia a `text/plain` vía `xdg-mime`.
-7. Instala **podman-compose** con `pip --user` después de `stown`.
+7. Instala lenguajes/runtimes user-local con barra de progreso:
+   **Go** vía `gvm`, **fnm**, **Julia** vía `juliaup`, **Java** vía
+   **SDKMAN!**, **uv**, **Gradle**, **pnpm**.
 8. Aplica dotfiles del perfil `vm/` con `stown`.
+9. Instala **podman-compose** con `pip --user` después de `stown`.
 
 ## Bootstrap remoto
 
