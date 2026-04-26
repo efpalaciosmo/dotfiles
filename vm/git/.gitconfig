@@ -1,0 +1,14 @@
+[user]
+    name = Efrain Palacios Mosquera
+    email = efpalaciosmo@unal.edu.co
+
+[init]
+    defaultBranch = main
+
+[core]
+    editor = nvim
+    autocrlf = input
+    ignorecase = false
+
+[pull]
+    rebase = false
