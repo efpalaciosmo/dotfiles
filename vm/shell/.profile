@@ -81,3 +81,5 @@ _prepend_path "$HOME/.opencode/bin"
 export PATH
 
 unset -f _prepend_path
+
+export PATH="$HOME/.local/bin:$PATH"

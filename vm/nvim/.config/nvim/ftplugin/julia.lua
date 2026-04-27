@@ -1,0 +1,9 @@
+local ft = require("config.ft")
+
+ft.indent(4)
+
+local o = vim.opt_local
+o.colorcolumn = "92"
+o.commentstring = "# %s"
+
+ft.suffixes({ ".jl" })
