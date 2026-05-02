@@ -1,90 +1,76 @@
-# Dotfiles — Fedora Sericea (Silverblue + Sway) + Distrobox Fedora 44
+# Dotfiles — Fedora Sericea (Niri) + Distrobox Fedora 44
 
-Configuración personal reproducible, idempotente y reversible para un entorno
-en **Fedora Sericea** (Silverblue orientado a **Sway**/Wayland; compositor
-**Niri** y apps asociadas bajo `packages/`) como host gráfico y **Fedora 44**
-como contenedor de desarrollo dentro de **Distrobox**.
+Reproducible, idempotent automation for a **Fedora Sericea** host (atomic desktop with **Niri**, Wayland, and related configs under `packages/`) plus a **Fedora 44** development container in **Distrobox**.
 
-> El host se mantiene "limpio": nada de `dnf`, nada de `rpm-ostree layer`,
-> nada de paquetes de desarrollo. El desarrollo vive en el contenedor.
+> The host stays “clean”: no `dnf`, no `rpm-ostree` package layering, no dev toolchains on the host. Development happens in the container.
 
-## Estructura
+## Layout
 
 ```text
 .
-├── packages/             # Todos los paquetes stow/stown (árbol = rutas bajo $HOME)
+├── packages/             # stow/stown trees (paths mirror $HOME)
 │   ├── dunst/            # .config/dunst/…
 │   ├── foot/             # .config/foot/…
 │   ├── niri/             # .config/niri/… + .config/xdg-desktop-portal/…
 │   ├── rofi/
 │   ├── waybar/
-│   ├── shell/            # dotfiles del HOST (Sericea)
+│   ├── shell/            # host shell dotfiles (Sericea)
 │   ├── git/
-│   ├── nvim/             # Neovim (normalmente solo contenedor; ver group_vars)
-│   ├── shell-container/  # opcional: shell del contenedor (no en stown vm por defecto)
-│   ├── git-container/
+│   ├── nvim/
+│   ├── shell-container/  # container shell (Zsh, GOPATH, …) — stown on vm profile
+│   ├── git-container/    # optional Git config for the container (not in default stown list)
 │   └── starship-container/
-├── doc/niri/             # Notas — no se enlazan a $HOME
-├── .config -> packages/nvim/.config   # atajo local para editar nvim en el repo
-├── roles/                # Roles Ansible (common, home, vm_*, dotfiles, …)
+├── roles/                # Ansible roles (common, home, vm_*, dotfiles, …)
 ├── tasks/                # profile-home.yml, profile-vm.yml
-├── group_vars/all.yml    # Listas (Flatpaks, paquetes Fedora, fuentes, …)
+├── group_vars/all.yml    # Flatpaks, Fedora packages, fonts, stown package lists, …
 ├── playbook.yml          # -e dotfiles_profile=home|vm
 ├── playbook-doctor.yml
 ├── ansible.cfg
 ├── inventory.ini.example # make setup → inventory.ini
 ├── requirements.yml      # community.general (Flatpak, …)
 ├── requirements-ansible.txt
-├── bootstrap-dotfiles.sh # clonar/actualizar y make setup && make <perfil>
-├── Makefile              # ansible-playbook + tags (misma interfaz que antes)
-├── architecture.md
+├── bootstrap-dotfiles.sh # clone/update then make setup && make <profile>
+├── Makefile              # ansible-playbook + tags (CLI entry points)
+├── architecture.md       # deeper design notes
 ├── README.md
 └── .gitignore
 ```
 
-> Mantenemos un único repositorio. La separación es por carpetas/perfiles, no
-> por ramas. **stown** enlaza cada subcarpeta de **`packages/`** hacia `$HOME`
-> (misma idea que **GNU Stow**). Qué paquetes se aplican en host vs contenedor
-> se define en **`group_vars/all.yml`** (`stown_packages_host` / `stown_packages_vm`).
-> Ansible orquesta el sistema; **`make home`** y **`make vm`** son perfiles de Ansible,
-> no nombres de carpetas.
+Single repo; separation is by **profile** (`home` vs `vm`), not by branches. **stown** links each subtree under **`packages/`** into `$HOME` (same idea as **GNU Stow**). Which packages apply on the host vs in the container is defined in **`group_vars/all.yml`** (`stown_packages_host` / `stown_packages_vm`). Ansible drives the system; **`make home`** and **`make vm`** are Ansible profiles, not folder names.
 
-## Filosofía
+## Principles
 
-- **Idempotente**: ejecutar `make home` o `make vm` varias veces es seguro.
-- **Reversible**: cualquier conflicto se respalda en
-  `~/.dotfiles-backup/YYYYmmdd-HHMMSS/` antes de aplicar `stown`.
-- **Sin destrucción**: no se pisa un archivo del usuario sin moverlo al backup.
-- **Dry-run**: `DRY_RUN=1 make home|vm` usa `ansible-playbook --check` (lo que
-  Ansible pueda simular; instaladores externos pueden no reflejar todo).
-- **Ansible + venv**: `make setup` crea `.venv/` e instala `ansible-core` y
-  colecciones sin depender de Ansible a nivel de sistema.
+- **Idempotent**: `make home` and `make vm` are safe to run repeatedly.
+- **Reversible**: conflicts are moved to `~/.dotfiles-backup/YYYYmmdd-HHMMSS/` before applying **stown**.
+- **Non-destructive**: existing real files are not overwritten without a backup.
+- **Dry-run**: `DRY_RUN=1 make home|vm` runs `ansible-playbook --check` (best effort; external installers may not fully simulate).
+- **Ansible venv**: `make setup` creates `.venv/`, installs `ansible-core`, and pulls collections without a system-wide Ansible.
 
-## Targets
+## Makefile targets
 
 ```bash
-make setup        # .venv + ansible-core + community.general en .ansible/collections + inventory.ini
-make help         # lista todos los targets
-make doctor       # diagnóstico (rol validation / playbook-doctor)
-make check        # ansible-playbook --syntax-check (+ ansible-lint si existe)
-make verify       # check + regla: targets parciales sin `,home` / `,vm` en --tags
+make setup        # .venv + ansible-core + community.general in .ansible/collections + inventory.ini
+make help         # list all targets
+make doctor       # validation role / playbook-doctor
+make check        # ansible-playbook --syntax-check (+ ansible-lint if installed)
+make verify       # check + guard: partial targets must not use `,home` / `,vm` in --tags
 
-make home         # PERFIL HOST  (Silverblue)
-make vm           # PERFIL VM    (dentro de distrobox enter fedora)
+make home         # HOST profile  (Silverblue / Sericea host)
+make vm           # VM profile    (inside: distrobox enter fedora)
 
-make dry-run-home # equivale a DRY_RUN=1 make home
+make dry-run-home # same as DRY_RUN=1 make home
 make dry-run-vm
 
-# Auxiliares (host)
+# Host helpers
 make fonts-home
 make flatpaks
 make distrobox
 make stown-home
 
-# pip + stown: mismo target en host (perfil home) o en Distrobox (perfil vm)
+# pip + stown: same target on host (home) or in Distrobox (vm); profile auto-detected unless overridden
 make python-user-tools
 
-# Auxiliares (vm)
+# Container helpers
 make fonts-vm
 make packages-vm
 make vscode-insiders
@@ -97,85 +83,73 @@ make stown-vm
 
 ## Quickstart
 
-### En el host (Fedora Silverblue)
+### On the host (Fedora Sericea / Silverblue)
 
 ```bash
-git clone https://github.com/USUARIO/dotfiles.git ~/Projects/dotfiles
+git clone https://github.com/YOUR_USER/dotfiles.git ~/Projects/dotfiles
 cd ~/Projects/dotfiles
-make setup           # primera vez: venv + collections + inventory.ini
-make doctor          # opcional, para ver el estado actual
-make dry-run-home    # opcional, ansible en modo check
+make setup           # first run: venv, collections, inventory.ini
+make doctor          # optional: inspect environment
+make dry-run-home    # optional: Ansible check mode
 make home
 ```
 
-`make home`:
+`make home` (full profile) roughly:
 
-1. Valida que estás en host (no dentro de distrobox), detecta ostree.
-2. Crea `~/.local/bin` y se asegura de que esté en PATH (`~/.profile`,
-   `~/.bashrc`/`~/.zshrc` si existen — sin duplicar líneas).
-3. Instala **Nerd Fonts** (IBMPlexMono y JetBrainsMono v3.4.0) en
-   `~/.local/share/fonts/nerd-fonts/`.
-4. Instala **Distrobox** localmente en `~/.local` (sin sudo).
-5. Crea el contenedor `fedora` con imagen `quay.io/fedora/fedora:44-x86_64`
-   y `--home $HOME/Projects/fedora`.
-6. Enlaza dentro del contenedor `podman` -> `distrobox-host-exec` (usa el
-   podman del host).
-7. Configura **Flathub** como remoto **--user** (no de sistema). Si existe
-   un remoto de sistema llamado `flathub`, intenta eliminarlo (con sudo,
-   opcional). Instala todas las apps con `--user`.
-8. Hace bootstrap de **pip** en `--user` y instala **stown**.
-9. Aplica dotfiles del host (`stown_packages_host` en `group_vars/all.yml`) con `stown` desde `packages/`.
+1. Runs **common**: ensures you are not inside Distrobox; **warns** if the host does not look like ostree/atomic (non-Silverblue hosts can still be used; pip may need `ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1` — see `group_vars/all.yml` / `pip_break_allowed`).
+2. Ensures `~/.local/bin` and related dirs exist; adds `export PATH="$HOME/.local/bin:$PATH"` to `~/.profile` and, if they already exist, to `~/.bashrc` / `~/.zshrc` (does not create the rc files — **stown** owns them on the host once applied).
+3. Installs **Nerd Fonts** (IBMPlexMono and JetBrainsMono **v3.4.0**) under `~/.local/share/fonts/nerd-fonts/`.
+4. Installs **Distrobox** under `~/.local` (user prefix).
+5. Creates the **`fedora`** container from `quay.io/fedora/fedora:44-x86_64` with `--home` set to `$HOME/Projects/fedora` (see `group_vars/all.yml` for overrides).
+6. Inside the container, symlinks **`/usr/local/bin/podman`** → **`/usr/bin/distrobox-host-exec`** so container `podman` uses the host.
+7. Configures **Flathub** as a **user** remote. If a **system** remote named `flathub` exists, the playbook tries to remove it (`become`/sudo). Installs apps from `flatpak_apps` with **`--user`**.
+8. Bootstraps **pip** for `--user` and installs **stown**.
+9. Applies host dotfiles: packages listed in **`stown_packages_host`** (`dunst`, `foot`, `git`, `niri`, `rofi`, `shell`, `waybar`).
 
-### En el contenedor (Distrobox Fedora)
+### In the container (Distrobox Fedora)
 
 ```bash
 distrobox enter fedora
-cd ~/Projects/dotfiles    # asume que el repo está dentro del home compartido
+cd ~/Projects/dotfiles    # repo on the shared home / bind mount
 make doctor
 make dry-run-vm
 make vm
 ```
 
-`make vm`:
+`make vm` (full profile) order matches `tasks/profile-vm.yml`:
 
-1. Valida que estás dentro de Distrobox y que la imagen es Fedora.
-2. Crea `~/.local/bin` (y dirs relacionados) y ajusta PATH en `~/.profile` si hace falta.
-3. Hace `sudo dnf makecache` e instala paquetes Fedora (shell, devtools,
-   compiladores, lenguajes base).
-4. Instala **Starship** en `~/.local/bin` (instalador oficial).
-5. Instala **stown** con `pip --user` (misma lógica PEP 668 / break que antes).
-6. Instala las mismas Nerd Fonts en `~/.local/share/fonts/nerd-fonts/`.
-7. Instala **VS Code Insiders** desde el repo RPM oficial de Microsoft
-   y lo asocia a `text/plain` vía `xdg-mime`.
-8. Instala lenguajes/runtimes user-local:
-   **Go** vía `gvm`, **fnm**, **Julia** vía `juliaup`, **Java** vía
-   **SDKMAN!**, **uv**, **Gradle**, **pnpm**.
-9. Instala **oh-my-zsh** y plugins (git).
-10. Aplica dotfiles del perfil VM con **stown** (por defecto solo `nvim` en `stown_packages_vm`).
-11. Instala **podman-compose** con `pip --user` después de `stown`.
+1. Ensures you are **inside** Distrobox and **Fedora** is reported as the distribution.
+2. **Common**: same `~/.local` layout; on vm, `~/.profile` gets the PATH line only if `.local/bin` is not already referenced (leaves room for SDKMAN and similar).
+3. **`dnf`**: installs the Fedora package sets in `group_vars/all.yml` (`vm_pkg_*`).
+4. **Starship** → `~/.local/bin` (upstream install script).
+5. **Python user tools**: `get-pip` + **stown** (`pip --user`), with PEP 668 handling as configured.
+6. **Nerd Fonts** (same version/layout as the host).
+7. **VS Code Insiders** from Microsoft’s repo; default app for `text/plain` via `xdg-mime` where applicable.
+8. **Languages / runtimes**: **Go** via **gvm**, **fnm**, **Julia** via **juliaup**, **Java** via **SDKMAN!**, **uv**, **Gradle**, **pnpm** (each can be skipped with `SKIP_*=1` env vars — see `group_vars/all.yml`).
+9. **oh-my-zsh** and plugins.
+10. **stown** applies vm packages: **`stown_packages_vm`** — **`nvim`**, **`shell-container`**, **`starship-container`** (keeps Zsh/rc files managed after SDKMAN and friends).
+11. **podman-compose** via `pip --user`.
 
-## Bootstrap remoto
+## Remote bootstrap
 
-Si arrancas en una máquina nueva sin clonar el repo todavía:
+On a new machine before the repo exists:
 
 ```bash
-DOTFILES_REPO_URL="https://github.com/USUARIO/dotfiles.git" \
+DOTFILES_REPO_URL="https://github.com/YOUR_USER/dotfiles.git" \
 DOTFILES_DIR="$HOME/Projects/dotfiles" \
 PROFILE="home" \
-bash <(curl -fsSL https://raw.githubusercontent.com/USUARIO/dotfiles/main/bootstrap-dotfiles.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_USER/dotfiles/main/bootstrap-dotfiles.sh)
 ```
 
 Defaults:
-- `DOTFILES_DIR` = `$HOME/Projects/dotfiles`
-- `PROFILE` = `home` (usa `vm` cuando ya estés dentro del contenedor)
-- `DOTFILES_REPO_URL` no tiene default; es obligatorio si el directorio no
-  existe.
 
-## Modo dry-run
+- `DOTFILES_DIR` → `$HOME/Projects/dotfiles`
+- `PROFILE` → `home` (use `vm` when already inside the container)
+- `DOTFILES_REPO_URL` is required if the directory does not exist yet.
 
-Con `DRY_RUN=1`, `make home` y `make vm` invocan Ansible con `--check`.
-No todo lo que hacían los scripts con `DRY_RUN=1` es simulable al 100 %
-(instaladores externos); úsalo como vista previa best-effort.
+## Dry-run mode
+
+With `DRY_RUN=1`, `make home` and `make vm` pass `--check` to Ansible. External installers may not fully respect check mode; treat it as a preview.
 
 ```bash
 DRY_RUN=1 make home
@@ -186,110 +160,94 @@ make dry-run-vm
 
 ## Backups
 
-Cuando un destino ya existe (archivo real o symlink incorrecto), el rol
-`dotfiles` lo mueve a:
+When a target already exists (real file or wrong symlink), the **dotfiles** role moves it to:
 
 ```text
-$HOME/.dotfiles-backup/YYYYmmdd-HHMMSS/<ruta-relativa-a-$HOME>
+$HOME/.dotfiles-backup/YYYYmmdd-HHMMSS/<path-relative-to-$HOME>
 ```
 
-Puedes inspeccionar / restaurar:
+Inspect or restore:
 
 ```bash
 ls -la ~/.dotfiles-backup/
 ls ~/.dotfiles-backup/$(ls -1tr ~/.dotfiles-backup | tail -n1)
-mv ~/.dotfiles-backup/<stamp>/.zshrc ~/.zshrc   # restaurar
+mv ~/.dotfiles-backup/<stamp>/.zshrc ~/.zshrc   # example restore
 ```
 
-## Reversión y limpieza
+## Revert / cleanup
 
-### Quitar un Flatpak instalado por este repo
+### Remove a Flatpak installed by this repo
 
 ```bash
 flatpak --user uninstall com.valvesoftware.Steam
-flatpak --user uninstall --all          # ¡todos!
+flatpak --user uninstall --all          # removes all user Flatpaks — be careful
 ```
 
-### Eliminar / recrear el contenedor `fedora`
+### Remove / recreate the `fedora` container
 
 ```bash
 distrobox stop fedora
 distrobox rm fedora
-make distrobox       # vuelve a crearlo (idempotente)
+make distrobox       # recreates it (idempotent)
 ```
 
-> Si modificas `DISTROBOX_IMAGE` o `DISTROBOX_CONTAINER_HOME` antes de
-> ejecutar `make distrobox`, se respeta esa configuración.
+> If you change `distrobox_image` or `distrobox_container_home` in `group_vars/all.yml` (or via extra vars) before `make distrobox`, that configuration is what gets used.
 
-### Quitar `code-insiders` del contenedor
+### Remove VS Code Insiders from the container
 
 ```bash
 distrobox enter fedora -- sudo dnf remove -y code-insiders
 distrobox enter fedora -- sudo rm -f /etc/yum.repos.d/vscode.repo
 ```
 
-### Quitar Nerd Fonts
+### Remove Nerd Fonts installed by the fonts role
 
 ```bash
 rm -rf ~/.local/share/fonts/nerd-fonts
 fc-cache -f ~/.local/share/fonts
 ```
 
-## Depurar problemas de PATH
+## Debugging PATH
 
 ```bash
-make doctor            # imprime PATH y comprueba ~/.local/bin
+make doctor            # prints PATH and checks ~/.local/bin
 echo "$PATH" | tr ':' '\n'
 ls -la ~/.local/bin
 grep -n 'PATH' ~/.profile ~/.bashrc ~/.zshrc 2>/dev/null
 ```
 
-Si `~/.local/bin` no aparece, abre una nueva sesión (login) o haz
-`source ~/.profile`. Las herramientas locales (Distrobox, podman-compose,
-stown) viven ahí.
+If `~/.local/bin` is missing from `PATH`, open a new login session or `source ~/.profile`. Local tools (Distrobox, **stown**, **podman-compose**) are expected there.
 
-## Reglas estrictas Fedora Silverblue (host)
+## Fedora Silverblue / Sericea host rules
 
-- ❌ No se usa `dnf` en el host.
-- ❌ No se layerizan paquetes con `rpm-ostree` (no fue necesario para esta
-  configuración; si en el futuro se necesita algo del sistema, documentar).
-- ❌ No se instala VS Code Insiders ni toolchains de desarrollo en el host.
-- ❌ No se usa `sudo` salvo para intentar quitar el remoto Flathub a nivel
-  sistema (es opcional; si falla, se imprime el comando manual).
-- ✅ Flatpaks van como `--user`.
-- ✅ Binarios locales en `~/.local/bin`.
-- ✅ Fuentes en `~/.local/share/fonts/`.
+- Do not use `dnf` on the host.
+- Do not layer packages with `rpm-ostree` for this setup (if you ever must, document it separately).
+- Do not install VS Code Insiders or dev toolchains on the host profile.
+- `sudo` is limited to what the playbooks need (e.g. removing a **system** `flathub` remote); failures fall back to printed manual steps where relevant.
+- Flatpaks are installed **`--user`**.
+- User binaries live in `~/.local/bin`.
+- Fonts live under `~/.local/share/fonts/`.
 
-## Notas y advertencias
+## Notes
 
-- **VS Code Insiders desktop file**: en Fedora suele ser
-  `code-insiders.desktop`. El rol `vm_vscode` prueba Insiders y, si no existe,
-  `code.desktop`.
-- **`podman` dentro del contenedor**: queda enlazado a
-  `/usr/bin/distrobox-host-exec` para ejecutar el podman del host. Verifica
-  con `make doctor` o:
+- **VS Code Insiders desktop file**: often `code-insiders.desktop`. Role `vm_vscode` prefers Insiders, then falls back to `code.desktop`.
+- **`podman` in the container**: should resolve to **`/usr/bin/distrobox-host-exec`** via `/usr/local/bin/podman`. Verify with `make doctor` or:
   ```bash
   command -v podman && readlink -f "$(command -v podman)"
   ```
-  Si falla con errores tipo `host-spawn`, sal del contenedor y vuelve a
-  entrar (`distrobox stop fedora && distrobox enter fedora`).
-- **PEP 668 / externally-managed**: si pip rechaza la instalación de
-  `stown`, vuelve a intentar con:
+  If you see `host-spawn` errors, exit and re-enter the container (`distrobox stop fedora && distrobox enter fedora`).
+- **PEP 668 / externally-managed environments**: if `pip` refuses **stown**, retry with:
   ```bash
   ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1 make python-user-tools
   ```
-  Esto sólo se aplica a la instalación `--user` y se imprime claramente.
-- **Flatpaks tras instalación**: tras añadir Flatpaks `--user` puede ser
-  necesario cerrar sesión y volver a entrar para que aparezcan los
-  launchers en el menú de aplicaciones (se actualiza `XDG_DATA_DIRS`).
-- **Fuentes en terminal**: el rol de fuentes no cambia el emulador. Configura manualmente:
-  - Principal: `JetBrainsMono Nerd Font`
-  - Alternativa: `IBMPlexMono Nerd Font`
-  - Verifica: `fc-match 'JetBrainsMono Nerd Font'`
+  On non-ostree **home** profiles, the playbook may allow break-system-packages for user installs automatically — see `pip_break_allowed` in `group_vars/all.yml`.
+- **Flatpaks after install**: you may need to log out and back in for **user** Flatpaks to show up in the app menu (`XDG_DATA_DIRS`).
+- **Terminal fonts**: the fonts role does not change your terminal emulator. Set the font manually, e.g. **JetBrainsMono Nerd Font** or **IBMPlexMono Nerd Font**; check with `fc-match 'JetBrainsMono Nerd Font'`.
+- **`GOPATH`**: after the vm profile, `packages/shell-container` sets `GOPATH="$HOME/.go"` in the managed shell startup — open a new shell or `source` the relevant file before expecting `echo "$GOPATH"`.
 
-## Criterios de aceptación
+## Acceptance checks
 
-En el host:
+On the host:
 
 ```bash
 make check
@@ -303,7 +261,7 @@ flatpak list --user
 fc-match "JetBrainsMono Nerd Font"
 ```
 
-Dentro del contenedor (`distrobox enter fedora`):
+Inside the container (`distrobox enter fedora`):
 
 ```bash
 cd ~/Projects/dotfiles
@@ -312,13 +270,14 @@ make doctor
 DRY_RUN=1 make vm
 make vm
 command -v code-insiders
-xdg-mime query default text/plain        # -> code-insiders.desktop
+xdg-mime query default text/plain        # often code-insiders.desktop
 command -v podman-compose
 podman version
 podman-compose --help
-echo "$GOPATH"                            # -> $HOME/.go
+# After a new login shell:
+echo "$GOPATH"                            # expect $HOME/.go per shell-container config
 ```
 
-## Licencia
+## License
 
-Configuración personal. Úsala bajo tu propio criterio.
+Personal configuration. Use at your own discretion.
