@@ -1,8 +1,9 @@
-# Dotfiles — Fedora Silverblue + Distrobox Fedora 44
+# Dotfiles — Fedora Sericea (Silverblue + Sway) + Distrobox Fedora 44
 
 Configuración personal reproducible, idempotente y reversible para un entorno
-de desarrollo en **Fedora Silverblue / Atomic Desktop** como host gráfico y
-**Fedora 44** como contenedor de desarrollo dentro de **Distrobox**.
+en **Fedora Sericea** (Silverblue orientado a **Sway**/Wayland; compositor
+**Niri** y apps asociadas bajo `packages/`) como host gráfico y **Fedora 44**
+como contenedor de desarrollo dentro de **Distrobox**.
 
 > El host se mantiene "limpio": nada de `dnf`, nada de `rpm-ostree layer`,
 > nada de paquetes de desarrollo. El desarrollo vive en el contenedor.
@@ -11,65 +12,86 @@ de desarrollo en **Fedora Silverblue / Atomic Desktop** como host gráfico y
 
 ```text
 .
-├── home/                 # Dotfiles del HOST (Silverblue)
-│   ├── shell/            # .profile, .bashrc, .zshrc minimales
-│   └── git/              # .gitconfig
-├── vm/                   # Dotfiles del CONTENEDOR (Distrobox fedora)
-│   ├── shell/            # .profile, .bashrc, .zshrc con toolchains
-│   ├── git/              # .gitconfig
-│   ├── nvim/             # .config/nvim/...
-│   └── starship/         # .config/starship.toml
-├── scripts/
-│   ├── lib/              # common.sh, nerd-fonts.sh
-│   ├── home/             # install.sh + targets para el host
-│   ├── vm/               # install.sh + targets para el contenedor
-│   ├── stown/            # apply.sh (wrapper de stown con backups)
-│   ├── doctor.sh
-│   ├── check.sh
-│   └── bootstrap-dotfiles.sh
-├── Makefile
+├── packages/             # Todos los paquetes stow/stown (árbol = rutas bajo $HOME)
+│   ├── dunst/            # .config/dunst/…
+│   ├── foot/             # .config/foot/…
+│   ├── niri/             # .config/niri/… + .config/xdg-desktop-portal/…
+│   ├── rofi/
+│   ├── waybar/
+│   ├── shell/            # dotfiles del HOST (Sericea)
+│   ├── git/
+│   ├── nvim/             # Neovim (normalmente solo contenedor; ver group_vars)
+│   ├── shell-container/  # opcional: shell del contenedor (no en stown vm por defecto)
+│   ├── git-container/
+│   └── starship-container/
+├── doc/niri/             # Notas — no se enlazan a $HOME
+├── .config -> packages/nvim/.config   # atajo local para editar nvim en el repo
+├── roles/                # Roles Ansible (common, home, vm_*, dotfiles, …)
+├── tasks/                # profile-home.yml, profile-vm.yml
+├── group_vars/all.yml    # Listas (Flatpaks, paquetes Fedora, fuentes, …)
+├── playbook.yml          # -e dotfiles_profile=home|vm
+├── playbook-doctor.yml
+├── ansible.cfg
+├── inventory.ini.example # make setup → inventory.ini
+├── requirements.yml      # community.general (Flatpak, …)
+├── requirements-ansible.txt
+├── bootstrap-dotfiles.sh # clonar/actualizar y make setup && make <perfil>
+├── Makefile              # ansible-playbook + tags (misma interfaz que antes)
+├── architecture.md
 ├── README.md
 └── .gitignore
 ```
 
 > Mantenemos un único repositorio. La separación es por carpetas/perfiles, no
-> por ramas, para poder compartir scripts y librería común sin divergencias.
+> por ramas. **stown** enlaza cada subcarpeta de **`packages/`** hacia `$HOME`
+> (misma idea que **GNU Stow**). Qué paquetes se aplican en host vs contenedor
+> se define en **`group_vars/all.yml`** (`stown_packages_host` / `stown_packages_vm`).
+> Ansible orquesta el sistema; **`make home`** y **`make vm`** son perfiles de Ansible,
+> no nombres de carpetas.
 
 ## Filosofía
 
 - **Idempotente**: ejecutar `make home` o `make vm` varias veces es seguro.
 - **Reversible**: cualquier conflicto se respalda en
-  `~/.dotfiles-backup/YYYYmmdd-HHMMSS/` antes de tocar nada.
-- **Sin destrucción**: nunca se borra un archivo del usuario sin backup.
-- **Dry-run** explícito vía `DRY_RUN=1` para previsualizar.
-- **Bash estricto**: todos los scripts usan `set -Eeuo pipefail`.
-- **Resúmenes al final**: cada script imprime OK / Skipped / Failed / Notes.
+  `~/.dotfiles-backup/YYYYmmdd-HHMMSS/` antes de aplicar `stown`.
+- **Sin destrucción**: no se pisa un archivo del usuario sin moverlo al backup.
+- **Dry-run**: `DRY_RUN=1 make home|vm` usa `ansible-playbook --check` (lo que
+  Ansible pueda simular; instaladores externos pueden no reflejar todo).
+- **Ansible + venv**: `make setup` crea `.venv/` e instala `ansible-core` y
+  colecciones sin depender de Ansible a nivel de sistema.
 
 ## Targets
 
 ```bash
+make setup        # .venv + ansible-core + community.general en .ansible/collections + inventory.ini
 make help         # lista todos los targets
-make doctor       # diagnóstico de entorno (PATH, comandos, contexto)
-make check        # bash -n + shellcheck (si está instalado)
+make doctor       # diagnóstico (rol validation / playbook-doctor)
+make check        # ansible-playbook --syntax-check (+ ansible-lint si existe)
+make verify       # check + regla: targets parciales sin `,home` / `,vm` en --tags
 
 make home         # PERFIL HOST  (Silverblue)
 make vm           # PERFIL VM    (dentro de distrobox enter fedora)
 
-make dry-run-home
+make dry-run-home # equivale a DRY_RUN=1 make home
 make dry-run-vm
 
 # Auxiliares (host)
 make fonts-home
 make flatpaks
 make distrobox
-make python-user-tools
 make stown-home
+
+# pip + stown: mismo target en host (perfil home) o en Distrobox (perfil vm)
+make python-user-tools
 
 # Auxiliares (vm)
 make fonts-vm
 make packages-vm
 make vscode-insiders
 make podman-compose
+make starship-vm
+make languages-vm
+make shell-plugins-vm
 make stown-vm
 ```
 
@@ -80,8 +102,9 @@ make stown-vm
 ```bash
 git clone https://github.com/USUARIO/dotfiles.git ~/Projects/dotfiles
 cd ~/Projects/dotfiles
+make setup           # primera vez: venv + collections + inventory.ini
 make doctor          # opcional, para ver el estado actual
-make dry-run-home    # opcional, sólo imprime acciones
+make dry-run-home    # opcional, ansible en modo check
 make home
 ```
 
@@ -101,7 +124,7 @@ make home
    un remoto de sistema llamado `flathub`, intenta eliminarlo (con sudo,
    opcional). Instala todas las apps con `--user`.
 8. Hace bootstrap de **pip** en `--user` y instala **stown**.
-9. Aplica dotfiles del perfil `home/` con `stown`.
+9. Aplica dotfiles del host (`stown_packages_host` en `group_vars/all.yml`) con `stown` desde `packages/`.
 
 ### En el contenedor (Distrobox Fedora)
 
@@ -116,18 +139,20 @@ make vm
 `make vm`:
 
 1. Valida que estás dentro de Distrobox y que la imagen es Fedora.
-2. Crea `~/.local/bin` y lo añade al PATH.
+2. Crea `~/.local/bin` (y dirs relacionados) y ajusta PATH en `~/.profile` si hace falta.
 3. Hace `sudo dnf makecache` e instala paquetes Fedora (shell, devtools,
    compiladores, lenguajes base).
-4. Instala **stown** con `pip --user`.
-5. Instala las mismas Nerd Fonts en `~/.local/share/fonts/nerd-fonts/`.
-6. Instala **VS Code Insiders** desde el repo RPM oficial de Microsoft
+4. Instala **Starship** en `~/.local/bin` (instalador oficial).
+5. Instala **stown** con `pip --user` (misma lógica PEP 668 / break que antes).
+6. Instala las mismas Nerd Fonts en `~/.local/share/fonts/nerd-fonts/`.
+7. Instala **VS Code Insiders** desde el repo RPM oficial de Microsoft
    y lo asocia a `text/plain` vía `xdg-mime`.
-7. Instala lenguajes/runtimes user-local con barra de progreso:
+8. Instala lenguajes/runtimes user-local:
    **Go** vía `gvm`, **fnm**, **Julia** vía `juliaup`, **Java** vía
    **SDKMAN!**, **uv**, **Gradle**, **pnpm**.
-8. Aplica dotfiles del perfil `vm/` con `stown`.
-9. Instala **podman-compose** con `pip --user` después de `stown`.
+9. Instala **oh-my-zsh** y plugins (git).
+10. Aplica dotfiles del perfil VM con **stown** (por defecto solo `nvim` en `stown_packages_vm`).
+11. Instala **podman-compose** con `pip --user` después de `stown`.
 
 ## Bootstrap remoto
 
@@ -137,7 +162,7 @@ Si arrancas en una máquina nueva sin clonar el repo todavía:
 DOTFILES_REPO_URL="https://github.com/USUARIO/dotfiles.git" \
 DOTFILES_DIR="$HOME/Projects/dotfiles" \
 PROFILE="home" \
-bash <(curl -fsSL https://raw.githubusercontent.com/USUARIO/dotfiles/main/scripts/bootstrap-dotfiles.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/USUARIO/dotfiles/main/bootstrap-dotfiles.sh)
 ```
 
 Defaults:
@@ -148,20 +173,21 @@ Defaults:
 
 ## Modo dry-run
 
-Cualquier script honra `DRY_RUN=1` y se limita a imprimir los comandos
-importantes:
+Con `DRY_RUN=1`, `make home` y `make vm` invocan Ansible con `--check`.
+No todo lo que hacían los scripts con `DRY_RUN=1` es simulable al 100 %
+(instaladores externos); úsalo como vista previa best-effort.
 
 ```bash
 DRY_RUN=1 make home
 DRY_RUN=1 make vm
-DRY_RUN=1 bash scripts/home/flatpaks.sh
-DRY_RUN=1 bash scripts/stown/apply.sh home
+make dry-run-home
+make dry-run-vm
 ```
 
 ## Backups
 
-Cuando un destino ya existe (archivo real o symlink incorrecto), `apply.sh`
-lo mueve a:
+Cuando un destino ya existe (archivo real o symlink incorrecto), el rol
+`dotfiles` lo mueve a:
 
 ```text
 $HOME/.dotfiles-backup/YYYYmmdd-HHMMSS/<ruta-relativa-a-$HOME>
@@ -236,9 +262,9 @@ stown) viven ahí.
 
 ## Notas y advertencias
 
-- **VS Code Insiders desktop file**: en Fedora se llama
-  `code-insiders.desktop`. El script lo detecta y, si no existe, intenta
-  con `code.desktop` y avisa si no encuentra ninguno.
+- **VS Code Insiders desktop file**: en Fedora suele ser
+  `code-insiders.desktop`. El rol `vm_vscode` prueba Insiders y, si no existe,
+  `code.desktop`.
 - **`podman` dentro del contenedor**: queda enlazado a
   `/usr/bin/distrobox-host-exec` para ejecutar el podman del host. Verifica
   con `make doctor` o:
@@ -256,8 +282,7 @@ stown) viven ahí.
 - **Flatpaks tras instalación**: tras añadir Flatpaks `--user` puede ser
   necesario cerrar sesión y volver a entrar para que aparezcan los
   launchers en el menú de aplicaciones (se actualiza `XDG_DATA_DIRS`).
-- **Fuentes en terminal**: el script de fuentes no fuerza el cambio en el
-  emulador. Configura manualmente:
+- **Fuentes en terminal**: el rol de fuentes no cambia el emulador. Configura manualmente:
   - Principal: `JetBrainsMono Nerd Font`
   - Alternativa: `IBMPlexMono Nerd Font`
   - Verifica: `fc-match 'JetBrainsMono Nerd Font'`

@@ -1,0 +1,148 @@
+// ~/.config/niri/keybinds.kdl
+
+binds {
+    Mod+Shift+Slash repeat=false { show-hotkey-overlay; }
+
+    Mod+Return repeat=false hotkey-overlay-title="Abrir terminal" { spawn-sh "alacritty || kitty || foot || ghostty || wezterm"; }
+    Mod+T repeat=false hotkey-overlay-title="Abrir terminal" { spawn-sh "foot || alacritty || wezterm"; }
+    Mod+D repeat=false hotkey-overlay-title="Lanzador de apps" { spawn-sh "rofi -show drun || fuzzel || wofi --show drun"; }
+
+    Mod+O repeat=false { toggle-overview; }
+    Mod+Q repeat=false { close-window; }
+    Mod+Shift+E repeat=false { quit; }
+
+    // Navegacion estilo Vim / Tmux
+    Mod+H { focus-column-left; }
+    Mod+J { focus-window-or-workspace-down; }
+    Mod+K { focus-window-or-workspace-up; }
+    Mod+L { focus-column-right; }
+
+    Mod+Left  { focus-column-left; }
+    Mod+Down  { focus-window-or-workspace-down; }
+    Mod+Up    { focus-window-or-workspace-up; }
+    Mod+Right { focus-column-right; }
+
+    Mod+Home { focus-column-first; }
+    Mod+End  { focus-column-last; }
+
+    // Mover columnas / ventanas
+    Mod+Ctrl+H { move-column-left; }
+    Mod+Ctrl+J { move-window-down-or-to-workspace-down; }
+    Mod+Ctrl+K { move-window-up-or-to-workspace-up; }
+    Mod+Ctrl+L { move-column-right; }
+
+    Mod+Ctrl+Left  { move-column-left; }
+    Mod+Ctrl+Down  { move-window-down-or-to-workspace-down; }
+    Mod+Ctrl+Up    { move-window-up-or-to-workspace-up; }
+    Mod+Ctrl+Right { move-column-right; }
+
+    Mod+Ctrl+Home { move-column-to-first; }
+    Mod+Ctrl+End  { move-column-to-last; }
+
+    // Tamano / layout
+    Mod+R       { switch-preset-column-width; }
+    Mod+Shift+R { switch-preset-column-width-back; }
+
+    Mod+Ctrl+Shift+R { switch-preset-window-height; }
+    Mod+Ctrl+R       { reset-window-height; }
+
+    Mod+Minus       { set-column-width "-10%"; }
+    Mod+Equal       { set-column-width "+10%"; }
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    // Accesos directos para 2/5 y 3/5.
+    Mod+BracketLeft  { set-column-width "40%"; }
+    Mod+BracketRight { set-column-width "60%"; }
+
+    Mod+F       { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+M       { maximize-window-to-edges; }
+    Mod+Ctrl+F  { expand-column-to-available-width; }
+
+    Mod+C      { center-column; }
+    Mod+Ctrl+C { center-visible-columns; }
+    Mod+W      { toggle-column-tabbed-display; }
+
+    // Floating
+    Mod+V       { toggle-window-floating; }
+    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+
+    // Agrupar / separar ventanas en columnas
+    Mod+Comma  { consume-window-into-column; }
+    Mod+Period { expel-window-from-column; }
+
+    // Workspaces
+    Mod+U { focus-workspace-down; }
+    Mod+I { focus-workspace-up; }
+
+    Mod+Ctrl+U { move-column-to-workspace-down; }
+    Mod+Ctrl+I { move-column-to-workspace-up; }
+
+    Mod+Shift+U { move-workspace-down; }
+    Mod+Shift+I { move-workspace-up; }
+
+    Mod+Tab { focus-workspace-previous; }
+
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+
+    Mod+Ctrl+1 { move-column-to-workspace 1; }
+    Mod+Ctrl+2 { move-column-to-workspace 2; }
+    Mod+Ctrl+3 { move-column-to-workspace 3; }
+    Mod+Ctrl+4 { move-column-to-workspace 4; }
+    Mod+Ctrl+5 { move-column-to-workspace 5; }
+    Mod+Ctrl+6 { move-column-to-workspace 6; }
+    Mod+Ctrl+7 { move-column-to-workspace 7; }
+    Mod+Ctrl+8 { move-column-to-workspace 8; }
+    Mod+Ctrl+9 { move-column-to-workspace 9; }
+
+    // Monitores
+    Mod+Shift+H { focus-monitor-left; }
+    Mod+Shift+J { focus-monitor-down; }
+    Mod+Shift+K { focus-monitor-up; }
+    Mod+Shift+L { focus-monitor-right; }
+
+    Mod+Ctrl+Shift+H { move-column-to-monitor-left; }
+    Mod+Ctrl+Shift+J { move-column-to-monitor-down; }
+    Mod+Ctrl+Shift+K { move-column-to-monitor-up; }
+    Mod+Ctrl+Shift+L { move-column-to-monitor-right; }
+
+    // Mouse / scroll con Mod
+    Mod+WheelScrollDown cooldown-ms=150 { focus-workspace-down; }
+    Mod+WheelScrollUp   cooldown-ms=150 { focus-workspace-up; }
+    Mod+WheelScrollRight { focus-column-right; }
+    Mod+WheelScrollLeft  { focus-column-left; }
+
+    Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
+    Mod+Ctrl+WheelScrollRight { move-column-right; }
+    Mod+Ctrl+WheelScrollLeft  { move-column-left; }
+
+    // Capturas / audio / brillo
+    Print { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print { screenshot-window; }
+
+    XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ -l 1.0"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-"; }
+    XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+
+    XF86AudioPlay allow-when-locked=true { spawn-sh "playerctl play-pause"; }
+    XF86AudioStop allow-when-locked=true { spawn-sh "playerctl stop"; }
+    XF86AudioPrev allow-when-locked=true { spawn-sh "playerctl previous"; }
+    XF86AudioNext allow-when-locked=true { spawn-sh "playerctl next"; }
+
+    XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
+
+    Mod+Escape allow-inhibiting=false repeat=false { toggle-keyboard-shortcuts-inhibit; }
+}

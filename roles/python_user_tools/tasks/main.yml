@@ -1,0 +1,68 @@
+---
+- name: Check if pip is available
+  ansible.builtin.command:
+    argv: ["{{ dotfiles_pip_python }}", "-m", "pip", "--version"]
+  register: pip_check
+  changed_when: false
+  failed_when: false
+
+- name: Download get-pip.py
+  ansible.builtin.get_url:
+    url: "{{ get_pip_url }}"
+    dest: "{{ ansible_env.HOME }}/.cache/dotfiles/get-pip.py"
+    mode: '0644'
+  when: pip_check.rc != 0
+
+- name: Bootstrap pip (--user)
+  ansible.builtin.command:
+    argv:
+      - "{{ dotfiles_pip_python }}"
+      - "{{ ansible_env.HOME }}/.cache/dotfiles/get-pip.py"
+      - --user
+  register: pip_bootstrap
+  when: pip_check.rc != 0
+  changed_when: pip_bootstrap.rc == 0
+  failed_when: false
+
+- name: Bootstrap pip (--user, PEP 668 retry with --break-system-packages)
+  ansible.builtin.command:
+    argv:
+      - "{{ dotfiles_pip_python }}"
+      - "{{ ansible_env.HOME }}/.cache/dotfiles/get-pip.py"
+      - --user
+      - --break-system-packages
+  register: pip_bootstrap_break
+  when:
+    - pip_check.rc != 0
+    - pip_bootstrap.rc != 0
+    - pip_break_allowed | bool
+  changed_when: pip_bootstrap_break.rc == 0
+  failed_when: pip_bootstrap_break.rc != 0
+
+- name: Require pip bootstrap to succeed
+  ansible.builtin.assert:
+    that:
+      - pip_check.rc == 0
+        or (pip_bootstrap.rc | default(1)) == 0
+        or (pip_bootstrap_break.rc | default(1)) == 0
+    fail_msg: >-
+      Bootstrapping pip failed (PEP 668 / externally-managed Python is common on Arch).
+      Install pip for your distro (e.g. pacman -S python-pip), or re-run with
+      ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1 or allow_pip_break_system_packages: true in group_vars.
+  when: pip_check.rc != 0
+
+# Use `python -m pip` via command so we do not depend on Ansible's `pip` module
+# (which requires Python `packaging` on the target interpreter).
+- name: Install or upgrade stown (pip --user)
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/pip_user_install.yml"
+  vars:
+    pip_install_pkg: stown
+
+- name: Verify stown is on PATH
+  ansible.builtin.command:
+    cmd: bash -lc 'command -v stown'
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH | default('') }}"
+  register: stown_verify
+  changed_when: false
+  failed_when: stown_verify.rc != 0

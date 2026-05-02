@@ -1,0 +1,68 @@
+---
+# `dotfiles_in_distrobox` is set in role `common`; run it before guards that use it.
+- name: Common setup
+  ansible.builtin.import_role:
+    name: common
+  tags: [always, common, vm]
+
+# `always`: run on partial VM runs (e.g. `make fonts-vm` uses only `--tags fonts-vm`).
+- name: VM profile guard (Distrobox + Fedora)
+  tags: [always, vm]
+  block:
+    - name: Require Distrobox context
+      ansible.builtin.fail:
+        msg: "Run the vm profile inside Distrobox (distrobox enter fedora)."
+      when: not dotfiles_in_distrobox | bool
+
+    - name: Require Fedora in container
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.get('distribution', '') == 'Fedora'
+        fail_msg: "Expected Fedora in the container (ansible_distribution != Fedora)."
+
+- name: Fedora packages (dnf)
+  ansible.builtin.import_role:
+    name: vm_packages
+  tags: [packages-vm, vm]
+
+- name: Starship (prompt)
+  ansible.builtin.import_role:
+    name: vm_starship
+  tags: [starship-vm, vm]
+
+- name: Python user tools (pip, stown)
+  ansible.builtin.import_role:
+    name: python_user_tools
+  tags: [python-user-tools, vm]
+
+- name: Nerd Fonts (vm)
+  ansible.builtin.import_role:
+    name: fonts
+  tags: [fonts-vm, vm]
+
+- name: VS Code Insiders
+  ansible.builtin.import_role:
+    name: vm_vscode
+  tags: [vscode-insiders, vm]
+
+- name: Languages / runtimes
+  ansible.builtin.import_role:
+    name: vm_languages
+  tags: [languages-vm, vm]
+
+- name: Shell plugins (oh-my-zsh)
+  ansible.builtin.import_role:
+    name: vm_shell_plugins
+  tags: [shell-plugins-vm, vm]
+
+- name: Apply dotfiles with stown
+  ansible.builtin.import_role:
+    name: dotfiles
+  vars:
+    stown_profile: vm
+  tags: [stown-vm, vm]
+
+- name: podman-compose (pip --user)
+  ansible.builtin.import_role:
+    name: vm_podman_compose
+  tags: [podman-compose, vm]

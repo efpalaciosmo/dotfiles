@@ -1,0 +1,142 @@
+---
+- name: Context summary
+  ansible.builtin.debug:
+    msg:
+      - "=== dotfiles doctor (ansible) ==="
+      - "User={{ ansible_user_id | default(ansible_env.USER) }} HOME={{ ansible_env.HOME }}"
+      - "Distrobox (heuristic)={{ dotfiles_in_distrobox | default('unknown') }}"
+      - "ostree-booted={{ dotfiles_is_ostree_host | default('unknown') }}"
+      - "Distribution={{ ansible_facts.get('distribution', '?') }} {{ ansible_facts.get('distribution_version', '') }}"
+
+- name: Critical commands availability
+  ansible.builtin.shell: command -v "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop:
+    - bash
+    - tar
+    - python3
+  register: doctor_critical
+  changed_when: false
+  failed_when: false
+
+- name: Show critical command paths
+  ansible.builtin.debug:
+    msg: "{{ item.item }} -> {{ item.stdout if item.rc == 0 else 'MISSING' }}"
+  loop: "{{ doctor_critical.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Optional commands
+  ansible.builtin.shell: command -v "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop:
+    - curl
+    - wget
+    - git
+    - make
+    - stown
+    - shellcheck
+  register: doctor_optional
+  changed_when: false
+  failed_when: false
+
+- name: Host-only commands (expected outside Distrobox)
+  ansible.builtin.shell: command -v "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop:
+    - flatpak
+    - podman
+    - distrobox
+  register: doctor_host
+  changed_when: false
+  failed_when: false
+  when: not dotfiles_in_distrobox | default(false) | bool
+
+- name: VM-only commands (expected inside Distrobox)
+  ansible.builtin.shell: command -v "{{ item }}"
+  args:
+    executable: /bin/bash
+  loop:
+    - dnf
+    - code-insiders
+    - podman-compose
+  register: doctor_vm
+  changed_when: false
+  failed_when: false
+  when: dotfiles_in_distrobox | default(false) | bool
+
+- name: PATH contains ~/.local/bin
+  ansible.builtin.debug:
+    msg: >-
+      {{ 'OK: ~/.local/bin in PATH'
+         if (':' ~ ansible_env.PATH ~ ':') is search(':' ~ ansible_env.HOME ~ '/.local/bin:')
+         else 'WARN: ~/.local/bin not in PATH for this session' }}
+
+- name: GOPATH hint
+  ansible.builtin.debug:
+    msg: "GOPATH={{ ansible_env.get('GOPATH', '(unset — open a new shell after vm profile)') }}"
+
+- name: podman bridge inside container
+  ansible.builtin.shell: |
+    set -euo pipefail
+    p="$(command -v podman || true)"
+    if [[ -z "$p" ]]; then echo "podman missing"; exit 0; fi
+    t="$(readlink -f "$p" || true)"
+    echo "podman -> $p (resolved: $t)"
+  register: doctor_podman
+  changed_when: false
+  failed_when: false
+  when: dotfiles_in_distrobox | default(false) | bool
+
+- name: Show podman bridge diagnostics
+  ansible.builtin.debug:
+    var: doctor_podman.stdout_lines
+  when: dotfiles_in_distrobox | default(false) | bool
+
+- name: MIME default for text/plain (vm)
+  ansible.builtin.command:
+    cmd: xdg-mime query default text/plain
+  register: doctor_mime
+  changed_when: false
+  failed_when: false
+  when: dotfiles_in_distrobox | default(false) | bool
+
+- name: Show MIME default
+  ansible.builtin.debug:
+    var: doctor_mime.stdout
+  when:
+    - dotfiles_in_distrobox | default(false) | bool
+    - doctor_mime.rc == 0
+
+- name: Dotfile symlink sample check (packages/ + stown list)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    root="$DOTFILES_PACKAGES_ROOT"
+    found=0
+    for pkg in $DOTFILES_STOWN_PKGS; do
+      [[ -d "$root/$pkg" ]] || continue
+      prefix="${root}/${pkg}/"
+      while IFS= read -r -d '' f; do
+        rel="${f#$prefix}"
+        target="$HOME/$rel"
+        if [[ -L "$target" ]]; then echo "OK link $target"; found=1
+        elif [[ -e "$target" ]]; then echo "FILE $target (not symlink)"
+        else echo "MISS $target"; fi
+        if [[ $found -ge 5 ]]; then break 2; fi
+      done < <(find "$root/$pkg" -type f -print0 | head -z -n 24)
+    done
+  args:
+    executable: /bin/bash
+  environment:
+    DOTFILES_PACKAGES_ROOT: "{{ dotfiles_packages_root }}"
+    DOTFILES_STOWN_PKGS: "{{ (stown_packages_vm if dotfiles_in_distrobox | default(false) else stown_packages_host) | join(' ') }}"
+  register: doctor_links
+  changed_when: false
+  failed_when: false
+
+- name: Show dotfile link sample
+  ansible.builtin.debug:
+    var: doctor_links.stdout_lines

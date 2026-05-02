@@ -1,0 +1,39 @@
+---
+# `dotfiles_in_distrobox` is set in role `common`; run it before guards that use it.
+- name: Common setup
+  ansible.builtin.import_role:
+    name: common
+  tags: [always, common, home]
+
+# `always`: run on partial home runs (e.g. `make fonts-home` uses only `--tags fonts-home`).
+- name: Home profile guard (Silverblue host)
+  tags: [always, home]
+  block:
+    - name: Fail if running inside Distrobox
+      ansible.builtin.fail:
+        msg: "Run the home profile on the host, not inside distrobox."
+      when: dotfiles_in_distrobox | bool
+
+- name: Nerd Fonts (host)
+  ansible.builtin.import_role:
+    name: fonts
+  tags: [fonts-home, home]
+
+# Only distrobox + flatpaks here — do not add umbrella `home` or partial runs that pass
+# `--tags home` by mistake would pull in Flatpak (needs community.general).
+- name: Distrobox and Flatpaks (host)
+  ansible.builtin.import_role:
+    name: home
+  tags: [distrobox, flatpaks]
+
+- name: Python user tools (pip, stown)
+  ansible.builtin.import_role:
+    name: python_user_tools
+  tags: [python-user-tools, home]
+
+- name: Apply dotfiles with stown
+  ansible.builtin.import_role:
+    name: dotfiles
+  vars:
+    stown_profile: home
+  tags: [stown-home, home]

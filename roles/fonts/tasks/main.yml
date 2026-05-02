@@ -1,0 +1,67 @@
+---
+- name: Ensure nerd-fonts install root
+  ansible.builtin.file:
+    path: "{{ nerd_fonts_root }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure nerd-fonts download cache
+  ansible.builtin.file:
+    path: "{{ nerd_fonts_cache_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Stat font install marker
+  ansible.builtin.stat:
+    path: "{{ nerd_fonts_root }}/{{ item.subdir }}/.dotfiles-installed-{{ nerd_fonts_version }}"
+  loop: "{{ nerd_fonts_list }}"
+  register: nerd_font_markers
+
+- name: Download Nerd Font archive
+  ansible.builtin.get_url:
+    url: "{{ nerd_fonts_base_url }}/{{ item.item.archive }}"
+    dest: "{{ nerd_fonts_cache_dir }}/{{ item.item.archive }}"
+    mode: '0644'
+    force: false
+  loop: "{{ nerd_font_markers.results }}"
+  when: not item.stat.exists | default(false)
+  loop_control:
+    label: "{{ item.item.subdir }}"
+
+- name: Ensure font target directory
+  ansible.builtin.file:
+    path: "{{ nerd_fonts_root }}/{{ item.item.subdir }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ nerd_font_markers.results }}"
+  when: not item.stat.exists | default(false)
+  loop_control:
+    label: "{{ item.item.subdir }}"
+
+- name: Extract Nerd Font archive
+  ansible.builtin.unarchive:
+    src: "{{ nerd_fonts_cache_dir }}/{{ item.item.archive }}"
+    dest: "{{ nerd_fonts_root }}/{{ item.item.subdir }}"
+    remote_src: true
+  loop: "{{ nerd_font_markers.results }}"
+  when: not item.stat.exists | default(false)
+  loop_control:
+    label: "{{ item.item.subdir }}"
+
+- name: Touch install marker
+  ansible.builtin.file:
+    path: "{{ nerd_fonts_root }}/{{ item.item.subdir }}/.dotfiles-installed-{{ nerd_fonts_version }}"
+    state: touch
+    mode: '0644'
+    modification_time: preserve
+    access_time: preserve
+  loop: "{{ nerd_font_markers.results }}"
+  when: not item.stat.exists | default(false)
+  loop_control:
+    label: "{{ item.item.subdir }}"
+
+- name: Refresh font cache
+  ansible.builtin.command:
+    cmd: fc-cache -f "{{ ansible_env.HOME }}/.local/share/fonts"
+  changed_when: true
+  failed_when: false

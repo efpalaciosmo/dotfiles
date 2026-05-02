@@ -1,0 +1,162 @@
+---
+# Repository root (playbook lives in repo root)
+dotfiles_repo_root: "{{ playbook_dir }}"
+
+# GNU Stow / stown layout: each subdir of `packages/` mirrors paths under $HOME
+# (e.g. packages/nvim/.config/nvim/init.lua -> ~/.config/nvim/init.lua).
+dotfiles_packages_root: "{{ playbook_dir }}/packages"
+
+# Paquetes a enlazar con `stown` en el host (Sericea / Silverblue).
+stown_packages_host:
+  - dunst
+  - foot
+  - git
+  - niri
+  - rofi
+  - shell
+  - waybar
+
+# Paquetes a enlazar en el contenedor Distrobox.
+# Incluye shell + starship para mantener .zshrc/.profile gestionados por stown
+# (evita que instaladores como SDKMAN dejen un rc parcial).
+stown_packages_vm:
+  - nvim
+  - shell-container
+  - starship-container
+
+# Distrobox (host)
+distrobox_prefix: "{{ ansible_env.HOME }}/.local"
+distrobox_install_url: "https://raw.githubusercontent.com/89luca89/distrobox/main/install"
+distrobox_container_name: fedora
+distrobox_image: quay.io/fedora/fedora:44-x86_64
+distrobox_container_home: "{{ ansible_env.HOME }}/Projects/fedora"
+
+# Flathub / Flatpaks (host, --user)
+flathub_repo_url: "https://dl.flathub.org/repo/flathub.flatpakrepo"
+flatpak_apps:
+  - app.zen_browser.zen
+  - com.github.xournalpp.xournalpp
+  - org.gnome.Papers
+  - com.usebottles.bottles
+  - com.github.tchx84.Flatseal
+  - org.gnome.Firmware
+  - net.opentabletdriver.OpenTabletDriver
+  - io.missioncenter.MissionCenter
+  - com.github.marhkb.Pods
+  - re.sonny.Workbench
+  - re.sonny.Playhouse
+  - org.mozilla.Thunderbird
+  - org.telegram.desktop
+  - com.discordapp.Discord
+  - com.brave.Browser
+  - org.qbittorrent.qBittorrent
+  - org.kde.kdenlive
+  - com.github.flxzt.rnote
+  - org.gimp.GIMP
+  - com.valvesoftware.Steam
+  - com.valvesoftware.Steam.CompatibilityTool.Proton-GE
+  - com.obsproject.Studio
+  - com.obsproject.Studio.Plugin.OBSPWVideo
+  - com.obsproject.Studio.Plugin.GStreamerVaapi
+  - org.virt_manager.virt-manager
+  - org.virt_manager.virt_manager.Extension.Qemu
+
+# Nerd Fonts
+nerd_fonts_version: v3.4.0
+nerd_fonts_base_url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}"
+nerd_fonts_list:
+  - archive: IBMPlexMono.tar.xz
+    subdir: IBMPlexMono
+  - archive: JetBrainsMono.tar.xz
+    subdir: JetBrainsMono
+nerd_fonts_root: "{{ ansible_env.HOME }}/.local/share/fonts/nerd-fonts"
+nerd_fonts_cache_dir: "{{ ansible_env.XDG_CACHE_HOME | default(ansible_env.HOME + '/.cache') }}/dotfiles/nerd-fonts/{{ nerd_fonts_version }}"
+
+# pip / stown
+get_pip_url: "https://bootstrap.pypa.io/get-pip.py"
+# Also set ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1 in the environment to force retry with --break-system-packages
+allow_pip_break_system_packages: false
+# Lazy Jinja: resolved at task time, after `common` has set dotfiles_in_distrobox.
+# True ⇒ retry pip --user installs with --break-system-packages on PEP 668 hosts.
+# Non-ostree + home profile: typical desktop distros (e.g. Arch) need this for `pip --user`.
+pip_break_allowed: >-
+  {{
+    (allow_pip_break_system_packages | bool)
+    or (dotfiles_in_distrobox | default(false) | bool)
+    or (lookup('env', 'ALLOW_PIP_BREAK_SYSTEM_PACKAGES', default='0') == '1')
+    or (
+      (dotfiles_profile | default('') == 'home')
+      and not (dotfiles_is_ostree_host | default(false) | bool)
+    )
+  }}
+
+# VS Code Insiders (vm)
+vscode_repo_file: /etc/yum.repos.d/vscode.repo
+microsoft_key_url: "https://packages.microsoft.com/keys/microsoft.asc"
+
+# Starship (vm)
+starship_install_url: "https://starship.rs/install.sh"
+starship_bin_dir: "{{ ansible_env.HOME }}/.local/bin"
+
+# Languages (vm) — SKIP_* equivalent
+skip_go: "{{ lookup('env', 'SKIP_GO', default='0') == '1' }}"
+skip_fnm: "{{ lookup('env', 'SKIP_FNM', default='0') == '1' }}"
+skip_julia: "{{ lookup('env', 'SKIP_JULIA', default='0') == '1' }}"
+skip_java: "{{ lookup('env', 'SKIP_JAVA', default='0') == '1' }}"
+skip_uv: "{{ lookup('env', 'SKIP_UV', default='0') == '1' }}"
+skip_gradle: "{{ lookup('env', 'SKIP_GRADLE', default='0') == '1' }}"
+skip_pnpm: "{{ lookup('env', 'SKIP_PNPM', default='0') == '1' }}"
+
+jdk_feature_version: "{{ lookup('env', 'JDK_FEATURE_VERSION', default='21') }}"
+jdk_distribution: "{{ lookup('env', 'JDK_DISTRIBUTION', default='tem') }}"
+
+# Zsh / oh-my-zsh (vm)
+zsh_dir: "{{ ansible_env.ZSH | default(ansible_env.HOME + '/.oh-my-zsh') }}"
+zsh_custom: "{{ ansible_env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
+
+# Fedora packages (vm) — same lists as scripts/vm/packages-fedora.sh
+vm_pkg_shell:
+  - zsh
+  - bash-completion
+vm_pkg_terminal:
+  - tree
+  - fastfetch
+  - jq
+  - fd-find
+  - ripgrep
+  - fzf
+  - bat
+  - btop
+  - tmux
+vm_pkg_devtools:
+  - git
+  - gh
+  - neovim
+  - unzip
+  - tar
+  - xz
+  - wget
+  - curl
+  - ca-certificates
+vm_pkg_build:
+  - gcc
+  - gcc-c++
+  - clang
+  - clang-tools-extra
+  - llvm
+  - lldb
+  - cmake
+  - make
+  - ninja-build
+  - pkgconf-pkg-config
+  - gawk
+  - findutils
+  - bison
+vm_pkg_languages:
+  - python3
+  - python3-pip
+  - zig
+vm_packages_all: "{{ vm_pkg_shell + vm_pkg_terminal + vm_pkg_devtools + vm_pkg_build + vm_pkg_languages }}"
+
+# Dotfiles / stown
+dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|.*\.md\.template)$'

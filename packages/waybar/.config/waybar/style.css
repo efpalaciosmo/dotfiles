@@ -1,0 +1,239 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Waybar — Adwaita Dark
+   Paleta: niri layout.kdl + adwaita-utils.lua
+   ═══════════════════════════════════════════════════════════════════ */
+
+@define-color adw_bg       #1d1d20;
+@define-color adw_bg_alt   #242428;
+@define-color adw_bg_hover #2e2e32;
+@define-color adw_popup    #36363a;
+@define-color adw_border   #2e2e32;
+@define-color adw_sep      #36363a;
+
+@define-color adw_fg       #deddda;
+@define-color adw_muted    #9a9996;
+@define-color adw_dim      #5e5c64;
+
+@define-color adw_orange   #ff7800;
+@define-color adw_orange_s rgba(255,120,0,0.14);
+@define-color adw_red      #ed333b;
+@define-color adw_yellow   #f5c211;
+@define-color adw_green    #57e389;
+@define-color adw_blue     #62a0ea;
+
+/* ── Reset base ──────────────────────────────────────────────────── */
+
+* {
+    border:        none;
+    border-radius: 0;
+    font-family:   "JetBrainsMono Nerd Font", "JetBrainsMono NF", monospace;
+    font-size:     12px;
+    font-weight:   500;
+    min-height:    0;
+    color:         @adw_fg;
+    transition:    background 150ms ease,
+                   color      150ms ease,
+                   opacity    150ms ease;
+}
+
+/* ── Barra principal ─────────────────────────────────────────────── */
+
+window#waybar {
+    background:    @adw_bg;
+    border-bottom: 1px solid @adw_border;
+    min-height:    32px;
+}
+
+/* ── Tooltip ─────────────────────────────────────────────────────── */
+
+tooltip {
+    background:    @adw_popup;
+    border:        1px solid @adw_sep;
+    border-radius: 10px;
+    padding:       6px 4px;
+}
+
+tooltip label {
+    color:   @adw_fg;
+    padding: 2px 8px;
+}
+
+/* ── Workspaces ──────────────────────────────────────────────────── */
+
+#workspaces {
+    margin:        5px 4px 5px 10px;
+    padding:       0 4px;
+    background:    @adw_bg_alt;
+    border:        1px solid @adw_border;
+    border-radius: 8px;
+}
+
+#workspaces button {
+    padding:       0 10px;
+    border-radius: 6px;
+    min-height:    20px;
+    color:         @adw_dim;
+    background:    transparent;
+}
+
+#workspaces button.active {
+    color:         @adw_orange;
+    background:    @adw_orange_s;
+}
+
+#workspaces button:hover {
+    color:         @adw_fg;
+    background:    alpha(@adw_fg, 0.07);
+}
+
+#workspaces button:focus {
+    background:    alpha(@adw_fg, 0.07);
+}
+
+/* ── Título de ventana ───────────────────────────────────────────── */
+
+#window {
+    padding-left: 14px;
+    color:        @adw_muted;
+    font-size:    11px;
+    font-weight:  400;
+}
+
+/* ── Módulos del lado derecho — base ─────────────────────────────── */
+
+#tray,
+#privacy,
+#network,
+#bluetooth,
+#pulseaudio,
+#cpu,
+#memory,
+#disk,
+#temperature,
+#battery,
+#clock {
+    padding: 0 10px;
+}
+
+#tray {
+    padding: 0 8px;
+}
+
+/* Separadores visuales entre grupos lógicos */
+#cpu    { border-left: 1px solid @adw_sep; }
+#clock  { border-left: 1px solid @adw_sep; }
+
+/* ── Conectividad ────────────────────────────────────────────────── */
+
+#network,
+#bluetooth {
+    color: @adw_fg;
+}
+
+#network:hover,
+#bluetooth:hover {
+    color:      @adw_blue;
+    background: alpha(@adw_blue, 0.10);
+}
+
+/* ── Audio ───────────────────────────────────────────────────────── */
+
+#pulseaudio {
+    color: @adw_fg;
+}
+
+#pulseaudio:hover {
+    color:      @adw_orange;
+    background: @adw_orange_s;
+}
+
+#pulseaudio.muted {
+    color: @adw_dim;
+}
+
+/* Micro activo */
+#pulseaudio.mic {
+    color:         @adw_bg;
+    background:    @adw_orange;
+    border-radius: 6px;
+    margin:        5px 2px;
+    padding:       0 10px;
+}
+
+#pulseaudio.mic.source-muted {
+    color:         @adw_dim;
+    background:    transparent;
+    border-radius: 0;
+    margin:        0;
+}
+
+/* ── Estadísticas del sistema ────────────────────────────────────── */
+
+#cpu,
+#memory,
+#disk,
+#temperature {
+    color: @adw_muted;
+}
+
+#cpu:hover,
+#memory:hover,
+#disk:hover {
+    color:      @adw_fg;
+    background: alpha(@adw_fg, 0.06);
+}
+
+/* ── Battery ─────────────────────────────────────────────────────── */
+
+#battery {
+    color: @adw_muted;
+}
+
+#battery.plugged,
+#battery.full {
+    color: @adw_green;
+}
+
+/* ── Estados de aviso ────────────────────────────────────────────── */
+
+#battery.warning {
+    color:         @adw_bg;
+    background:    @adw_orange;
+    border-radius: 6px;
+    margin:        5px 2px;
+    padding:       0 10px;
+}
+
+#temperature.critical,
+#battery.critical,
+#cpu.critical,
+#memory.critical,
+#disk.critical {
+    color:         @adw_bg;
+    background:    @adw_red;
+    border-radius: 6px;
+    margin:        5px 2px;
+    padding:       0 10px;
+}
+
+/* ── Privacy ─────────────────────────────────────────────────────── */
+
+#privacy {
+    color:         @adw_bg;
+    background:    @adw_yellow;
+    border-radius: 6px;
+    margin:        5px 2px;
+    padding:       0 10px;
+}
+
+/* ── Reloj ───────────────────────────────────────────────────────── */
+
+#clock {
+    color:       @adw_fg;
+    font-weight: 700;
+    padding:     0 16px 0 12px;
+}
+
+#clock:hover {
+    color: @adw_orange;
+}

@@ -1,0 +1,40 @@
+---
+# stown_pkg_dir = absolute path to package (e.g. .../packages/shell)
+- name: Find files under package
+  ansible.builtin.find:
+    paths: "{{ stown_pkg_dir }}"
+    recurse: true
+    file_type: file
+    hidden: true
+  register: _dotfiles_pkg_files
+
+- name: Filter ignored paths for stown preflight
+  ansible.builtin.set_fact:
+    _leaves: >-
+      {{
+        _dotfiles_pkg_files.files
+        | map(attribute='path')
+        | reject('search', dotfiles_ignore_regex)
+        | list
+      }}
+
+- name: Prepare backup root
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}"
+    state: directory
+    mode: '0755'
+
+- name: Check each target for conflicts
+  ansible.builtin.include_tasks: backup_conflict.yml
+  loop: "{{ _leaves }}"
+  loop_control:
+    loop_var: _leaf
+
+- name: Run stown for package
+  ansible.builtin.command:
+    cmd: stown --force "{{ ansible_env.HOME }}" "{{ stown_pkg_dir }}"
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH | default('') }}"
+  register: _stown_out
+  changed_when: _stown_out.rc == 0
+  failed_when: _stown_out.rc != 0

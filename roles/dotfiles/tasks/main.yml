@@ -1,0 +1,36 @@
+---
+- name: Require stown_profile
+  ansible.builtin.assert:
+    that:
+      - stown_profile is defined
+      - stown_profile in ['home', 'vm']
+
+- name: Select stown package names for this profile
+  ansible.builtin.set_fact:
+    _stown_names: "{{ stown_packages_host if stown_profile == 'home' else stown_packages_vm }}"
+
+- name: Stat each stown package directory
+  ansible.builtin.stat:
+    path: "{{ dotfiles_packages_root }}/{{ item }}"
+  loop: "{{ _stown_names }}"
+  register: stown_pkg_stat
+
+- name: Require package dirs under dotfiles_packages_root
+  ansible.builtin.assert:
+    that:
+      - item.stat.exists | default(false)
+      - item.stat.isdir | default(false)
+    fail_msg: >-
+      Missing stown package '{{ item.item }}' — expected directory
+      {{ dotfiles_packages_root }}/{{ item.item }}
+  loop: "{{ stown_pkg_stat.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Apply each stown package
+  ansible.builtin.include_tasks: apply_package.yml
+  loop: "{{ _stown_names }}"
+  loop_control:
+    loop_var: _stown_pkg_name
+  vars:
+    stown_pkg_dir: "{{ dotfiles_packages_root }}/{{ _stown_pkg_name }}"

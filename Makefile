@@ -1,6 +1,14 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: help doctor check home vm \
+VENV := $(CURDIR)/.venv
+PIP := $(VENV)/bin/pip
+ANSIBLE_PLAYBOOK := $(VENV)/bin/ansible-playbook
+ANSIBLE_GALAXY := $(VENV)/bin/ansible-galaxy
+INV := $(CURDIR)/inventory.ini
+# Pass DRY_RUN=1 with --check for dry-run (see README).
+CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
+
+.PHONY: help setup doctor check verify home vm \
         fonts-home fonts-vm flatpaks distrobox \
         stown-home stown-vm \
         dry-run-home dry-run-vm \
@@ -11,69 +19,97 @@ help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  %-22s %s\n", $$1, $$2}'
 
+setup: ## Create .venv, install ansible-core + collections, ensure inventory.ini
+	@if [ ! -x "$(ANSIBLE_PLAYBOOK)" ]; then \
+		python3 -m venv "$(VENV)"; \
+		"$(PIP)" install -r requirements-ansible.txt; \
+	fi
+	@mkdir -p "$(CURDIR)/.ansible/collections"
+	@"$(ANSIBLE_GALAXY)" collection install -r requirements.yml -p "$(CURDIR)/.ansible/collections"
+	@test -f "$(INV)" || cp inventory.ini.example "$(INV)"
+
 # ---- Validation ------------------------------------------------------
 
-doctor: ## Check environment (PATH, commands, host/distrobox context)
-	@bash scripts/doctor.sh
+doctor: setup ## Check environment (PATH, commands, host/distrobox context)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook-doctor.yml
 
-check: ## Validate syntax (bash -n + shellcheck if available)
-	@bash scripts/check.sh
+check: setup ## Ansible syntax-check (+ ansible-lint if installed)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --syntax-check
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --syntax-check
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook-doctor.yml --syntax-check
+	@command -v ansible-lint >/dev/null 2>&1 && ansible-lint -q . || true
+
+# Partial Makefile targets must not pass `--tags foo,home` / `foo,vm` (Ansible OR would run the whole profile).
+verify: check
+	@! grep -E 'playbook\.yml.*--tags [^ ]+,(home|vm)' $(MAKEFILE_LIST) \
+		|| (echo >&2 "verify: drop umbrella ,home/,vm from partial playbook invocations"; exit 1)
+	@echo "verify: OK"
 
 # ---- Main profiles ---------------------------------------------------
 
-home: ## Install/configure the Fedora Silverblue host (home profile)
-	@bash scripts/home/install.sh
+home: setup ## Install/configure the Fedora Silverblue host (home profile)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags home $(CHECK)
 
-vm: ## Install/configure the Fedora Distrobox container (vm profile)
-	@bash scripts/vm/install.sh
+vm: setup ## Install/configure the Fedora Distrobox container (vm profile)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags vm $(CHECK)
 
 # ---- Dry-run mode ----------------------------------------------------
 
-dry-run-home: ## Like 'home' but only prints important commands
-	@DRY_RUN=1 bash scripts/home/install.sh
+dry-run-home: ## Like 'home' in Ansible check mode
+	@$(MAKE) home DRY_RUN=1
 
-dry-run-vm: ## Like 'vm' but only prints important commands
-	@DRY_RUN=1 bash scripts/vm/install.sh
+dry-run-vm: ## Like 'vm' in Ansible check mode
+	@$(MAKE) vm DRY_RUN=1
 
 # ---- Auxiliary targets (host) ----------------------------------------
 
-fonts-home: ## Install Nerd Fonts on the host (~/.local/share/fonts)
-	@bash scripts/home/fonts.sh
+# Partial targets pass a single tag so Ansible does not OR-match the umbrella `home`/`vm` tag
+# (which would run every role in the profile).
 
-flatpaks: ## Configure user Flathub and install Flatpak apps
-	@bash scripts/home/flatpaks.sh
+fonts-home: setup ## Install Nerd Fonts on the host (~/.local/share/fonts)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags fonts-home
 
-distrobox: ## Install local distrobox and create the 'fedora' container
-	@bash scripts/home/distrobox.sh
+flatpaks: setup ## Configure user Flathub and install Flatpak apps
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags flatpaks
 
-python-user-tools: ## Bootstrap pip --user and install 'stown'
-	@bash scripts/home/python-user-tools.sh
+distrobox: setup ## Install local distrobox and create the 'fedora' container
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags distrobox
 
-stown-home: ## Apply home-profile dotfiles with stown
-	@bash scripts/stown/apply.sh home
+# Same heuristic as roles/common for Distrobox/podman user containers.
+# Override: PYTHON_USER_TOOLS_PROFILE=home|vm make python-user-tools
+python-user-tools: setup ## pip --user + stown (profile home vs vm chosen automatically)
+	@profile="$$PYTHON_USER_TOOLS_PROFILE"; \
+	if [ -z "$$profile" ]; then \
+		profile=home; \
+		if [ -f /run/.containerenv ] || [ -d /run/host ] || [ -n "$$DISTROBOX_ENTER_PATH" ] || [ -n "$$CONTAINER_ID" ]; then profile=vm; fi; \
+	fi; \
+	"$(ANSIBLE_PLAYBOOK)" -i $(INV) playbook.yml -e dotfiles_profile="$$profile" --tags python-user-tools
+
+stown-home: setup ## Apply home-profile dotfiles with stown
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags stown-home
 
 # ---- Auxiliary targets (vm) ------------------------------------------
 
-fonts-vm: ## Install Nerd Fonts inside the container (~/.local/share/fonts)
-	@bash scripts/vm/fonts.sh
+fonts-vm: setup ## Install Nerd Fonts inside the container (~/.local/share/fonts)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags fonts-vm
 
-packages-vm: ## Install Fedora packages with dnf inside the container
-	@bash scripts/vm/packages-fedora.sh
+packages-vm: setup ## Install Fedora packages with dnf inside the container
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags packages-vm
 
-vscode-insiders: ## Install VS Code Insiders inside the container
-	@bash scripts/vm/vscode-insiders.sh
+vscode-insiders: setup ## Install VS Code Insiders inside the container
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags vscode-insiders
 
-podman-compose: ## Install podman-compose into ~/.local/bin (container)
-	@bash scripts/vm/podman-compose.sh
+podman-compose: setup ## Install podman-compose into ~/.local/bin (container)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags podman-compose
 
-starship-vm: ## Install starship (prompt) into ~/.local/bin (container)
-	@bash scripts/vm/starship.sh
+starship-vm: setup ## Install starship (prompt) into ~/.local/bin (container)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags starship-vm
 
-languages-vm: ## Install Go(gvm)/fnm/Julia/JDK(SDKMAN)/uv/Gradle/pnpm into ~/.local (container)
-	@bash scripts/vm/languages.sh
+languages-vm: setup ## Install Go/fnm/Julia/JDK/uv/Gradle/pnpm into ~/.local (container)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags languages-vm
 
-shell-plugins-vm: ## Install oh-my-zsh + zsh-autosuggestions/syntax-highlighting (container)
-	@bash scripts/vm/shell-plugins.sh
+shell-plugins-vm: setup ## Install oh-my-zsh + plugins (container)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags shell-plugins-vm
 
-stown-vm: ## Apply vm-profile dotfiles with stown
-	@bash scripts/stown/apply.sh vm
+stown-vm: setup ## Apply vm-profile dotfiles with stown
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags stown-vm

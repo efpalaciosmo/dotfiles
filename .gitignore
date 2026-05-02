@@ -12,6 +12,8 @@ __pycache__/
 .dotfiles-installed-*
 node_modules/
 .venv/
+.ansible/
+inventory.ini
 
 # Backups should never be committed
 .dotfiles-backup/

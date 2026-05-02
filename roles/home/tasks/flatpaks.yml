@@ -1,0 +1,55 @@
+---
+- name: List system flatpak remotes
+  ansible.builtin.command:
+    cmd: flatpak remotes --system
+  register: fp_remotes_system
+  changed_when: false
+  failed_when: false
+
+- name: Remove system flathub remote if present
+  ansible.builtin.command:
+    cmd: flatpak remote-delete --system flathub
+  become: true
+  when: "'flathub' in fp_remotes_system.stdout"
+  failed_when: false
+  changed_when: true
+
+- name: Ensure user flathub remote
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    method: user
+    flatpakrepo_url: "{{ flathub_repo_url }}"
+
+# Per-app failures are tolerated (network glitches, EOL apps), but we surface
+# the failed list at the end so the run is not silently broken.
+- name: Install Flatpak apps (--user)
+  community.general.flatpak:
+    name: "{{ item }}"
+    state: present
+    method: user
+    remote: flathub
+  loop: "{{ flatpak_apps }}"
+  loop_control:
+    label: "{{ item }}"
+  register: flatpak_install_results
+  failed_when: false
+
+- name: Collect failed flatpak installs
+  ansible.builtin.set_fact:
+    _flatpak_failures: >-
+      {{
+        flatpak_install_results.results
+        | selectattr('failed', 'defined')
+        | selectattr('failed', 'equalto', true)
+        | map(attribute='item')
+        | list
+      }}
+
+- name: Warn about failed flatpak installs
+  ansible.builtin.debug:
+    msg: >-
+      WARNING: {{ _flatpak_failures | length }} flatpak app(s) failed:
+      {{ _flatpak_failures | join(', ') }}.
+      Re-run `make flatpaks` after checking network / app availability.
+  when: _flatpak_failures | length > 0

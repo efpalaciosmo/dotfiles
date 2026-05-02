@@ -1,0 +1,84 @@
+---
+- name: VS Code Insiders (vm)
+  tags: [vm, vscode-insiders]
+  block:
+    - name: Import Microsoft RPM key
+      ansible.builtin.rpm_key:
+        key: "{{ microsoft_key_url }}"
+        state: present
+      become: true
+
+    - name: Install VS Code yum repo file
+      ansible.builtin.copy:
+        dest: "{{ vscode_repo_file }}"
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          [code]
+          name=Visual Studio Code
+          baseurl=https://packages.microsoft.com/yumrepos/vscode
+          enabled=1
+          gpgcheck=1
+          gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+      become: true
+
+    - name: dnf check-update (ignore rc 100)
+      ansible.builtin.command:
+        cmd: dnf check-update
+      become: true
+      changed_when: false
+      failed_when: false
+
+    # Use CLI `dnf` instead of Ansible's dnf module to avoid Python libdnf bindings
+    # issues in some container images/interpreters.
+    - name: Check whether VS Code Insiders is already installed
+      ansible.builtin.command:
+        cmd: rpm -q code-insiders
+      become: true
+      register: code_insiders_rpm
+      changed_when: false
+      failed_when: false
+
+    - name: Install VS Code Insiders
+      ansible.builtin.command:
+        cmd: dnf -y install code-insiders
+      become: true
+      when: code_insiders_rpm.rc != 0
+      register: code_insiders_install
+      changed_when: code_insiders_install.rc == 0
+
+    - name: Ensure XDG config dir for mimeapps
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/.config"
+        state: directory
+        mode: '0755'
+
+    - name: Stat VS Code desktop files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /usr/share/applications/code-insiders.desktop
+        - /usr/share/applications/code.desktop
+      register: vscode_desktop_stats
+
+    - name: Choose MIME default desktop id
+      ansible.builtin.set_fact:
+        vscode_desktop_id: >-
+          {{
+            'code-insiders.desktop'
+            if vscode_desktop_stats.results[0].stat.exists | default(false)
+            else (
+              'code.desktop'
+              if vscode_desktop_stats.results[1].stat.exists | default(false)
+              else ''
+            )
+          }}
+
+    - name: Set default text/plain handler
+      ansible.builtin.command:
+        cmd: xdg-mime default "{{ vscode_desktop_id }}" text/plain
+      when: vscode_desktop_id | length > 0
+      register: xdg_mime
+      changed_when: xdg_mime.rc == 0
+      failed_when: false

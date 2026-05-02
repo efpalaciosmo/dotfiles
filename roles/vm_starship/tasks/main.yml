@@ -1,0 +1,29 @@
+---
+- name: Starship (vm)
+  tags: [vm, starship-vm]
+  block:
+    - name: Check if starship already installed
+      ansible.builtin.shell:
+        cmd: command -v starship
+      register: starship_which
+      changed_when: false
+      failed_when: false
+      environment:
+        PATH: "{{ starship_bin_dir }}:{{ ansible_env.PATH | default('') }}"
+
+    - name: Download starship install script
+      ansible.builtin.get_url:
+        url: "{{ starship_install_url }}"
+        dest: "{{ ansible_env.HOME }}/.cache/dotfiles/starship-install.sh"
+        mode: '0755'
+      when: starship_which.rc != 0
+
+    - name: Run starship installer
+      ansible.builtin.command:
+        cmd: >-
+          sh "{{ ansible_env.HOME }}/.cache/dotfiles/starship-install.sh"
+          --bin-dir "{{ starship_bin_dir }}" --yes
+      when: starship_which.rc != 0
+      changed_when: true
+      environment:
+        PATH: "{{ starship_bin_dir }}:{{ ansible_env.PATH | default('') }}"

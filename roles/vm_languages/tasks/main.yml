@@ -1,0 +1,45 @@
+---
+# User-local language runtimes inside the Fedora Distrobox (matches scripts/vm/languages.sh).
+# Order: go, fnm, julia, java, uv, gradle, pnpm
+
+- name: Languages (vm)
+  tags: [vm, languages-vm]
+  block:
+    - name: Language toolchain cache directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ ansible_env.HOME }}/.cache/dotfiles"
+        - "{{ ansible_env.HOME }}/.local/bin"
+        - "{{ ansible_env.HOME }}/.local/lib"
+        - "{{ ansible_env.HOME }}/.local/opt"
+
+    - name: Include Go (gvm)
+      ansible.builtin.include_tasks: go.yml
+      when: not (skip_go | default(false) | bool)
+
+    - name: Include fnm
+      ansible.builtin.include_tasks: fnm.yml
+      when: not (skip_fnm | default(false) | bool)
+
+    - name: Include Julia (juliaup)
+      ansible.builtin.include_tasks: julia.yml
+      when: not (skip_julia | default(false) | bool)
+
+    - name: Include Java (SDKMAN)
+      ansible.builtin.include_tasks: java.yml
+      when: not (skip_java | default(false) | bool)
+
+    - name: Include uv
+      ansible.builtin.include_tasks: uv.yml
+      when: not (skip_uv | default(false) | bool)
+
+    - name: Include Gradle
+      ansible.builtin.include_tasks: gradle.yml
+      when: not (skip_gradle | default(false) | bool)
+
+    - name: Include pnpm
+      ansible.builtin.include_tasks: pnpm.yml
+      when: not (skip_pnpm | default(false) | bool)
