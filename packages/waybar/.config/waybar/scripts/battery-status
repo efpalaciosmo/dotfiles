@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -u
+
+json_escape() {
+    local s=${1//\\/\\\\}
+    s=${s//\"/\\\"}
+    s=${s//$'\n'/\\n}
+    s=${s//$'\t'/\\t}
+    printf '%s' "$s"
+}
+
+find_battery() {
+    local bat
+    for bat in /sys/class/power_supply/BAT*; do
+        [[ -d "$bat" && -r "$bat/capacity" ]] && {
+            printf '%s\n' "$bat"
+            return 0
+        }
+    done
+    return 1
+}
+
+if [[ "${1:-}" == "--available" ]]; then
+    find_battery >/dev/null
+    exit $?
+fi
+
+bat=$(find_battery || true)
+if [[ -z "$bat" ]]; then
+    printf '{"text":"","tooltip":"","class":"unavailable"}\n'
+    exit 0
+fi
+
+capacity=$(<"$bat/capacity")
+status="Unknown"
+[[ -r "$bat/status" ]] && status=$(<"$bat/status")
+
+case "$status" in
+    Charging) icon=""; class="charging" ;;
+    Full) icon=""; class="full" ;;
+    Discharging)
+        if (( capacity <= 15 )); then
+            icon=""; class="critical"
+        elif (( capacity <= 30 )); then
+            icon=""; class="warning"
+        elif (( capacity <= 55 )); then
+            icon=""; class="normal"
+        elif (( capacity <= 80 )); then
+            icon=""; class="normal"
+        else
+            icon=""; class="normal"
+        fi
+        ;;
+    *) icon=""; class="normal" ;;
+esac
+
+tooltip="Battery: ${capacity}%\nStatus: ${status}"
+
+if [[ -r "$bat/energy_now" && -r "$bat/energy_full" ]]; then
+    tooltip+="\nEnergy: $(( $(<"$bat/energy_now") / 1000 )) / $(( $(<"$bat/energy_full") / 1000 )) mWh"
+elif [[ -r "$bat/charge_now" && -r "$bat/charge_full" ]]; then
+    tooltip+="\nCharge: $(( $(<"$bat/charge_now") / 1000 )) / $(( $(<"$bat/charge_full") / 1000 )) mAh"
+fi
+
+printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \
+    "$(json_escape "${icon} ${capacity}%")" \
+    "$(json_escape "$tooltip")" \
+    "$class"

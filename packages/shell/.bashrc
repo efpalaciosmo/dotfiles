@@ -1,4 +1,4 @@
-# ~/.bashrc - host (Fedora Silverblue / Atomic)
+# ~/.bashrc - host (Arch Linux)
 # Interactive bash configuration for the host.
 
 [[ $- != *i* ]] && return
@@ -31,6 +31,33 @@ alias fpuu='flatpak --user uninstall'
 alias fpuup='flatpak --user update -y'
 alias fpul='flatpak list --user'
 
+# Python / uv
+alias uvr="uv run"
+alias uvs="uv sync"
+alias uva="uv add"
+alias uvad="uv add --dev"
+alias uvrem="uv remove"
+alias uvi="uv init"
+alias uvlock="uv lock"
+
+# uv autocompletion (bash)
+if command -v uv >/dev/null 2>&1; then
+    eval "$(uv generate-shell-completion bash)"
+fi
+
+# fnm hook (bash)
+if command -v fnm >/dev/null 2>&1; then
+    eval "$(fnm env --use-on-cd --shell bash)"
+fi
+
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init bash)"
 fi
+
+# pnpm
+export PNPM_HOME="$HOME/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

@@ -12,12 +12,12 @@
 
 - name: Paths for Gradle install
   ansible.builtin.set_fact:
-    gradle_version_dir: "{{ ansible_env.HOME }}/.local/opt/gradle-{{ gradle_dotfiles_version }}"
-    gradle_zip_cache: "{{ ansible_env.HOME }}/.cache/dotfiles/gradle/gradle-{{ gradle_dotfiles_version }}-bin.zip"
+    gradle_version_dir: "{{ ansible_facts.env.HOME }}/.local/opt/gradle-{{ gradle_dotfiles_version }}"
+    gradle_zip_cache: "{{ ansible_facts.env.HOME }}/.cache/dotfiles/gradle/gradle-{{ gradle_dotfiles_version }}-bin.zip"
 
 - name: Ensure Gradle cache directory exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.cache/dotfiles/gradle"
+    path: "{{ ansible_facts.env.HOME }}/.cache/dotfiles/gradle"
     state: directory
     mode: '0755'
 
@@ -31,7 +31,7 @@
 - name: Expand Gradle into versioned directory
   ansible.builtin.unarchive:
     src: "{{ gradle_zip_cache }}"
-    dest: "{{ ansible_env.HOME }}/.local/opt"
+    dest: "{{ ansible_facts.env.HOME }}/.local/opt"
     remote_src: true
     creates: "{{ gradle_version_dir }}/bin/gradle"
 
@@ -46,6 +46,6 @@
 - name: Symlink ~/.local/opt/gradle to versioned tree
   ansible.builtin.file:
     src: "{{ gradle_version_dir }}"
-    dest: "{{ ansible_env.HOME }}/.local/opt/gradle"
+    dest: "{{ ansible_facts.env.HOME }}/.local/opt/gradle"
     state: link
     force: true

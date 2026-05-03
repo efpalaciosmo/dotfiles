@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mode=${1:-drun}
+
+case "$mode" in
+    drun|run|window|ssh|filebrowser) ;;
+    *) mode=drun ;;
+esac
+
+if command -v rofi >/dev/null 2>&1; then
+    exec rofi -show "$mode" -show-icons
+elif command -v fuzzel >/dev/null 2>&1; then
+    exec fuzzel
+elif command -v wofi >/dev/null 2>&1; then
+    exec wofi --show drun
+fi
+
+printf 'No launcher found. Install rofi, fuzzel, or wofi.\n' >&2
+exit 1

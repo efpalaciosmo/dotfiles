@@ -1,12 +1,12 @@
 # Arquitectura — Dotfiles (Ansible)
 
-Este repositorio automatiza un entorno **Fedora Sericea** (Silverblue Wayland; compositor **Niri** y **foot**, **waybar**, **rofi**, **dunst**, portales bajo `packages/niri/`) como host y **Fedora 44 en Distrobox** como contenedor de desarrollo. La orquestación es **declarativa con Ansible**; **Make** mantiene los mismos comandos de siempre e instala Ansible en un **`.venv`** local.
+Este repositorio automatiza un entorno **Arch Linux** (Wayland con **Niri**, **foot**, **waybar**, **rofi**, **mako**, portales bajo `packages/niri/`) como host y **Fedora 44 en Distrobox** como contenedor de desarrollo. La orquestación es **declarativa con Ansible**; **Make** mantiene los mismos comandos de siempre e instala Ansible en un **`.venv`** local.
 
 ## Herramientas
 
 | Capa | Rol |
 |------|-----|
-| **Ansible** | Define el estado deseado (paquetes, Flatpaks, Distrobox, `dnf`, `stown`, etc.). |
+| **Ansible** | Define el estado deseado (paquetes `pacman`, Flatpaks, Distrobox, `dnf`, `stown`, etc.). |
 | **Make** | Atajos: `make setup`, `make home`, `make vm`, targets auxiliares y dry-run. |
 | **Python venv** | `.venv/` con `ansible-core` y dependencias sin ensuciar el sistema. |
 | **Ansible Galaxy** | Colección `community.general` (Flatpak, etc.). |
@@ -23,12 +23,13 @@ Este repositorio automatiza un entorno **Fedora Sericea** (Silverblue Wayland; c
 ├── requirements.yml          # Colecciones Galaxy
 ├── requirements-ansible.txt  # ansible-core en el venv
 ├── Makefile                  # Invoca ansible-playbook con tags
-├── group_vars/all.yml        # Listas (Flatpaks, paquetes Fedora, fuentes, …)
+├── group_vars/all.yml        # Listas (pacman, Flatpaks, paquetes Fedora, fuentes, …)
 ├── tasks/
 │   ├── profile-home.yml      # Orden del perfil host
 │   └── profile-vm.yml        # Orden del perfil contenedor
 ├── roles/
-│   ├── common/               # Heurísticas Distrobox/ostree, dirs, PATH
+│   ├── common/               # Heurísticas Distrobox, dirs, PATH
+│   ├── home_packages/        # pacman (Arch en host)
 │   ├── fonts/                # Nerd Fonts en ~/.local/share/fonts
 │   ├── home/                 # Rol Ansible: Distrobox + Flatpaks (host)
 │   ├── python_user_tools/    # pip --user + stown
@@ -41,8 +42,8 @@ Este repositorio automatiza un entorno **Fedora Sericea** (Silverblue Wayland; c
 │   ├── vm_shell_plugins/
 │   └── vm_podman_compose/
 ├── packages/                 # Árbol tipo Stow: un subdirectorio = un paquete stown
-│   # Host: dunst, foot, git, niri, rofi, shell, waybar → `stown_packages_host`
-│   # VM (por defecto): nvim → `stown_packages_vm`; opcional: *-container (shell, git, starship)
+│   # Host: foot, git, mako, niri, nvim, rofi, shell, starship, waybar -> `stown_packages_host`
+│   # VM (por defecto): nvim, shell-container, starship -> `stown_packages_vm`
 │   └── …                     # ver `ls packages/` y `group_vars/all.yml`
 ├── doc/                      # Documentación que no va a ~/.config (p. ej. doc/niri/*.md)
 ├── bootstrap-dotfiles.sh     # Clonar / actualizar repo y `make setup && make <perfil>`
@@ -52,14 +53,14 @@ Este repositorio automatiza un entorno **Fedora Sericea** (Silverblue Wayland; c
 ## Privilegios: usuario vs root
 
 - **Sin `become`**: la mayoría de tareas (fuentes user, Distrobox en `~/.local`, Flatpaks `--user`, `pip --user`, `stown`, clones git de plugins).
-- **Con `become` (sudo)**: donde el script original lo requería — p. ej. eliminar remoto Flatpak del sistema (opcional), `dnf`/`rpm` en el contenedor, llave/repo RPM de VS Code Insiders, `dnf makecache`, puente `podman` dentro del contenedor (`sudo ln` vía `distrobox enter`).
+- **Con `become` (sudo)**: paquetes `pacman` del host, eliminar remoto Flatpak del sistema (opcional), `dnf`/`rpm` en el contenedor, llave/repo RPM de VS Code Insiders, `dnf makecache`, puente `podman` dentro del contenedor (`sudo ln` vía `distrobox enter`).
 
 ## Perfiles
 
 Los nombres **`home`** y **`vm`** son **perfiles de Ansible** (`dotfiles_profile`), no carpetas de dotfiles. Los archivos a enlazar viven todos bajo `packages/`.
 
-- **`home`**: Silverblue; no `dnf` en el host. Orden: common → fonts → Distrobox + Flatpaks → pip/stown → dotfiles (paquetes en `stown_packages_host`).
-- **`vm`**: Dentro de `distrobox enter fedora`. Orden: common → paquetes → Starship → pip/stown → fuentes → VS Code Insiders → lenguajes → shell plugins → dotfiles (por defecto solo `nvim` en `stown_packages_vm`) → podman-compose.
+- **`home`**: Arch Linux. Orden: common -> pacman -> fonts -> Distrobox + Flatpaks -> pip/stown -> lenguajes -> Starship -> shell plugins -> dotfiles (paquetes en `stown_packages_host`).
+- **`vm`**: Dentro de `distrobox enter fedora`. Orden: common -> paquetes -> Starship -> pip/stown -> fuentes -> VS Code Insiders -> lenguajes -> shell plugins -> dotfiles (`stown_packages_vm`) -> podman-compose.
 
 ## Tags y Make
 
@@ -74,4 +75,4 @@ Los targets auxiliares (`make fonts-home`, `make fonts-vm`, etc.) pasan **una so
 
 ## Extensión futura
 
-La base está en **un solo OS objetivo** (Fedora Silverblue + Distrobox). Para Arch, openSUSE o macOS se pueden añadir plays/roles condicionados por `ansible_facts` sin cambiar el árbol `packages/` ni el uso de **stown** (solo las listas `stown_packages_*` y los roles que instalen software).
+La base está en **un host Arch Linux** más **Fedora en Distrobox**. Para otros hosts se pueden añadir plays/roles condicionados por `ansible_facts` sin cambiar el árbol `packages/` ni el uso de **stown** (solo las listas `stown_packages_*` y los roles que instalen software).

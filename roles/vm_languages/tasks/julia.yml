@@ -11,6 +11,6 @@
     set -euo pipefail
     curl -fsSL https://install.julialang.org | sh -s -- --yes --default-channel release
   args:
-    creates: "{{ ansible_env.HOME }}/.juliaup/bin/julia"
+    creates: "{{ ansible_facts.env.HOME }}/.juliaup/bin/julia"
   when: julia_which.rc != 0
   changed_when: true

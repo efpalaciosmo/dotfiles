@@ -11,10 +11,10 @@
         state: directory
         mode: '0755'
       loop:
-        - "{{ ansible_env.HOME }}/.cache/dotfiles"
-        - "{{ ansible_env.HOME }}/.local/bin"
-        - "{{ ansible_env.HOME }}/.local/lib"
-        - "{{ ansible_env.HOME }}/.local/opt"
+        - "{{ ansible_facts.env.HOME }}/.cache/dotfiles"
+        - "{{ ansible_facts.env.HOME }}/.local/bin"
+        - "{{ ansible_facts.env.HOME }}/.local/lib"
+        - "{{ ansible_facts.env.HOME }}/.local/opt"
 
     - name: Include Go (gvm)
       ansible.builtin.include_tasks: go.yml

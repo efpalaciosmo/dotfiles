@@ -1,7 +1,7 @@
 ---
 - name: Check fnm binary
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.local/share/fnm/fnm"
+    path: "{{ ansible_facts.env.HOME }}/.local/share/fnm/fnm"
   register: fnm_bin
 
 - name: Install fnm (official installer, skip shell hooks)
@@ -9,6 +9,6 @@
     set -euo pipefail
     curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
   args:
-    creates: "{{ ansible_env.HOME }}/.local/share/fnm/fnm"
+    creates: "{{ ansible_facts.env.HOME }}/.local/share/fnm/fnm"
   when: not fnm_bin.stat.exists | default(false)
   changed_when: true

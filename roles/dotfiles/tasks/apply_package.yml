@@ -20,7 +20,7 @@
 
 - name: Prepare backup root
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}"
+    path: "{{ ansible_facts.env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}"
     state: directory
     mode: '0755'
 
@@ -32,9 +32,15 @@
 
 - name: Run stown for package
   ansible.builtin.command:
-    cmd: stown --force "{{ ansible_env.HOME }}" "{{ stown_pkg_dir }}"
+    argv:
+      - stown
+      - --force
+      - --ignore
+      - "{{ dotfiles_ignore_regex }}"
+      - "{{ ansible_facts.env.HOME }}"
+      - "{{ stown_pkg_dir }}"
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH | default('') }}"
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
   register: _stown_out
   changed_when: _stown_out.rc == 0
   failed_when: _stown_out.rc != 0

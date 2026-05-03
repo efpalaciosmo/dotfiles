@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -u
+
+json_escape() {
+    local s=${1//\\/\\\\}
+    s=${s//\"/\\\"}
+    s=${s//$'\n'/\\n}
+    s=${s//$'\t'/\\t}
+    printf '%s' "$s"
+}
+
+has_controller() {
+    command -v bluetoothctl >/dev/null 2>&1 || return 1
+    if command -v busctl >/dev/null 2>&1; then
+        busctl --system tree org.bluez >/dev/null 2>&1 || return 1
+    fi
+    bluetoothctl show >/dev/null 2>&1
+}
+
+if [[ "${1:-}" == "--available" ]]; then
+    has_controller
+    exit $?
+fi
+
+if ! has_controller; then
+    if command -v bluetoothctl >/dev/null 2>&1; then
+        tooltip="Bluetooth unavailable\nBlueZ may be stopped, or no adapter was found"
+    else
+        tooltip="Bluetooth unavailable\nbluetoothctl is not installed"
+    fi
+    printf '{"text":"%s","tooltip":"%s","class":"unavailable"}\n' \
+        "$(json_escape "")" \
+        "$(json_escape "$tooltip")"
+    exit 0
+fi
+
+controller=$(bluetoothctl show 2>/dev/null || true)
+powered=$(awk -F ': ' '/Powered:/ {print $2; exit}' <<< "$controller")
+alias=$(awk -F ': ' '/Alias:/ {print $2; exit}' <<< "$controller")
+
+if [[ "$powered" != "yes" ]]; then
+    tooltip="Bluetooth: off"
+    [[ -n "$alias" ]] && tooltip+="\nController: $alias"
+    printf '{"text":"%s","tooltip":"%s","class":"off"}\n' \
+        "$(json_escape "")" \
+        "$(json_escape "$tooltip")"
+    exit 0
+fi
+
+connected=$(bluetoothctl devices Connected 2>/dev/null | sed 's/^Device [^[:space:]]\+ //')
+count=$(sed '/^[[:space:]]*$/d' <<< "$connected" | wc -l)
+
+if (( count > 0 )); then
+    text=" ${count}"
+    tooltip="Bluetooth: ${count} connected"
+    [[ -n "$alias" ]] && tooltip+="\nController: $alias"
+    tooltip+="\n${connected}"
+    class="connected"
+else
+    text=""
+    tooltip="Bluetooth: on"
+    [[ -n "$alias" ]] && tooltip+="\nController: $alias"
+    class="on"
+fi
+
+printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \
+    "$(json_escape "$text")" \
+    "$(json_escape "$tooltip")" \
+    "$class"

@@ -1,4 +1,4 @@
-# ~/.profile - host (Fedora Silverblue / Atomic)
+# ~/.profile - host (Arch Linux)
 # Loaded by login shells. Keep it POSIX-compatible.
 
 # Local user binaries (Distrobox, Starship, fonts tools, podman-compose, etc.)
@@ -8,6 +8,31 @@ if [ -d "$HOME/.local/bin" ]; then
         *) PATH="$HOME/.local/bin:$PATH" ;;
     esac
 fi
+
+# User Flatpak app commands exported by `flatpak --user`.
+if [ -d "$HOME/.local/share/flatpak/exports/bin" ]; then
+    case ":$PATH:" in
+        *":$HOME/.local/share/flatpak/exports/bin:"*) ;;
+        *) PATH="$HOME/.local/share/flatpak/exports/bin:$PATH" ;;
+    esac
+fi
+
+# fnm (Fast Node Manager) and pnpm live in user-local data dirs.
+if [ -d "$HOME/.local/share/fnm" ]; then
+    case ":$PATH:" in
+        *":$HOME/.local/share/fnm:"*) ;;
+        *) PATH="$HOME/.local/share/fnm:$PATH" ;;
+    esac
+fi
+
+PNPM_HOME="$HOME/.local/share/pnpm"
+if [ -d "$PNPM_HOME" ]; then
+    case ":$PATH:" in
+        *":$PNPM_HOME:"*) ;;
+        *) PATH="$PNPM_HOME:$PATH" ;;
+    esac
+fi
+export PNPM_HOME
 
 # User flatpak data dir (so launchers and `flatpak run` work consistently).
 if [ -d "$HOME/.local/share/flatpak/exports/share" ]; then

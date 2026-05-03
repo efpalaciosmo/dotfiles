@@ -1,5 +1,5 @@
 ---
-- name: Host prerequisites (Silverblue host)
+- name: Host prerequisites (Arch host)
   tags: [home, distrobox, flatpaks]
   block:
     - name: Verify required host commands exist
@@ -28,6 +28,7 @@
         that:
           - curl_wget.results[0].rc == 0 or curl_wget.results[1].rc == 0
         fail_msg: "Need curl or wget on the host."
+        quiet: true
 
 - name: Distrobox install, container, and podman bridge
   tags: [home, distrobox]

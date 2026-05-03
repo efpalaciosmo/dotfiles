@@ -7,12 +7,17 @@ ANSIBLE_GALAXY := $(VENV)/bin/ansible-galaxy
 INV := $(CURDIR)/inventory.ini
 # Pass DRY_RUN=1 with --check for dry-run (see README).
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
+# Home pacman tasks use sudo. Flatpak only needs sudo when a system Flathub
+# remote exists and should be removed.
+HOME_BECOME := --ask-become-pass
+FLATPAK_BECOME = $(shell flatpak remotes --system 2>/dev/null | awk '$$1 == "flathub" { print "--ask-become-pass"; exit }')
 
 .PHONY: help setup doctor check verify home vm \
-        fonts-home fonts-vm flatpaks distrobox \
+        packages-home fonts-home fonts-vm flatpaks distrobox \
         stown-home stown-vm \
         dry-run-home dry-run-vm \
         python-user-tools vscode-insiders podman-compose packages-vm starship-vm \
+        starship-home language-home languages-home shell-plugins-home \
         languages-vm shell-plugins-vm
 
 help: ## List available targets
@@ -47,8 +52,8 @@ verify: check
 
 # ---- Main profiles ---------------------------------------------------
 
-home: setup ## Install/configure the Fedora Silverblue host (home profile)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags home $(CHECK)
+home: setup ## Install/configure the Arch Linux host (home profile)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags home $(HOME_BECOME) $(CHECK)
 
 vm: setup ## Install/configure the Fedora Distrobox container (vm profile)
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags vm $(CHECK)
@@ -69,8 +74,11 @@ dry-run-vm: ## Like 'vm' in Ansible check mode
 fonts-home: setup ## Install Nerd Fonts on the host (~/.local/share/fonts)
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags fonts-home
 
+packages-home: setup ## Install Arch packages with pacman on the host
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags packages-home $(HOME_BECOME)
+
 flatpaks: setup ## Configure user Flathub and install Flatpak apps
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags flatpaks
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags flatpaks $(FLATPAK_BECOME)
 
 distrobox: setup ## Install local distrobox and create the 'fedora' container
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags distrobox
@@ -87,6 +95,17 @@ python-user-tools: setup ## pip --user + stown (profile home vs vm chosen automa
 
 stown-home: setup ## Apply home-profile dotfiles with stown
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags stown-home
+
+language-home: languages-home
+
+languages-home: setup ## Install fnm/uv/pnpm into ~/.local on the host
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags languages-home
+
+starship-home: setup ## Install starship (prompt) into ~/.local/bin on the host
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags starship-home
+
+shell-plugins-home: setup ## Install oh-my-zsh + plugins on the host
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags shell-plugins-home
 
 # ---- Auxiliary targets (vm) ------------------------------------------
 

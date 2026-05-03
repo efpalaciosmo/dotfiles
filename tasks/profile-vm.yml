@@ -19,6 +19,7 @@
         that:
           - ansible_facts.get('distribution', '') == 'Fedora'
         fail_msg: "Expected Fedora in the container (ansible_distribution != Fedora)."
+        quiet: true
 
 - name: Fedora packages (dnf)
   ansible.builtin.import_role:

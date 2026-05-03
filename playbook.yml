@@ -14,6 +14,7 @@
           - dotfiles_profile is defined
           - dotfiles_profile in ['home', 'vm']
         fail_msg: "Set -e dotfiles_profile=home or dotfiles_profile=vm"
+        quiet: true
       tags: [always]
 
     - name: Set backup stamp for dotfile conflicts

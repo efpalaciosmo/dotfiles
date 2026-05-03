@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir=${BASH_SOURCE[0]%/*}
+# shellcheck source=common
+. "$script_dir/common"
+
+confirm() {
+    local prompt=$1 confirm_label=$2 choice
+    choice=$(menu "$prompt" "Cancel" "$confirm_label" || true)
+    [[ "$choice" == "$confirm_label" ]]
+}
+
+run_systemctl() {
+    local action=$1
+
+    if systemctl -i "$action"; then
+        return 0
+    fi
+
+    notify_user "Power menu" "Could not run: systemctl $action"
+    return 1
+}
+
+turn_displays_off() {
+    if command -v niri >/dev/null 2>&1 && niri msg action power-off-monitors; then
+        return 0
+    fi
+
+    notify_user "Power menu" "Could not put displays to sleep"
+    return 1
+}
+
+lock_session() {
+    if command -v loginctl >/dev/null 2>&1; then
+        loginctl lock-session || notify_user "Power menu" "Could not lock the session"
+    fi
+}
+
+logout_session() {
+    if command -v niri >/dev/null 2>&1; then
+        niri msg action quit
+    elif [[ -n "${XDG_SESSION_ID:-}" ]] && command -v loginctl >/dev/null 2>&1; then
+        loginctl terminate-session "$XDG_SESSION_ID"
+    fi
+}
+
+choice=$(menu "Power" \
+    "  Power off" \
+    "  Reboot" \
+    "⏾  Suspend" \
+    "  Lock" \
+    "  Log out" \
+    "󰍹  Display sleep" || true)
+
+case "$choice" in
+    *"Power off")
+        confirm "Power off this computer?" "Power off" && run_systemctl poweroff
+        ;;
+    *"Reboot")
+        confirm "Reboot this computer?" "Reboot" && run_systemctl reboot
+        ;;
+    *"Suspend")
+        confirm "Suspend this computer?" "Suspend" && run_systemctl suspend
+        ;;
+    *"Lock")
+        lock_session
+        ;;
+    *"Log out")
+        confirm "Log out of this session?" "Log out" && logout_session
+        ;;
+    *"Display sleep")
+        turn_displays_off
+        ;;
+esac

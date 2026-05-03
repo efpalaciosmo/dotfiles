@@ -11,8 +11,8 @@
     cmd: flatpak remote-delete --system flathub
   become: true
   when: "'flathub' in fp_remotes_system.stdout"
-  failed_when: false
-  changed_when: true
+  register: fp_remove_system_flathub
+  changed_when: fp_remove_system_flathub.rc == 0
 
 - name: Ensure user flathub remote
   community.general.flatpak_remote:

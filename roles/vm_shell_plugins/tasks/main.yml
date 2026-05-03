@@ -1,6 +1,6 @@
 ---
-- name: Shell plugins (vm)
-  tags: [vm, shell-plugins-vm]
+- name: Shell plugins
+  tags: [vm, home, shell-plugins-vm, shell-plugins-home]
   block:
     - name: Require zsh
       ansible.builtin.shell:

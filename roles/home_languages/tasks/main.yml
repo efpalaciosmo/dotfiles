@@ -1,0 +1,28 @@
+---
+# User-local language tooling on the host.
+# Keep this intentionally smaller than the container language stack.
+
+- name: Languages (home)
+  tags: [home, languages-home, language-home]
+  block:
+    - name: Language toolchain cache directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ ansible_facts.env.HOME }}/.cache/dotfiles"
+        - "{{ ansible_facts.env.HOME }}/.local/bin"
+        - "{{ ansible_facts.env.HOME }}/.local/share"
+
+    - name: Include fnm
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/roles/vm_languages/tasks/fnm.yml"
+      when: not (skip_fnm | default(false) | bool)
+
+    - name: Include uv
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/roles/vm_languages/tasks/uv.yml"
+      when: not (skip_uv | default(false) | bool)
+
+    - name: Include pnpm
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/roles/vm_languages/tasks/pnpm.yml"
+      when: not (skip_pnpm | default(false) | bool)

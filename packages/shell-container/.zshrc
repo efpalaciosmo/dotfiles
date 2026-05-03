@@ -30,6 +30,12 @@ if [ -f "$ZSH/oh-my-zsh.sh" ]; then
   source "$ZSH/oh-my-zsh.sh"
 fi
 
+# Ensure zsh completions exist even when oh-my-zsh is missing or skips compinit.
+if (( ! $+_comps )); then
+    autoload -Uz compinit
+    compinit -i -d "${ZSH_COMPDUMP:-$HOME/.zcompdump}"
+fi
+
 setopt MENU_COMPLETE
 setopt AUTO_LIST
 setopt COMPLETE_IN_WORD

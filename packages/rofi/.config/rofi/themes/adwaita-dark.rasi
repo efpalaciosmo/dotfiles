@@ -1,5 +1,5 @@
 * {
-    font: "JetBrainsMono Medium 12";
+    font: "Inter Medium 12";
 
     bg0: #1d1d20;
     bg1: #242428;
@@ -54,7 +54,7 @@ inputbar {
     border-color:     var(bg2);
     padding:          12px 16px;
     spacing:          12px;
-    children:         [ "icon-search", "entry" ];
+    children:         [ "icon-search", "prompt", "entry" ];
 }
 
 prompt {
@@ -70,7 +70,7 @@ icon-search {
 
 entry {
     text-color:        var(fg0);
-    placeholder:       "Buscar aplicaciones";
+    placeholder:       "Filtrar";
     placeholder-color: var(fg2);
 }
 

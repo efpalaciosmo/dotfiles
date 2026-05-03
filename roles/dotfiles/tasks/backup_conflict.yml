@@ -6,7 +6,7 @@
 
 - name: Target path under HOME
   ansible.builtin.set_fact:
-    _home_target: "{{ ansible_env.HOME }}/{{ _rel_under_pkg }}"
+    _home_target: "{{ ansible_facts.env.HOME }}/{{ _rel_under_pkg }}"
 
 - name: Stat home target
   ansible.builtin.stat:
@@ -16,14 +16,20 @@
 
 - name: Canonical source path
   ansible.builtin.command:
-    cmd: readlink -f "{{ _leaf }}"
+    argv:
+      - readlink
+      - -f
+      - "{{ _leaf }}"
   register: _src_canon
   changed_when: false
   failed_when: false
 
 - name: Canonical destination path
   ansible.builtin.command:
-    cmd: readlink -f "{{ _home_target }}"
+    argv:
+      - readlink
+      - -f
+      - "{{ _home_target }}"
   register: _dst_canon
   changed_when: false
   failed_when: false
@@ -34,26 +40,24 @@
     _need_backup: >-
       {{
         (
-          (_ht.stat.islnk | default(false))
-          and (
-            (_dst_canon.stdout | default('')) != (_src_canon.stdout | default(''))
-          )
-        )
-        or (
           (_ht.stat.exists | default(false))
-          and not (_ht.stat.islnk | default(false))
+          or (_ht.stat.islnk | default(false))
         )
+        and ((_dst_canon.stdout | default('')) != (_src_canon.stdout | default('')))
       }}
 
 - name: Ensure backup parent directory
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}/{{ _rel_under_pkg | dirname }}"
+    path: "{{ ansible_facts.env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}/{{ _rel_under_pkg | dirname }}"
     state: directory
     mode: '0755'
   when: _need_backup | bool
 
 - name: Move conflicting path to backup tree
   ansible.builtin.command:
-    cmd: mv "{{ _home_target }}" "{{ ansible_env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}/{{ _rel_under_pkg }}"
+    argv:
+      - mv
+      - "{{ _home_target }}"
+      - "{{ ansible_facts.env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}/{{ _rel_under_pkg }}"
   when: _need_backup | bool
   changed_when: true

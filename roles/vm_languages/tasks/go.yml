@@ -12,15 +12,16 @@
     that:
       - git_cmd.rc == 0
     fail_msg: "git is required by gvm; run `make packages-vm` (or ensure vm_packages succeeds) before `make vm`."
+    quiet: true
 
 - name: Install gvm
   ansible.builtin.shell: |
     set -euo pipefail
     curl -fsSL https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer | bash
   args:
-    creates: "{{ ansible_env.HOME }}/.gvm/scripts/gvm"
+    creates: "{{ ansible_facts.env.HOME }}/.gvm/scripts/gvm"
   environment:
-    PATH: "/usr/bin:/bin:{{ ansible_env.PATH | default('') }}"
+    PATH: "/usr/bin:/bin:{{ ansible_facts.env.PATH | default('') }}"
   changed_when: true
 
 # Same as languages.sh: `curl ... | head -n1 | sed 's/^go//'`
@@ -49,6 +50,7 @@
       - go_dotfiles_version | length > 0
       - go_dotfiles_version is match('^[0-9][0-9A-Za-z.+~-]*$')
     fail_msg: "Could not parse Go version from go.dev/VERSION (first line)."
+    quiet: true
 
 - name: Set gvm package name
   ansible.builtin.set_fact:
@@ -56,12 +58,12 @@
 
 - name: Stat gvm Go tree
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.gvm/gos/{{ go_dotfiles_pkg }}"
+    path: "{{ ansible_facts.env.HOME }}/.gvm/gos/{{ go_dotfiles_pkg }}"
   register: go_gos_stat
 
 - name: Stat Go dotfiles marker
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.gvm/.dotfiles-installed-{{ go_dotfiles_pkg }}"
+    path: "{{ ansible_facts.env.HOME }}/.gvm/.dotfiles-installed-{{ go_dotfiles_pkg }}"
   register: go_marker_stat
 
 - name: Set fact — install Go when marker or tree missing
@@ -88,18 +90,19 @@
 
 - name: Stat gvm Go tree (after install)
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.gvm/gos/{{ go_dotfiles_pkg }}"
+    path: "{{ ansible_facts.env.HOME }}/.gvm/gos/{{ go_dotfiles_pkg }}"
   register: go_gos_final
 
 - name: Assert gvm Go tree exists
   ansible.builtin.assert:
     that:
       - go_gos_final.stat.isdir | default(false)
-    fail_msg: "gvm did not produce {{ ansible_env.HOME }}/.gvm/gos/{{ go_dotfiles_pkg }}"
+    fail_msg: "gvm did not produce {{ ansible_facts.env.HOME }}/.gvm/gos/{{ go_dotfiles_pkg }}"
+    quiet: true
 
 - name: Symlink ~/.local/go to gvm tree
   ansible.builtin.file:
-    src: "{{ ansible_env.HOME }}/.gvm/gos/{{ go_dotfiles_pkg }}"
-    dest: "{{ ansible_env.HOME }}/.local/go"
+    src: "{{ ansible_facts.env.HOME }}/.gvm/gos/{{ go_dotfiles_pkg }}"
+    dest: "{{ ansible_facts.env.HOME }}/.local/go"
     state: link
     force: true

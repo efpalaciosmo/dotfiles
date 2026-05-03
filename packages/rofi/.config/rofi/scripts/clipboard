@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir=${BASH_SOURCE[0]%/*}
+# shellcheck source=common
+. "$script_dir/common"
+
+missing_commands cliphist wl-copy || exit 1
+clear_label="󰆴  Clear history"
+
+selector() {
+    if command -v rofi >/dev/null 2>&1; then
+        rofi -dmenu -i -p "Clipboard" -matching fuzzy \
+            -theme-str 'window { width: 760px; } listview { lines: 12; }'
+    elif command -v fuzzel >/dev/null 2>&1; then
+        fuzzel --dmenu --prompt "Clipboard"
+    elif command -v wofi >/dev/null 2>&1; then
+        wofi --dmenu --prompt "Clipboard"
+    else
+        return 1
+    fi
+}
+
+if [[ "${1:-}" == "--clear" ]]; then
+    cliphist wipe
+    notify_user "Clipboard history cleared"
+    exit 0
+fi
+
+choice=$({ printf '%s\n' "$clear_label"; cliphist list; } | selector || true)
+[[ -n "$choice" ]] || exit 0
+
+if [[ "$choice" == "$clear_label" ]]; then
+    confirm_choice=$(menu "Clear clipboard history?" "No" "Yes" || true)
+    [[ "$confirm_choice" == "Yes" ]] || exit 0
+    cliphist wipe
+    notify_user "Clipboard history cleared"
+else
+    printf '%s' "$choice" | cliphist decode | wl-copy
+fi

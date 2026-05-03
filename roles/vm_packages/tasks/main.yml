@@ -27,6 +27,7 @@
         that:
           - vm_curl_wget.results | selectattr('rc', 'equalto', 0) | list | length > 0
         fail_msg: "Need curl or wget inside the container."
+        quiet: true
 
     - name: Refresh dnf cache
       ansible.builtin.command:

@@ -6,14 +6,16 @@ dotfiles_repo_root: "{{ playbook_dir }}"
 # (e.g. packages/nvim/.config/nvim/init.lua -> ~/.config/nvim/init.lua).
 dotfiles_packages_root: "{{ playbook_dir }}/packages"
 
-# Paquetes a enlazar con `stown` en el host (Sericea / Silverblue).
+# Paquetes a enlazar con `stown` en el host (Arch Linux).
 stown_packages_host:
-  - dunst
   - foot
   - git
+  - mako
   - niri
+  - nvim
   - rofi
   - shell
+  - starship
   - waybar
 
 # Paquetes a enlazar en el contenedor Distrobox.
@@ -22,14 +24,14 @@ stown_packages_host:
 stown_packages_vm:
   - nvim
   - shell-container
-  - starship-container
+  - starship
 
 # Distrobox (host)
-distrobox_prefix: "{{ ansible_env.HOME }}/.local"
+distrobox_prefix: "{{ ansible_facts.env.HOME }}/.local"
 distrobox_install_url: "https://raw.githubusercontent.com/89luca89/distrobox/main/install"
 distrobox_container_name: fedora
 distrobox_image: quay.io/fedora/fedora:44-x86_64
-distrobox_container_home: "{{ ansible_env.HOME }}/Projects/fedora"
+distrobox_container_home: "{{ ansible_facts.env.HOME }}/Projects/fedora"
 
 # Flathub / Flatpaks (host, --user)
 flathub_repo_url: "https://dl.flathub.org/repo/flathub.flatpakrepo"
@@ -61,6 +63,63 @@ flatpak_apps:
   - org.virt_manager.virt-manager
   - org.virt_manager.virt_manager.Extension.Qemu
 
+# Arch Linux packages (home, pacman).
+#
+# Keep these as package names instead of pkg=version pins. Arch is rolling, and
+# exact version pins fail as soon as the sync database advances past a snapshot.
+# This list includes the Niri session baseline plus helper CLIs used by
+# Waybar modules, keybinds, and rofi scripts.
+home_pacman_packages:
+  - adw-gtk-theme
+  - base-devel
+  - bash-completion
+  - bluez
+  - bluez-utils
+  - brightnessctl
+  - btop
+  - cliphist
+  - cmake
+  - curl
+  - dconf
+  - duf
+  - fastfetch
+  - flatpak
+  - foot
+  - gnome-keyring
+  - grim
+  - gsettings-desktop-schemas
+  - git
+  - libnotify
+  - libpulse
+  - make
+  - mako
+  - ncdu
+  - neovim
+  - networkmanager
+  - niri
+  - nm-connection-editor
+  - nvtop
+  - pavucontrol
+  - playerctl
+  - polkit-gnome
+  - podman
+  - python
+  - python-pip
+  - rofi
+  - slurp
+  - swaybg
+  - swappy
+  - unzip
+  - waybar
+  - wget
+  - wireplumber
+  - wl-clipboard
+  - woff2-font-awesome
+  - xdg-desktop-portal
+  - xdg-desktop-portal-gnome
+  - xdg-desktop-portal-gtk
+  - zsh
+
 # Nerd Fonts
 nerd_fonts_version: v3.4.0
 nerd_fonts_base_url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}"
@@ -69,8 +128,12 @@ nerd_fonts_list:
     subdir: IBMPlexMono
   - archive: JetBrainsMono.tar.xz
     subdir: JetBrainsMono
-nerd_fonts_root: "{{ ansible_env.HOME }}/.local/share/fonts/nerd-fonts"
-nerd_fonts_cache_dir: "{{ ansible_env.XDG_CACHE_HOME | default(ansible_env.HOME + '/.cache') }}/dotfiles/nerd-fonts/{{ nerd_fonts_version }}"
+  - archive: Inter-4.1.zip
+    subdir: Inter
+    version: v4.1
+    url: https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip
+nerd_fonts_root: "{{ ansible_facts.env.HOME }}/.local/share/fonts/nerd-fonts"
+nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/nerd-fonts/{{ nerd_fonts_version }}"
 
 # pip / stown
 get_pip_url: "https://bootstrap.pypa.io/get-pip.py"
@@ -94,11 +157,11 @@ pip_break_allowed: >-
 vscode_repo_file: /etc/yum.repos.d/vscode.repo
 microsoft_key_url: "https://packages.microsoft.com/keys/microsoft.asc"
 
-# Starship (vm)
+# Starship
 starship_install_url: "https://starship.rs/install.sh"
-starship_bin_dir: "{{ ansible_env.HOME }}/.local/bin"
+starship_bin_dir: "{{ ansible_facts.env.HOME }}/.local/bin"
 
-# Languages (vm) — SKIP_* equivalent
+# Languages — SKIP_* equivalent
 skip_go: "{{ lookup('env', 'SKIP_GO', default='0') == '1' }}"
 skip_fnm: "{{ lookup('env', 'SKIP_FNM', default='0') == '1' }}"
 skip_julia: "{{ lookup('env', 'SKIP_JULIA', default='0') == '1' }}"
@@ -110,9 +173,9 @@ skip_pnpm: "{{ lookup('env', 'SKIP_PNPM', default='0') == '1' }}"
 jdk_feature_version: "{{ lookup('env', 'JDK_FEATURE_VERSION', default='21') }}"
 jdk_distribution: "{{ lookup('env', 'JDK_DISTRIBUTION', default='tem') }}"
 
-# Zsh / oh-my-zsh (vm)
-zsh_dir: "{{ ansible_env.ZSH | default(ansible_env.HOME + '/.oh-my-zsh') }}"
-zsh_custom: "{{ ansible_env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
+# Zsh / oh-my-zsh
+zsh_dir: "{{ ansible_facts.env.ZSH | default(ansible_facts.env.HOME + '/.oh-my-zsh') }}"
+zsh_custom: "{{ ansible_facts.env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
 
 # Fedora packages (vm) — same lists as scripts/vm/packages-fedora.sh
 vm_pkg_shell:

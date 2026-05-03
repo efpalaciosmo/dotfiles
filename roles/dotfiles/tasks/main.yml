@@ -4,6 +4,7 @@
     that:
       - stown_profile is defined
       - stown_profile in ['home', 'vm']
+    quiet: true
 
 - name: Select stown package names for this profile
   ansible.builtin.set_fact:
@@ -23,6 +24,7 @@
     fail_msg: >-
       Missing stown package '{{ item.item }}' — expected directory
       {{ dotfiles_packages_root }}/{{ item.item }}
+    quiet: true
   loop: "{{ stown_pkg_stat.results }}"
   loop_control:
     label: "{{ item.item }}"

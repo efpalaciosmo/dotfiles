@@ -45,3 +45,4 @@
       pip install --user {{ pip_install_pkg }} failed. If this is a PEP 668 host,
       re-run with ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1 (or set
       allow_pip_break_system_packages: true in group_vars/all.yml).
+    quiet: true

@@ -4,12 +4,12 @@
   ansible.builtin.import_tasks: "{{ playbook_dir }}/tasks/detect_context.yml"
   tags: [always]
 
-- name: Warn if not ostree on home profile
+- name: Warn if home profile is not running on Arch
   ansible.builtin.debug:
-    msg: "Host does NOT look ostree/atomic; Silverblue assumptions may not apply."
+    msg: "Home profile now targets Arch Linux; detected {{ ansible_facts.distribution }}."
   when:
     - dotfiles_profile == 'home'
-    - not dotfiles_is_ostree_host
+    - ansible_facts.distribution != 'Archlinux'
   tags: [always]
 
 - name: Resolve python interpreter used for pip --user
@@ -31,70 +31,34 @@
     state: directory
     mode: '0755'
   loop:
-    - "{{ ansible_env.HOME }}/.local/bin"
-    - "{{ ansible_env.HOME }}/.local/lib"
-    - "{{ ansible_env.HOME }}/.local/opt"
-    - "{{ ansible_env.HOME }}/.cache/dotfiles"
+    - "{{ ansible_facts.env.HOME }}/.local/bin"
+    - "{{ ansible_facts.env.HOME }}/.local/lib"
+    - "{{ ansible_facts.env.HOME }}/.local/opt"
+    - "{{ ansible_facts.env.HOME }}/.cache/dotfiles"
   tags: [always]
 
 # --- PATH ----------------------------------------------------------------
-# `home`: ensure the line in ~/.profile (creating it) and append to existing
-#         ~/.bashrc / ~/.zshrc (do not create them — stown owns them).
-# `vm`:   only ensure ~/.profile, and only if it doesn't already mention
-#         ~/.local/bin in any form (lets installers like SDKMAN co-exist).
+# Ensure ~/.profile mentions ~/.local/bin. Shell-specific rc files source
+# ~/.profile, and may be stown-managed symlinks back into this repository.
 - name: Resolve PATH targets for this profile
   ansible.builtin.set_fact:
     _path_line: 'export PATH="$HOME/.local/bin:$PATH"'
-    _path_targets_create: >-
-      {{ [ansible_env.HOME ~ '/.profile'] if dotfiles_profile == 'home' else [] }}
-    _path_targets_existing: >-
-      {{ [ansible_env.HOME ~ '/.bashrc', ansible_env.HOME ~ '/.zshrc']
-         if dotfiles_profile == 'home' else [] }}
+    _profile_path: "{{ ansible_facts.env.HOME }}/.profile"
   tags: [always]
 
-- name: Ensure PATH line in profile-style files (created if missing)
-  ansible.builtin.lineinfile:
-    path: "{{ item }}"
-    line: "{{ _path_line }}"
-    create: true
-    mode: '0644'
-  loop: "{{ _path_targets_create }}"
-  tags: [always]
-
-- name: Stat existing rc files
-  ansible.builtin.stat:
-    path: "{{ item }}"
-  loop: "{{ _path_targets_existing }}"
-  register: _path_rc_stats
-  tags: [always]
-
-- name: Ensure PATH line in existing rc files (do not create)
-  ansible.builtin.lineinfile:
-    path: "{{ item.item }}"
-    line: "{{ _path_line }}"
-  loop: "{{ _path_rc_stats.results }}"
-  loop_control:
-    label: "{{ item.item }}"
-  when: item.stat.exists | default(false)
-  tags: [always]
-
-# vm: only touch ~/.profile if it does not already reference .local/bin in any form.
-- name: Check ~/.profile for .local/bin (vm)
+- name: Check ~/.profile for .local/bin
   ansible.builtin.command:
-    cmd: grep -q '\.local/bin' "{{ ansible_env.HOME }}/.profile"
-  register: _vm_profile_has_local_bin
+    cmd: grep -q '\.local/bin' "{{ _profile_path }}"
+  register: _profile_has_local_bin
   changed_when: false
   failed_when: false
-  when: dotfiles_profile == 'vm'
   tags: [always]
 
-- name: Ensure PATH line in ~/.profile (vm)
+- name: Ensure PATH line in ~/.profile
   ansible.builtin.lineinfile:
-    path: "{{ ansible_env.HOME }}/.profile"
+    path: "{{ _profile_path }}"
     line: "{{ _path_line }}"
     create: true
     mode: '0644'
-  when:
-    - dotfiles_profile == 'vm'
-    - _vm_profile_has_local_bin.rc | default(1) != 0
+  when: _profile_has_local_bin.rc | default(1) != 0
   tags: [always]

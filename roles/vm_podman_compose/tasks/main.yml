@@ -11,7 +11,7 @@
       ansible.builtin.command:
         cmd: bash -lc 'command -v podman-compose'
       environment:
-        PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH | default('') }}"
+        PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
       register: _podman_compose_verify
       changed_when: false
       failed_when: _podman_compose_verify.rc != 0

@@ -25,6 +25,6 @@
       {{
         (_ctx_containerenv.stat.exists | default(false))
         or (_ctx_run_host.stat.exists | default(false))
-        or (ansible_env.get('DISTROBOX_ENTER_PATH', '') | length > 0)
-        or (ansible_env.get('CONTAINER_ID', '') | length > 0)
+        or (ansible_facts.env.get('DISTROBOX_ENTER_PATH', '') | length > 0)
+        or (ansible_facts.env.get('CONTAINER_ID', '') | length > 0)
       }}

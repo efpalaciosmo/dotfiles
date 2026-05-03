@@ -6,13 +6,13 @@
   changed_when: false
   failed_when: false
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH | default('') }}"
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
 
 - name: Install uv (official installer)
   ansible.builtin.shell: |
     set -euo pipefail
     curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="$HOME/.local/bin" sh -s -- --quiet
   args:
-    creates: "{{ ansible_env.HOME }}/.local/bin/uv"
+    creates: "{{ ansible_facts.env.HOME }}/.local/bin/uv"
   when: uv_which.rc != 0
   changed_when: true

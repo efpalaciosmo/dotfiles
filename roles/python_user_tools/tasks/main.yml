@@ -9,7 +9,7 @@
 - name: Download get-pip.py
   ansible.builtin.get_url:
     url: "{{ get_pip_url }}"
-    dest: "{{ ansible_env.HOME }}/.cache/dotfiles/get-pip.py"
+    dest: "{{ ansible_facts.env.HOME }}/.cache/dotfiles/get-pip.py"
     mode: '0644'
   when: pip_check.rc != 0
 
@@ -17,7 +17,7 @@
   ansible.builtin.command:
     argv:
       - "{{ dotfiles_pip_python }}"
-      - "{{ ansible_env.HOME }}/.cache/dotfiles/get-pip.py"
+      - "{{ ansible_facts.env.HOME }}/.cache/dotfiles/get-pip.py"
       - --user
   register: pip_bootstrap
   when: pip_check.rc != 0
@@ -28,7 +28,7 @@
   ansible.builtin.command:
     argv:
       - "{{ dotfiles_pip_python }}"
-      - "{{ ansible_env.HOME }}/.cache/dotfiles/get-pip.py"
+      - "{{ ansible_facts.env.HOME }}/.cache/dotfiles/get-pip.py"
       - --user
       - --break-system-packages
   register: pip_bootstrap_break
@@ -49,6 +49,7 @@
       Bootstrapping pip failed (PEP 668 / externally-managed Python is common on Arch).
       Install pip for your distro (e.g. pacman -S python-pip), or re-run with
       ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1 or allow_pip_break_system_packages: true in group_vars.
+    quiet: true
   when: pip_check.rc != 0
 
 # Use `python -m pip` via command so we do not depend on Ansible's `pip` module
@@ -62,7 +63,7 @@
   ansible.builtin.command:
     cmd: bash -lc 'command -v stown'
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH | default('') }}"
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
   register: stown_verify
   changed_when: false
   failed_when: stown_verify.rc != 0

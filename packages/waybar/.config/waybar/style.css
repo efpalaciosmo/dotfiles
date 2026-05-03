@@ -1,27 +1,24 @@
-/* ═══════════════════════════════════════════════════════════════════
-   Waybar — Adwaita Dark
-   Paleta: niri layout.kdl + adwaita-utils.lua
-   ═══════════════════════════════════════════════════════════════════ */
+/* Waybar - compact Adwaita dark */
 
 @define-color adw_bg       #1d1d20;
 @define-color adw_bg_alt   #242428;
 @define-color adw_bg_hover #2e2e32;
 @define-color adw_popup    #36363a;
 @define-color adw_border   #2e2e32;
-@define-color adw_sep      #36363a;
+@define-color adw_sep      #3f3f45;
 
 @define-color adw_fg       #deddda;
+@define-color adw_strong   #ffffff;
 @define-color adw_muted    #9a9996;
 @define-color adw_dim      #5e5c64;
 
 @define-color adw_orange   #ff7800;
-@define-color adw_orange_s rgba(255,120,0,0.14);
 @define-color adw_red      #ed333b;
 @define-color adw_yellow   #f5c211;
 @define-color adw_green    #57e389;
 @define-color adw_blue     #62a0ea;
-
-/* ── Reset base ──────────────────────────────────────────────────── */
+@define-color adw_teal     #5bc8af;
+@define-color adw_purple   #c061cb;
 
 * {
     border:        none;
@@ -32,208 +29,296 @@
     min-height:    0;
     color:         @adw_fg;
     transition:    background 150ms ease,
-                   color      150ms ease,
-                   opacity    150ms ease;
+                   border-color 150ms ease,
+                   color 150ms ease,
+                   opacity 150ms ease;
 }
-
-/* ── Barra principal ─────────────────────────────────────────────── */
 
 window#waybar {
-    background:    @adw_bg;
+    background:    alpha(@adw_bg, 0.96);
     border-bottom: 1px solid @adw_border;
-    min-height:    32px;
+    min-height:    36px;
 }
-
-/* ── Tooltip ─────────────────────────────────────────────────────── */
 
 tooltip {
     background:    @adw_popup;
     border:        1px solid @adw_sep;
     border-radius: 10px;
-    padding:       6px 4px;
+    padding:       8px 6px;
 }
 
 tooltip label {
     color:   @adw_fg;
-    padding: 2px 8px;
+    padding: 3px 8px;
 }
-
-/* ── Workspaces ──────────────────────────────────────────────────── */
 
 #workspaces {
     margin:        5px 4px 5px 10px;
-    padding:       0 4px;
+    padding:       2px;
     background:    @adw_bg_alt;
     border:        1px solid @adw_border;
-    border-radius: 8px;
+    border-radius: 9px;
 }
 
 #workspaces button {
-    padding:       0 10px;
-    border-radius: 6px;
+    margin:        0 1px;
+    padding:       0 9px;
     min-height:    20px;
+    border-radius: 7px;
     color:         @adw_dim;
     background:    transparent;
 }
 
 #workspaces button.active {
-    color:         @adw_orange;
-    background:    @adw_orange_s;
+    color:      @adw_bg;
+    background: @adw_orange;
 }
 
-#workspaces button:hover {
-    color:         @adw_fg;
-    background:    alpha(@adw_fg, 0.07);
-}
-
+#workspaces button:hover,
 #workspaces button:focus {
-    background:    alpha(@adw_fg, 0.07);
+    color:      @adw_fg;
+    background: alpha(@adw_fg, 0.08);
 }
-
-/* ── Título de ventana ───────────────────────────────────────────── */
 
 #window {
-    padding-left: 14px;
+    padding-left: 12px;
     color:        @adw_muted;
     font-size:    11px;
     font-weight:  400;
 }
 
-/* ── Módulos del lado derecho — base ─────────────────────────────── */
+#custom-media {
+    margin:        5px 0;
+    padding:       0 14px;
+    min-width:     180px;
+    border:        1px solid alpha(@adw_blue, 0.24);
+    border-radius: 9px;
+    background:    alpha(@adw_blue, 0.08);
+    color:         @adw_fg;
+}
+
+#custom-media.playing {
+    border-color: alpha(@adw_blue, 0.42);
+    background:   alpha(@adw_blue, 0.13);
+}
+
+#custom-media.paused {
+    color:        @adw_muted;
+    border-color: alpha(@adw_yellow, 0.35);
+    background:   alpha(@adw_yellow, 0.10);
+}
 
 #tray,
 #privacy,
+#idle_inhibitor,
 #network,
 #bluetooth,
+#custom-bluetooth,
 #pulseaudio,
-#cpu,
+#custom-cpu,
 #memory,
+#custom-gpu,
 #disk,
 #temperature,
 #battery,
-#clock {
-    padding: 0 10px;
+#custom-battery,
+#clock,
+#custom-power {
+    margin:        5px 0;
+    padding:       0 10px;
+    border-radius: 8px;
 }
 
 #tray {
     padding: 0 8px;
 }
 
-/* Separadores visuales entre grupos lógicos */
-#cpu    { border-left: 1px solid @adw_sep; }
-#clock  { border-left: 1px solid @adw_sep; }
-
-/* ── Conectividad ────────────────────────────────────────────────── */
-
+#idle_inhibitor,
 #network,
-#bluetooth {
-    color: @adw_fg;
+#bluetooth,
+#custom-bluetooth,
+#pulseaudio,
+#custom-cpu,
+#memory,
+#custom-gpu,
+#disk,
+#custom-battery,
+#clock,
+#custom-power {
+    border:     1px solid transparent;
+    background: transparent;
 }
 
+#idle_inhibitor,
+#network,
+#bluetooth,
+#pulseaudio,
+#custom-cpu,
+#memory,
+#custom-gpu,
+#disk,
+#custom-battery {
+    color: @adw_muted;
+}
+
+#idle_inhibitor:hover,
 #network:hover,
-#bluetooth:hover {
-    color:      @adw_blue;
-    background: alpha(@adw_blue, 0.10);
+#bluetooth:hover,
+#custom-bluetooth:hover,
+#pulseaudio:hover,
+#custom-cpu:hover,
+#memory:hover,
+#custom-gpu:hover,
+#disk:hover,
+#custom-battery:hover {
+    color:        @adw_fg;
+    border-color: alpha(@adw_fg, 0.10);
+    background:   alpha(@adw_fg, 0.06);
 }
 
-/* ── Audio ───────────────────────────────────────────────────────── */
+#idle_inhibitor.activated {
+    color:        @adw_bg;
+    border-color: @adw_green;
+    background:   @adw_green;
+}
+
+#network.wifi {
+    color: @adw_blue;
+}
+
+#network.ethernet {
+    color: @adw_teal;
+}
+
+#network.disconnected {
+    color: @adw_dim;
+}
+
+#custom-bluetooth {
+    color: @adw_blue;
+}
+
+#custom-bluetooth.off,
+#custom-bluetooth.unavailable {
+    color: @adw_dim;
+}
+
+#custom-bluetooth.unavailable {
+    margin:  0;
+    padding: 0;
+    border:  none;
+}
+
+#custom-bluetooth.connected {
+    color: @adw_teal;
+}
 
 #pulseaudio {
     color: @adw_fg;
 }
 
 #pulseaudio:hover {
-    color:      @adw_orange;
-    background: @adw_orange_s;
+    color:        @adw_orange;
+    border-color: alpha(@adw_orange, 0.25);
+    background:   alpha(@adw_orange, 0.11);
 }
 
 #pulseaudio.muted {
     color: @adw_dim;
 }
 
-/* Micro activo */
 #pulseaudio.mic {
-    color:         @adw_bg;
-    background:    @adw_orange;
-    border-radius: 6px;
-    margin:        5px 2px;
-    padding:       0 10px;
+    color:        @adw_bg;
+    border-color: @adw_orange;
+    background:   @adw_orange;
 }
 
 #pulseaudio.mic.source-muted {
-    color:         @adw_dim;
-    background:    transparent;
-    border-radius: 0;
-    margin:        0;
+    color:        @adw_dim;
+    border-color: transparent;
+    background:   transparent;
 }
 
-/* ── Estadísticas del sistema ────────────────────────────────────── */
-
-#cpu,
-#memory,
-#disk,
-#temperature {
-    color: @adw_muted;
-}
-
-#cpu:hover,
-#memory:hover,
-#disk:hover {
-    color:      @adw_fg;
-    background: alpha(@adw_fg, 0.06);
-}
-
-/* ── Battery ─────────────────────────────────────────────────────── */
-
-#battery {
-    color: @adw_muted;
-}
-
-#battery.plugged,
-#battery.full {
+#custom-cpu {
     color: @adw_green;
 }
 
-/* ── Estados de aviso ────────────────────────────────────────────── */
+#memory {
+    color: @adw_blue;
+}
 
+#custom-gpu {
+    color: @adw_teal;
+}
+
+#disk {
+    color: @adw_purple;
+}
+
+#custom-gpu.unavailable {
+    color: @adw_dim;
+}
+
+#custom-battery.charging,
+#custom-battery.full,
+#battery.charging,
+#battery.full,
+#battery.plugged {
+    color: @adw_green;
+}
+
+#privacy {
+    color:      @adw_bg;
+    background: @adw_yellow;
+}
+
+#custom-cpu.warning,
+#custom-gpu.warning,
+#custom-battery.warning,
 #battery.warning {
-    color:         @adw_bg;
-    background:    @adw_orange;
-    border-radius: 6px;
-    margin:        5px 2px;
-    padding:       0 10px;
+    color:        @adw_bg;
+    border-color: @adw_yellow;
+    background:   @adw_yellow;
 }
 
 #temperature.critical,
 #battery.critical,
-#cpu.critical,
+#custom-battery.critical,
+#custom-cpu.critical,
+#custom-gpu.critical,
 #memory.critical,
 #disk.critical {
-    color:         @adw_bg;
-    background:    @adw_red;
-    border-radius: 6px;
-    margin:        5px 2px;
-    padding:       0 10px;
+    color:        @adw_bg;
+    border-color: @adw_red;
+    background:   @adw_red;
 }
-
-/* ── Privacy ─────────────────────────────────────────────────────── */
-
-#privacy {
-    color:         @adw_bg;
-    background:    @adw_yellow;
-    border-radius: 6px;
-    margin:        5px 2px;
-    padding:       0 10px;
-}
-
-/* ── Reloj ───────────────────────────────────────────────────────── */
 
 #clock {
-    color:       @adw_fg;
-    font-weight: 700;
-    padding:     0 16px 0 12px;
+    margin-left:   6px;
+    padding:       0 14px;
+    color:         @adw_strong;
+    font-weight:   700;
+    border-color:  alpha(@adw_orange, 0.28);
+    background:    alpha(@adw_orange, 0.10);
 }
 
 #clock:hover {
-    color: @adw_orange;
+    color:        @adw_orange;
+    border-color: alpha(@adw_orange, 0.45);
+    background:   alpha(@adw_orange, 0.14);
+}
+
+#custom-power {
+    margin-right:  10px;
+    padding:       0 12px;
+    color:         @adw_red;
+    border-color:  alpha(@adw_red, 0.24);
+    background:    alpha(@adw_red, 0.08);
+    font-size:     13px;
+}
+
+#custom-power:hover {
+    color:        @adw_bg;
+    border-color: @adw_red;
+    background:   @adw_red;
 }

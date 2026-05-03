@@ -1,0 +1,226 @@
+"$schema" = "https://starship.rs/config-schema.json"
+
+format = """
+[╭─](fg:surface)$os$username$hostname$container$directory$git_branch$git_status$git_state$fill$cmd_duration$status$jobs$time
+[╰─](fg:surface)$character"""
+
+right_format = """
+$python$nodejs$bun$deno$golang$rust$java$julia$c$lua$ruby$package$docker_context$aws$kubernetes"""
+
+add_newline = true
+continuation_prompt = "[∙](fg:muted) "
+command_timeout = 1000
+scan_timeout = 30
+palette = "aurora"
+
+[palettes.aurora]
+base = "#1e1e2e"
+surface = "#45475a"
+muted = "#6c7086"
+text = "#cdd6f4"
+blue = "#89b4fa"
+cyan = "#89dceb"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+orange = "#fab387"
+red = "#f38ba8"
+purple = "#cba6f7"
+pink = "#f5c2e7"
+teal = "#94e2d5"
+
+[os]
+disabled = false
+style = "bold fg:blue"
+format = "[$symbol]($style) "
+
+[os.symbols]
+AlmaLinux = ""
+Alpine = ""
+Arch = ""
+Debian = ""
+Fedora = ""
+Linux = ""
+Macos = ""
+NixOS = ""
+openSUSE = ""
+Redhat = ""
+Ubuntu = ""
+Windows = "󰍲"
+Unknown = ""
+
+[username]
+show_always = false
+style_user = "bold fg:green"
+style_root = "bold fg:red"
+format = "[$user]($style) "
+
+[hostname]
+ssh_only = true
+style = "bold fg:yellow"
+format = "[@$hostname]($style) "
+
+[container]
+symbol = "⬢"
+style = "bold fg:orange"
+format = "[$symbol $name]($style) "
+
+[directory]
+style = "bold fg:blue"
+read_only_style = "fg:red"
+read_only = " "
+format = "[$path]($style)[$read_only]($read_only_style) "
+truncation_length = 4
+truncation_symbol = "…/"
+truncate_to_repo = false
+home_symbol = "~"
+
+[directory.substitutions]
+"Desktop" = "󰇄 Desktop"
+"Documents" = "󰈙 Documents"
+"Downloads" = " Downloads"
+"Music" = " Music"
+"Pictures" = " Pictures"
+"Projects" = "󰲋 Projects"
+
+[git_branch]
+symbol = " "
+style = "bold fg:purple"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+style = "bold fg:yellow"
+format = "([$all_status$ahead_behind]($style) )"
+conflicted = "=${count} "
+ahead = "⇡${count} "
+behind = "⇣${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
+up_to_date = ""
+untracked = "?${count} "
+stashed = "$${count} "
+modified = "!${count} "
+staged = "+${count} "
+renamed = "»${count} "
+deleted = "✘${count} "
+
+[git_state]
+style = "bold fg:red"
+format = '\([$state( $progress_current/$progress_total)]($style)\) '
+
+[fill]
+symbol = " "
+style = "fg:surface"
+
+[cmd_duration]
+min_time = 800
+style = "fg:muted"
+format = "[󱦟 $duration]($style) "
+
+[status]
+disabled = false
+style = "bold fg:red"
+symbol = "✘"
+success_symbol = ""
+format = "[$symbol$status]($style) "
+map_symbol = true
+
+[jobs]
+symbol = " "
+style = "bold fg:orange"
+number_threshold = 1
+format = "[$symbol$number]($style) "
+
+[time]
+disabled = false
+style = "fg:muted"
+format = "[ $time]($style)"
+time_format = "%H:%M"
+
+[character]
+success_symbol = "[❯](bold fg:green)"
+error_symbol = "[❯](bold fg:red)"
+vimcmd_symbol = "[❮](bold fg:blue)"
+vimcmd_visual_symbol = "[❮](bold fg:yellow)"
+vimcmd_replace_symbol = "[❮](bold fg:purple)"
+
+[python]
+symbol = " "
+style = "bold fg:yellow"
+format = '[$symbol${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+pyenv_version_name = true
+pyenv_prefix = ""
+
+[nodejs]
+symbol = " "
+style = "bold fg:green"
+format = "[$symbol($version )]($style)"
+
+[bun]
+symbol = " "
+style = "bold fg:orange"
+format = "[$symbol($version )]($style)"
+
+[deno]
+symbol = " "
+style = "bold fg:green"
+format = "[$symbol($version )]($style)"
+
+[golang]
+symbol = " "
+style = "bold fg:cyan"
+format = "[$symbol($version )]($style)"
+
+[rust]
+symbol = " "
+style = "bold fg:orange"
+format = "[$symbol($version )]($style)"
+
+[java]
+symbol = " "
+style = "bold fg:red"
+format = "[$symbol($version )]($style)"
+
+[julia]
+symbol = " "
+style = "bold fg:purple"
+format = "[$symbol($version )]($style)"
+
+[c]
+symbol = " "
+style = "bold fg:blue"
+format = "[$symbol($version(-$name) )]($style)"
+
+[lua]
+symbol = " "
+style = "bold fg:blue"
+format = "[$symbol($version )]($style)"
+
+[ruby]
+symbol = " "
+style = "bold fg:red"
+format = "[$symbol($version )]($style)"
+
+[package]
+symbol = "󰏗 "
+style = "bold fg:pink"
+format = "[$symbol$version]($style) "
+display_private = false
+
+[docker_context]
+symbol = " "
+style = "bold fg:cyan"
+format = "[$symbol$context]($style) "
+only_with_files = true
+detect_files = ["docker-compose.yml", "docker-compose.yaml", "Dockerfile", "Containerfile"]
+
+[aws]
+symbol = " "
+style = "bold fg:orange"
+format = "[$symbol$profile( $region)]($style) "
+
+[kubernetes]
+symbol = "󱃾 "
+style = "bold fg:blue"
+format = '[$symbol$context( \($namespace\))]($style) '
+disabled = false
+detect_files = ["k8s.yaml", "kubernetes.yaml", "Chart.yaml", "skaffold.yaml"]
+detect_folders = ["k8s", "kubernetes"]
