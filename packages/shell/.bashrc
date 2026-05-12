@@ -1,4 +1,4 @@
-# ~/.bashrc - host (Arch Linux)
+# ~/.bashrc - Aeon host
 # Interactive bash configuration for the host.
 
 [[ $- != *i* ]] && return
@@ -22,7 +22,7 @@ alias cls='clear'
 
 alias dbe='distrobox enter'
 alias dbl='distrobox list'
-alias dbf='distrobox enter fedora'
+alias dbtw='distrobox enter tumbleweed'
 
 alias fpu='flatpak --user'
 alias fpus='flatpak --user search'

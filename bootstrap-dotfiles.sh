@@ -4,22 +4,24 @@
 # Usage:
 #   DOTFILES_REPO_URL="https://github.com/USUARIO/dotfiles.git" \
 #   DOTFILES_DIR="$HOME/Projects/dotfiles" \
-#   PROFILE="home" \
+#   PROFILE="aeon" \
 #   bash bootstrap-dotfiles.sh
 #
 # Defaults:
 #   DOTFILES_DIR=$HOME/Projects/dotfiles
-#   PROFILE=home
+#   PROFILE=aeon
 #   DOTFILES_REPO_URL=(required if directory does not exist)
 set -Eeuo pipefail
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/Projects/dotfiles}"
-PROFILE="${PROFILE:-home}"
+PROFILE="${PROFILE:-aeon}"
 
 case "$PROFILE" in
-  home|vm) ;;
-  *) echo "ERROR: PROFILE must be 'home' or 'vm' (current: $PROFILE)" >&2; exit 1 ;;
+  aeon|tw-vm) ;;
+  home) PROFILE=aeon ;;
+  vm) PROFILE=tw-vm ;;
+  *) echo "ERROR: PROFILE must be 'aeon' or 'tw-vm' (current: $PROFILE)" >&2; exit 1 ;;
 esac
 
 log() { printf '[bootstrap] %s\n' "$*"; }

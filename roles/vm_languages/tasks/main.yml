@@ -1,9 +1,10 @@
 ---
-# User-local language runtimes inside the Fedora Distrobox (matches scripts/vm/languages.sh).
+# User-local language runtimes inside the Tumbleweed Distrobox.
 # Order: go, fnm, julia, java, uv, gradle, pnpm
 
-- name: Languages (vm)
-  tags: [vm, languages-vm]
+- name: Languages (tw-vm)
+  tags: [tw-vm, languages-tw-vm]
+  when: not ansible_check_mode
   block:
     - name: Language toolchain cache directories
       ansible.builtin.file:

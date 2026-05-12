@@ -1,4 +1,4 @@
-# ~/.zshrc - Distrobox container `fedora`
+# ~/.zshrc - Tumbleweed Distrobox container
 # Development environment.
 #
 # Toolchain PATHs and env vars live in ~/.profile (POSIX, shared with bash).
@@ -56,7 +56,7 @@ fi
 
 # ---- Aliases --------------------------------------------------------
 
-# `podman` inside the container is bridged to the host during `make home`.
+# These aliases expect podman to be available in the manually prepared container.
 alias logs="podman logs"
 alias dpush="podman push"
 alias db="podman build"

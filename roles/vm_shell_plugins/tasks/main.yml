@@ -1,6 +1,7 @@
 ---
 - name: Shell plugins
-  tags: [vm, home, shell-plugins-vm, shell-plugins-home]
+  tags: [tw-vm, aeon, shell-plugins-tw-vm, shell-plugins-aeon]
+  when: not ansible_check_mode
   block:
     - name: Require zsh
       ansible.builtin.shell:

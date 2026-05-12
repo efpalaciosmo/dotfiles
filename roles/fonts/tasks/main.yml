@@ -24,7 +24,9 @@
     mode: '0644'
     force: false
   loop: "{{ nerd_font_markers.results }}"
-  when: not item.stat.exists | default(false)
+  when:
+    - not ansible_check_mode
+    - not item.stat.exists | default(false)
   loop_control:
     label: "{{ item.item.subdir }}"
 
@@ -44,7 +46,9 @@
     dest: "{{ nerd_fonts_root }}/{{ item.item.subdir }}"
     remote_src: true
   loop: "{{ nerd_font_markers.results }}"
-  when: not item.stat.exists | default(false)
+  when:
+    - not ansible_check_mode
+    - not item.stat.exists | default(false)
   loop_control:
     label: "{{ item.item.subdir }}"
 
@@ -56,12 +60,15 @@
     modification_time: preserve
     access_time: preserve
   loop: "{{ nerd_font_markers.results }}"
-  when: not item.stat.exists | default(false)
+  when:
+    - not ansible_check_mode
+    - not item.stat.exists | default(false)
   loop_control:
     label: "{{ item.item.subdir }}"
 
 - name: Refresh font cache
   ansible.builtin.command:
     cmd: fc-cache -f "{{ ansible_facts.env.HOME }}/.local/share/fonts"
+  when: not ansible_check_mode
   changed_when: true
   failed_when: false

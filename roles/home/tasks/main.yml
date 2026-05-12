@@ -1,99 +1,17 @@
 ---
-- name: Host prerequisites (Arch host)
-  tags: [home, distrobox, flatpaks]
+- name: Host Flatpak prerequisites
+  tags: [aeon, flatpaks]
+  when: not ansible_check_mode
   block:
-    - name: Verify required host commands exist
+    - name: Verify flatpak command exists
       ansible.builtin.shell:
         cmd: command -v "{{ item }}"
       loop:
         - bash
-        - tar
-        - python3
-        - podman
         - flatpak
       changed_when: false
 
-    - name: Verify curl or wget exists
-      ansible.builtin.shell:
-        cmd: command -v "{{ item }}"
-      loop:
-        - curl
-        - wget
-      register: curl_wget
-      changed_when: false
-      failed_when: false
-
-    - name: At least one downloader required
-      ansible.builtin.assert:
-        that:
-          - curl_wget.results[0].rc == 0 or curl_wget.results[1].rc == 0
-        fail_msg: "Need curl or wget on the host."
-        quiet: true
-
-- name: Distrobox install, container, and podman bridge
-  tags: [home, distrobox]
-  block:
-    - name: Stat distrobox binary
-      ansible.builtin.stat:
-        path: "{{ distrobox_prefix }}/bin/distrobox"
-      register: distrobox_bin_stat
-
-    - name: Install Distrobox to user prefix
-      ansible.builtin.shell: |
-        set -euo pipefail
-        if command -v curl >/dev/null 2>&1; then
-          curl -fsSL "{{ distrobox_install_url }}" | sh -s -- --prefix "{{ distrobox_prefix }}"
-        else
-          wget -qO- "{{ distrobox_install_url }}" | sh -s -- --prefix "{{ distrobox_prefix }}"
-        fi
-      when: not distrobox_bin_stat.stat.exists | default(false)
-      changed_when: true
-
-    - name: Ensure container home directory exists
-      ansible.builtin.file:
-        path: "{{ distrobox_container_home }}"
-        state: directory
-        mode: '0755'
-
-    - name: Check whether distrobox container already exists
-      ansible.builtin.shell: |
-        set -euo pipefail
-        "{{ distrobox_prefix }}/bin/distrobox" list --no-color 2>/dev/null | awk '{print $3}' | grep -Fxq "{{ distrobox_container_name }}"
-      register: distrobox_container_grep
-      changed_when: false
-      failed_when: false
-
-    - name: Create distrobox container
-      ansible.builtin.command:
-        argv:
-          - "{{ distrobox_prefix }}/bin/distrobox"
-          - create
-          - --name
-          - "{{ distrobox_container_name }}"
-          - --image
-          - "{{ distrobox_image }}"
-          - --home
-          - "{{ distrobox_container_home }}"
-          - --yes
-      when: distrobox_container_grep.rc != 0
-      changed_when: true
-
-    - name: Bridge podman inside container to host
-      ansible.builtin.command:
-        argv:
-          - "{{ distrobox_prefix }}/bin/distrobox"
-          - enter
-          - "{{ distrobox_container_name }}"
-          - --
-          - sudo
-          - ln
-          - -sfn
-          - /usr/bin/distrobox-host-exec
-          - /usr/local/bin/podman
-      register: podman_bridge
-      changed_when: podman_bridge.rc == 0
-      failed_when: false
-
 - name: Configure Flathub and Flatpaks (user)
   ansible.builtin.import_tasks: flatpaks.yml
-  tags: [home, flatpaks]
+  when: not ansible_check_mode
+  tags: [aeon, flatpaks]

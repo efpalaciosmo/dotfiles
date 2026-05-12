@@ -1,6 +1,6 @@
 ---
-- name: Fedora packages (vm)
-  tags: [vm, packages-vm]
+- name: Tumbleweed packages (tw-vm)
+  tags: [tw-vm, packages-tw-vm]
   block:
     - name: Verify required commands are present
       ansible.builtin.shell:
@@ -9,7 +9,7 @@
         - bash
         - tar
         - python3
-        - dnf
+        - zypper
       changed_when: false
 
     - name: Verify curl or wget exists
@@ -18,37 +18,43 @@
       loop:
         - curl
         - wget
-      register: vm_curl_wget
+      register: tw_vm_curl_wget
       changed_when: false
       failed_when: false
 
-    - name: At least one downloader required (vm)
+    - name: At least one downloader required (tw-vm)
       ansible.builtin.assert:
         that:
-          - vm_curl_wget.results | selectattr('rc', 'equalto', 0) | list | length > 0
+          - tw_vm_curl_wget.results | selectattr('rc', 'equalto', 0) | list | length > 0
         fail_msg: "Need curl or wget inside the container."
         quiet: true
+      when: not ansible_check_mode
 
-    - name: Refresh dnf cache
+    - name: Refresh zypper metadata
       ansible.builtin.command:
-        cmd: dnf makecache --refresh
+        cmd: zypper --non-interactive refresh
       become: true
-      register: dnf_makecache
-      changed_when: dnf_makecache.rc == 0
+      when: not ansible_check_mode
+      register: zypper_refresh
+      changed_when: zypper_refresh.rc == 0
       failed_when: false
 
-    - name: Install Fedora package set
+    - name: Install Tumbleweed package set
       ansible.builtin.command:
-        cmd: dnf -y install {{ vm_packages_all | join(' ') }}
+        cmd: >-
+          zypper --non-interactive --gpg-auto-import-keys install
+          --no-recommends {{ tw_packages_all | join(' ') }}
       become: true
-      register: dnf_install_vm
-      changed_when: "'Nothing to do' not in (dnf_install_vm.stdout | default(''))"
-      failed_when: dnf_install_vm.rc != 0
+      when: not ansible_check_mode
+      register: zypper_install_tw_vm
+      changed_when: "'Nothing to do' not in (zypper_install_tw_vm.stdout | default(''))"
+      failed_when: zypper_install_tw_vm.rc != 0
 
     - name: Verify packages with rpm (best-effort)
       ansible.builtin.command:
         cmd: rpm -q "{{ item }}"
-      loop: "{{ vm_packages_all }}"
-      register: rpm_q_vm
+      loop: "{{ tw_packages_all }}"
+      register: rpm_q_tw_vm
+      when: not ansible_check_mode
       changed_when: false
       failed_when: false

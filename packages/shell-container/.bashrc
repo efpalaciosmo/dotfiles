@@ -1,4 +1,4 @@
-# ~/.bashrc - Distrobox container `fedora`
+# ~/.bashrc - Tumbleweed Distrobox container
 # Interactive bash configuration for the dev container.
 #
 # Toolchain PATHs and env vars live in ~/.profile (POSIX). This file only

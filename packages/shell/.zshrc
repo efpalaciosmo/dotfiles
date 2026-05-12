@@ -1,8 +1,8 @@
-# ~/.zshrc - host (Arch Linux)
+# ~/.zshrc - Aeon host
 # Interactive zsh configuration for the host.
 #
 # The host is intentionally lean: development tooling lives inside the
-# `fedora` Distrobox container. See README.md for the rationale.
+# manually entered Tumbleweed Distrobox. See README.md for the rationale.
 
 if [ -f "$HOME/.profile" ]; then
     emulate sh -c '. "$HOME/.profile"'
@@ -43,7 +43,7 @@ alias cls='clear'
 
 alias dbe='distrobox enter'
 alias dbl='distrobox list'
-alias dbf='distrobox enter fedora'
+alias dbtw='distrobox enter tumbleweed'
 alias dbrm='distrobox rm'
 
 alias fpu='flatpak --user'
@@ -52,10 +52,6 @@ alias fpui='flatpak --user install -y'
 alias fpuu='flatpak --user uninstall'
 alias fpuup='flatpak --user update -y'
 alias fpul='flatpak list --user'
-
-# rpm-ostree wrappers (read-only here; do NOT layer dev tooling on the host).
-alias rosstatus='rpm-ostree status'
-alias rosup='rpm-ostree upgrade'
 
 # Python / uv
 alias uvr="uv run"

@@ -1,6 +1,7 @@
 ---
-- name: VS Code Insiders (vm)
-  tags: [vm, vscode-insiders]
+- name: VS Code Insiders (tw-vm)
+  tags: [tw-vm, vscode-insiders]
+  when: not ansible_check_mode
   block:
     - name: Import Microsoft RPM key
       ansible.builtin.rpm_key:
@@ -8,7 +9,16 @@
         state: present
       become: true
 
-    - name: Install VS Code yum repo file
+    - name: Ensure zypper repo directory exists
+      ansible.builtin.file:
+        path: /etc/zypp/repos.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      become: true
+
+    - name: Install VS Code zypper repo file
       ansible.builtin.copy:
         dest: "{{ vscode_repo_file }}"
         owner: root
@@ -17,21 +27,21 @@
         content: |
           [code]
           name=Visual Studio Code
-          baseurl=https://packages.microsoft.com/yumrepos/vscode
           enabled=1
+          autorefresh=1
+          baseurl=https://packages.microsoft.com/yumrepos/vscode
+          type=rpm-md
           gpgcheck=1
           gpgkey=https://packages.microsoft.com/keys/microsoft.asc
       become: true
 
-    - name: dnf check-update (ignore rc 100)
+    - name: Refresh VS Code zypper repo
       ansible.builtin.command:
-        cmd: dnf check-update
+        cmd: zypper --non-interactive --gpg-auto-import-keys refresh code
       become: true
       changed_when: false
       failed_when: false
 
-    # Use CLI `dnf` instead of Ansible's dnf module to avoid Python libdnf bindings
-    # issues in some container images/interpreters.
     - name: Check whether VS Code Insiders is already installed
       ansible.builtin.command:
         cmd: rpm -q code-insiders
@@ -42,7 +52,7 @@
 
     - name: Install VS Code Insiders
       ansible.builtin.command:
-        cmd: dnf -y install code-insiders
+        cmd: zypper --non-interactive --gpg-auto-import-keys install --no-recommends code-insiders
       become: true
       when: code_insiders_rpm.rc != 0
       register: code_insiders_install

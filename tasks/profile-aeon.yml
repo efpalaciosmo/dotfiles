@@ -1,0 +1,43 @@
+---
+- name: Common setup
+  ansible.builtin.import_role:
+    name: common
+  tags: [always, common, aeon]
+
+- name: Nerd Fonts (host)
+  ansible.builtin.import_role:
+    name: fonts
+  tags: [fonts-aeon, aeon]
+
+# Flatpaks are the only host app-install path managed by this profile.
+- name: Flatpaks (host)
+  ansible.builtin.import_role:
+    name: home
+  tags: [flatpaks, aeon]
+
+- name: Python user tools (pip, stown)
+  ansible.builtin.import_role:
+    name: python_user_tools
+  tags: [python-user-tools, aeon]
+
+- name: Language tools (host)
+  ansible.builtin.import_role:
+    name: home_languages
+  tags: [languages-aeon, language-aeon, aeon]
+
+- name: Starship prompt (host)
+  ansible.builtin.import_role:
+    name: vm_starship
+  tags: [starship-aeon, aeon]
+
+- name: Zsh plugins (host)
+  ansible.builtin.import_role:
+    name: vm_shell_plugins
+  tags: [shell-plugins-aeon, aeon]
+
+- name: Apply dotfiles with stown
+  ansible.builtin.import_role:
+    name: dotfiles
+  vars:
+    stown_profile: aeon
+  tags: [stown-aeon, aeon]

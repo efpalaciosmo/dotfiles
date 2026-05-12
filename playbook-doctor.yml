@@ -4,9 +4,5 @@
   connection: local
   gather_facts: true
 
-  pre_tasks:
-    - name: Detect dotfiles context (Distrobox / ostree)
-      ansible.builtin.import_tasks: tasks/detect_context.yml
-
   roles:
     - role: validation

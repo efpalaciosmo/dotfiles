@@ -1,7 +1,7 @@
-# ~/.profile - host (Arch Linux)
+# ~/.profile - Aeon host
 # Loaded by login shells. Keep it POSIX-compatible.
 
-# Local user binaries (Distrobox, Starship, fonts tools, podman-compose, etc.)
+# Local user binaries (Starship, stown, language tools, etc.)
 if [ -d "$HOME/.local/bin" ]; then
     case ":$PATH:" in
         *":$HOME/.local/bin:"*) ;;
@@ -45,9 +45,11 @@ fi
 
 export PATH
 
-# Editor on the host: prefer plain text editors, NOT code-insiders here.
-# VS Code Insiders runs inside the `fedora` distrobox container.
-if command -v nano >/dev/null 2>&1; then
+# Editor on the host: use Aeon's default Vim when available.
+if command -v vim >/dev/null 2>&1; then
+    export EDITOR="${EDITOR:-vim}"
+    export VISUAL="${VISUAL:-vim}"
+elif command -v nano >/dev/null 2>&1; then
     export EDITOR="${EDITOR:-nano}"
     export VISUAL="${VISUAL:-nano}"
 fi

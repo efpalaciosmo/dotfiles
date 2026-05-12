@@ -1,21 +1,9 @@
 ---
-# Detect dotfiles context (sets dotfiles_in_distrobox, dotfiles_is_ostree_host).
-- name: Detect dotfiles context (Distrobox / ostree)
-  ansible.builtin.import_tasks: "{{ playbook_dir }}/tasks/detect_context.yml"
-  tags: [always]
-
-- name: Warn if home profile is not running on Arch
-  ansible.builtin.debug:
-    msg: "Home profile now targets Arch Linux; detected {{ ansible_facts.distribution }}."
-  when:
-    - dotfiles_profile == 'home'
-    - ansible_facts.distribution != 'Archlinux'
-  tags: [always]
-
 - name: Resolve python interpreter used for pip --user
   ansible.builtin.command:
     cmd: bash -lc 'command -v python3 || command -v python'
   register: _pip_python_which
+  check_mode: false
   changed_when: false
   failed_when: _pip_python_which.rc != 0
   tags: [always]
@@ -46,12 +34,44 @@
     _profile_path: "{{ ansible_facts.env.HOME }}/.profile"
   tags: [always]
 
+- name: Stat ~/.profile link
+  ansible.builtin.stat:
+    path: "{{ _profile_path }}"
+    follow: false
+  register: _profile_lstat
+  tags: [always]
+
+- name: Stat ~/.profile target
+  ansible.builtin.stat:
+    path: "{{ _profile_path }}"
+    follow: true
+  register: _profile_tstat
+  when: _profile_lstat.stat.islnk | default(false)
+  tags: [always]
+
+- name: Set ~/.profile symlink state
+  ansible.builtin.set_fact:
+    _profile_is_broken_symlink: >-
+      {{
+        (_profile_lstat.stat.islnk | default(false))
+        and not (_profile_tstat.stat.exists | default(false))
+      }}
+  tags: [always]
+
+- name: Report broken ~/.profile symlink
+  ansible.builtin.debug:
+    msg: "Skipping PATH update because {{ _profile_path }} is a broken symlink; stown will replace it later in the profile."
+  when: _profile_is_broken_symlink | bool
+  tags: [always]
+
 - name: Check ~/.profile for .local/bin
   ansible.builtin.command:
     cmd: grep -q '\.local/bin' "{{ _profile_path }}"
   register: _profile_has_local_bin
+  check_mode: false
   changed_when: false
   failed_when: false
+  when: not (_profile_is_broken_symlink | bool)
   tags: [always]
 
 - name: Ensure PATH line in ~/.profile
@@ -60,5 +80,7 @@
     line: "{{ _path_line }}"
     create: true
     mode: '0644'
-  when: _profile_has_local_bin.rc | default(1) != 0
+  when:
+    - not (_profile_is_broken_symlink | bool)
+    - _profile_has_local_bin.rc | default(1) != 0
   tags: [always]

@@ -1,291 +1,123 @@
-# Dotfiles — Arch Linux (Niri) + Distrobox Fedora 44
+# Dotfiles — openSUSE Aeon + Tumbleweed Distrobox
 
-Reproducible, idempotent automation for an **Arch Linux** host with **Niri**, Wayland, and related configs under `packages/`, plus a **Fedora 44** development container in **Distrobox**.
+Reproducible, profile-driven automation for an **openSUSE Aeon** host and a manually entered **openSUSE Tumbleweed Distrobox**.
 
-> The host package baseline is managed with `pacman` first; heavier development tooling still lives in the Fedora Distrobox container.
+The Aeon profile stays in user space: Flatpaks, fonts, local user tools, shell/git/starship dotfiles, and a small Vim config. It does not install host RPMs, run `transactional-update`, or create Distrobox containers. The Tumbleweed profile assumes you are already inside the container and uses `zypper` for development packages.
 
 ## Layout
 
 ```text
 .
-├── packages/             # stow/stown trees (paths mirror $HOME)
-│   ├── mako/             # .config/mako/…
-│   ├── foot/             # .config/foot/…
-│   ├── niri/             # .config/niri/… + .config/xdg-desktop-portal/…
-│   ├── rofi/
-│   ├── waybar/
-│   ├── shell/            # host shell dotfiles
-│   ├── git/
-│   ├── nvim/
-│   ├── shell-container/  # container shell (Zsh, GOPATH, …) — stown on vm profile
-│   ├── git-container/    # optional Git config for the container (not in default stown list)
+├── packages/
+│   ├── git/              # Aeon git config
+│   ├── shell/            # Aeon shell config
+│   ├── vim/              # Aeon ~/.vimrc for vim-small
+│   ├── nvim-vm/          # Tumbleweed Neovim config
+│   ├── shell-container/  # Tumbleweed shell config
 │   └── starship/
-├── roles/                # Ansible roles (common, home, vm_*, dotfiles, …)
-├── tasks/                # profile-home.yml, profile-vm.yml
-├── group_vars/all.yml    # pacman packages, Flatpaks, Fedora packages, fonts, stown lists, …
-├── playbook.yml          # -e dotfiles_profile=home|vm
+├── roles/                # Ansible roles
+├── tasks/                # profile-aeon.yml, profile-tw-vm.yml
+├── group_vars/all.yml    # Flatpaks, fonts, Tumbleweed packages, stown lists
+├── playbook.yml          # -e dotfiles_profile=aeon|tw-vm
 ├── playbook-doctor.yml
-├── ansible.cfg
-├── inventory.ini.example # make setup → inventory.ini
-├── requirements.yml      # community.general (Flatpak, …)
-├── requirements-ansible.txt
-├── bootstrap-dotfiles.sh # clone/update then make setup && make <profile>
-├── Makefile              # ansible-playbook + tags (CLI entry points)
-├── architecture.md       # deeper design notes
-├── README.md
-└── .gitignore
+├── bootstrap-dotfiles.sh
+├── Makefile
+└── README.md
 ```
 
-Single repo; separation is by **profile** (`home` vs `vm`), not by branches. **stown** links each subtree under **`packages/`** into `$HOME` (same idea as **GNU Stow**). Which packages apply on the host vs in the container is defined in **`group_vars/all.yml`** (`stown_packages_host` / `stown_packages_vm`). Ansible drives the system; **`make home`** and **`make vm`** are Ansible profiles, not folder names.
+`stown` links each package subtree under `packages/` into `$HOME`. The active package lists are `stown_packages_aeon` and `stown_packages_tw_vm` in `group_vars/all.yml`. Legacy Niri/Waybar/Mako/Rofi/Foot package directories may still exist in the repo, but they are no longer applied by either profile.
 
-## Principles
-
-- **Idempotent**: `make home` and `make vm` are safe to run repeatedly.
-- **Reversible**: conflicts are moved to `~/.dotfiles-backup/YYYYmmdd-HHMMSS/` before applying **stown**.
-- **Non-destructive**: existing real files are not overwritten without a backup.
-- **Dry-run**: `DRY_RUN=1 make home|vm` runs `ansible-playbook --check` (best effort; external installers may not fully simulate).
-- **Ansible venv**: `make setup` creates `.venv/`, installs `ansible-core`, and pulls collections without a system-wide Ansible.
-
-## Makefile targets
+## Targets
 
 ```bash
-make setup        # .venv + ansible-core + community.general in .ansible/collections + inventory.ini
-make help         # list all targets
-make doctor       # validation role / playbook-doctor
-make check        # ansible-playbook --syntax-check (+ ansible-lint if installed)
-make verify       # check + guard: partial targets must not use `,home` / `,vm` in --tags
+make setup          # .venv + ansible-core + collections + inventory.ini
+make check          # syntax checks for aeon and tw-vm
+make verify         # check + partial-tag guard
+make doctor         # local command and dotfile diagnostics
 
-make home         # HOST profile  (Arch Linux host)
-make vm           # VM profile    (inside: distrobox enter fedora)
+make aeon           # Aeon host user-space profile
+make tw-vm          # Tumbleweed Distrobox profile
 
-make dry-run-home # same as DRY_RUN=1 make home
-make dry-run-vm
+make dry-run-aeon
+make dry-run-tw-vm
 
-# Host helpers
-make packages-home
-make fonts-home
+make fonts-aeon
 make flatpaks
-make distrobox
-make language-home
-make languages-home
-make starship-home
-make shell-plugins-home
-make stown-home
+make languages-aeon
+make starship-aeon
+make shell-plugins-aeon
+make stown-aeon
 
-# pip + stown: same target on host (home) or in Distrobox (vm); profile auto-detected unless overridden
-make python-user-tools
-
-# Container helpers
-make fonts-vm
-make packages-vm
+make packages-tw-vm
+make fonts-tw-vm
 make vscode-insiders
 make podman-compose
-make starship-vm
-make languages-vm
-make shell-plugins-vm
-make stown-vm
+make languages-tw-vm
+make starship-tw-vm
+make shell-plugins-tw-vm
+make stown-tw-vm
 ```
 
-## Quickstart
+Temporary compatibility aliases exist for the main profiles: `make home` runs `make aeon`, and `make vm` runs `make tw-vm`.
 
-### On the host (Arch Linux)
+## Aeon Host
 
 ```bash
 git clone https://github.com/YOUR_USER/dotfiles.git ~/Projects/dotfiles
 cd ~/Projects/dotfiles
-make setup           # first run: venv, collections, inventory.ini
-make doctor          # optional: inspect environment
-make dry-run-home    # optional: Ansible check mode
-make home
+make setup
+DRY_RUN=1 make aeon
+make aeon
 ```
 
-`make home` (full profile) roughly:
+`make aeon` runs common user-local setup, installs Nerd Fonts, configures user Flathub and Flatpaks, installs `stown`, installs small user-local language helpers, installs Starship and shell plugins, then applies `git`, `shell`, `starship`, and `vim`.
 
-1. Runs **common**: ensures you are not inside Distrobox and prepares the user-local layout.
-2. Ensures `~/.local/bin` and related dirs exist; ensures `~/.profile` references `.local/bin` without rewriting stown-managed shell rc files.
-3. Upgrades the Arch system and installs `home_pacman_packages` with **pacman**.
-4. Installs fonts (IBMPlexMono and JetBrainsMono Nerd Fonts **v3.4.0**, plus Inter **v4.1**) under `~/.local/share/fonts/nerd-fonts/`.
-5. Installs **Distrobox** under `~/.local` (user prefix).
-6. Creates the **`fedora`** container from `quay.io/fedora/fedora:44-x86_64` with `--home` set to `$HOME/Projects/fedora` (see `group_vars/all.yml` for overrides).
-7. Inside the container, symlinks **`/usr/local/bin/podman`** -> **`/usr/bin/distrobox-host-exec`** so container `podman` uses the host.
-8. Configures **Flathub** as a **user** remote. If a **system** remote named `flathub` exists, `make flatpaks` adds `--ask-become-pass` so Ansible can remove it with sudo. Installs apps from `flatpak_apps` with **`--user`**.
-9. Bootstraps **pip** for `--user` and installs **stown**.
-10. Installs host language tools: **fnm**, **uv**, and **pnpm**.
-11. Installs **Starship**, **oh-my-zsh**, and zsh plugins.
-12. Applies host dotfiles: packages listed in **`stown_packages_host`** (`foot`, `git`, `mako`, `niri`, `nvim`, `rofi`, `shell`, `starship`, `waybar`).
+## Tumbleweed Distrobox
 
-### In the container (Distrobox Fedora)
+Create and enter the Tumbleweed Distrobox manually, then run:
 
 ```bash
-distrobox enter fedora
-cd ~/Projects/dotfiles    # repo on the shared home / bind mount
-make doctor
-make dry-run-vm
-make vm
+cd ~/Projects/dotfiles
+make setup
+DRY_RUN=1 make tw-vm
+make tw-vm
 ```
 
-`make vm` (full profile) order matches `tasks/profile-vm.yml`:
+`make tw-vm` installs the Tumbleweed package set with `zypper`, installs VS Code Insiders from the Microsoft RPM repo, installs the development language stack, then applies `nvim-vm`, `shell-container`, and `starship`.
 
-1. Ensures you are **inside** Distrobox and **Fedora** is reported as the distribution.
-2. **Common**: same `~/.local` layout; on vm, `~/.profile` gets the PATH line only if `.local/bin` is not already referenced (leaves room for SDKMAN and similar).
-3. **`dnf`**: installs the Fedora package sets in `group_vars/all.yml` (`vm_pkg_*`).
-4. **Starship** → `~/.local/bin` (upstream install script).
-5. **Python user tools**: `get-pip` + **stown** (`pip --user`), with PEP 668 handling as configured.
-6. **Nerd Fonts** (same version/layout as the host).
-7. **VS Code Insiders** from Microsoft’s repo; default app for `text/plain` via `xdg-mime` where applicable.
-8. **Languages / runtimes**: **Go** via **gvm**, **fnm**, **Julia** via **juliaup**, **Java** via **SDKMAN!**, **uv**, **Gradle**, **pnpm** (each can be skipped with `SKIP_*=1` env vars — see `group_vars/all.yml`).
-9. **oh-my-zsh** and plugins.
-10. **stown** applies vm packages: **`stown_packages_vm`** — **`nvim`**, **`shell-container`**, **`starship`** (keeps Zsh/rc files managed after SDKMAN and friends).
-11. **podman-compose** via `pip --user`.
-
-## Remote bootstrap
-
-On a new machine before the repo exists:
+## Bootstrap
 
 ```bash
 DOTFILES_REPO_URL="https://github.com/YOUR_USER/dotfiles.git" \
 DOTFILES_DIR="$HOME/Projects/dotfiles" \
-PROFILE="home" \
+PROFILE="aeon" \
 bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_USER/dotfiles/main/bootstrap-dotfiles.sh)
 ```
 
 Defaults:
 
-- `DOTFILES_DIR` → `$HOME/Projects/dotfiles`
-- `PROFILE` → `home` (use `vm` when already inside the container)
-- `DOTFILES_REPO_URL` is required if the directory does not exist yet.
+- `DOTFILES_DIR` -> `$HOME/Projects/dotfiles`
+- `PROFILE` -> `aeon`
+- `PROFILE=home` and `PROFILE=vm` are accepted as temporary aliases.
 
-## Dry-run mode
-
-With `DRY_RUN=1`, `make home` and `make vm` pass `--check` to Ansible. External installers may not fully respect check mode; treat it as a preview.
+## Checks
 
 ```bash
-DRY_RUN=1 make home
-DRY_RUN=1 make vm
-make dry-run-home
-make dry-run-vm
+make check
+DRY_RUN=1 make aeon
+DRY_RUN=1 make tw-vm
+vim -Nu ~/.vimrc
 ```
 
-## Backups
+Expected behavior:
 
-When a target already exists (real file or wrong symlink), the **dotfiles** role moves it to:
-
-```text
-$HOME/.dotfiles-backup/YYYYmmdd-HHMMSS/<path-relative-to-$HOME>
-```
-
-Inspect or restore:
-
-```bash
-ls -la ~/.dotfiles-backup/
-ls ~/.dotfiles-backup/$(ls -1tr ~/.dotfiles-backup | tail -n1)
-mv ~/.dotfiles-backup/<stamp>/.zshrc ~/.zshrc   # example restore
-```
-
-## Revert / cleanup
-
-### Remove a Flatpak installed by this repo
-
-```bash
-flatpak --user uninstall com.valvesoftware.Steam
-flatpak --user uninstall --all          # removes all user Flatpaks — be careful
-```
-
-### Remove / recreate the `fedora` container
-
-```bash
-distrobox stop fedora
-distrobox rm fedora
-make distrobox       # recreates it (idempotent)
-```
-
-> If you change `distrobox_image` or `distrobox_container_home` in `group_vars/all.yml` (or via extra vars) before `make distrobox`, that configuration is what gets used.
-
-### Remove VS Code Insiders from the container
-
-```bash
-distrobox enter fedora -- sudo dnf remove -y code-insiders
-distrobox enter fedora -- sudo rm -f /etc/yum.repos.d/vscode.repo
-```
-
-### Remove Nerd Fonts installed by the fonts role
-
-```bash
-rm -rf ~/.local/share/fonts/nerd-fonts
-fc-cache -f ~/.local/share/fonts
-```
-
-## Debugging PATH
-
-```bash
-make doctor            # prints PATH and checks ~/.local/bin
-echo "$PATH" | tr ':' '\n'
-ls -la ~/.local/bin
-grep -n 'PATH' ~/.profile ~/.bashrc ~/.zshrc 2>/dev/null
-```
-
-If `~/.local/bin` is missing from `PATH`, open a new login session or `source ~/.profile`. Local tools (Distrobox, **stown**, **podman-compose**) are expected there.
-
-## Arch host rules
-
-- Host packages are installed with `pacman` through `home_pacman_packages`.
-- `niri`, `waybar`, and the helper CLIs used by Waybar/Niri/rofi are part of `home_pacman_packages`.
-- Do not install VS Code Insiders or dev toolchains on the host profile.
-- `sudo` is limited to what the playbooks need: pacman and, when applicable, removing a **system** `flathub` remote.
-- Flatpaks are installed **`--user`**.
-- User binaries live in `~/.local/bin`.
-- Fonts live under `~/.local/share/fonts/`.
+- `make aeon` does not call `pacman`, `dnf`, `zypper`, `transactional-update`, or Distrobox creation.
+- `make tw-vm` uses `zypper`, not `dnf`.
+- Host stown packages are Aeon-safe.
+- The full Neovim config is VM-only.
 
 ## Notes
 
-- **VS Code Insiders desktop file**: often `code-insiders.desktop`. Role `vm_vscode` prefers Insiders, then falls back to `code.desktop`.
-- **`podman` in the container**: should resolve to **`/usr/bin/distrobox-host-exec`** via `/usr/local/bin/podman`. Verify with `make doctor` or:
-  ```bash
-  command -v podman && readlink -f "$(command -v podman)"
-  ```
-  If you see `host-spawn` errors, exit and re-enter the container (`distrobox stop fedora && distrobox enter fedora`).
-- **PEP 668 / externally-managed environments**: if `pip` refuses **stown**, retry with:
-  ```bash
-  ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1 make python-user-tools
-  ```
-  On non-ostree **home** profiles, the playbook may allow break-system-packages for user installs automatically — see `pip_break_allowed` in `group_vars/all.yml`.
-- **Flatpaks after install**: you may need to log out and back in for **user** Flatpaks to show up in the app menu (`XDG_DATA_DIRS`).
-- **Terminal fonts**: the fonts role does not change your terminal emulator. Set the font manually, e.g. **JetBrainsMono Nerd Font**, **IBMPlexMono Nerd Font**, or **Inter**; check with `fc-match 'Inter'`.
-- **`GOPATH`**: after the vm profile, `packages/shell-container` sets `GOPATH="$HOME/.go"` in the managed shell startup — open a new shell or `source` the relevant file before expecting `echo "$GOPATH"`.
-
-## Acceptance checks
-
-On the host:
-
-```bash
-make check
-make doctor
-DRY_RUN=1 make home
-make home
-command -v distrobox
-distrobox list
-flatpak remotes --user | grep flathub
-flatpak list --user
-fc-match "JetBrainsMono Nerd Font"
-```
-
-Inside the container (`distrobox enter fedora`):
-
-```bash
-cd ~/Projects/dotfiles
-make check
-make doctor
-DRY_RUN=1 make vm
-make vm
-command -v code-insiders
-xdg-mime query default text/plain        # often code-insiders.desktop
-command -v podman-compose
-podman version
-podman-compose --help
-# After a new login shell:
-echo "$GOPATH"                            # expect $HOME/.go per shell-container config
-```
-
-## License
-
-Personal configuration. Use at your own discretion.
+- Wrong-target execution is intentionally not guarded; profiles are selected by the command you run.
+- Flatpaks are installed with `--user`. If a system Flathub remote exists, the Makefile asks for become only for removing that system remote.
+- `ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1` enables the PEP 668 retry for `pip --user` installs.

@@ -7,18 +7,15 @@ ANSIBLE_GALAXY := $(VENV)/bin/ansible-galaxy
 INV := $(CURDIR)/inventory.ini
 # Pass DRY_RUN=1 with --check for dry-run (see README).
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
-# Home pacman tasks use sudo. Flatpak only needs sudo when a system Flathub
-# remote exists and should be removed.
-HOME_BECOME := --ask-become-pass
+# Flatpak only needs sudo when a system Flathub remote exists and should be removed.
 FLATPAK_BECOME = $(shell flatpak remotes --system 2>/dev/null | awk '$$1 == "flathub" { print "--ask-become-pass"; exit }')
 
-.PHONY: help setup doctor check verify home vm \
-        packages-home fonts-home fonts-vm flatpaks distrobox \
-        stown-home stown-vm \
-        dry-run-home dry-run-vm \
-        python-user-tools vscode-insiders podman-compose packages-vm starship-vm \
-        starship-home language-home languages-home shell-plugins-home \
-        languages-vm shell-plugins-vm
+.PHONY: help setup doctor check verify \
+        aeon tw-vm home vm dry-run-aeon dry-run-tw-vm dry-run-home dry-run-vm \
+        fonts-aeon flatpaks stown-aeon \
+        python-user-tools starship-aeon language-aeon languages-aeon shell-plugins-aeon \
+        fonts-tw-vm packages-tw-vm vscode-insiders podman-compose \
+        starship-tw-vm languages-tw-vm shell-plugins-tw-vm stown-tw-vm
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -35,100 +32,99 @@ setup: ## Create .venv, install ansible-core + collections, ensure inventory.ini
 
 # ---- Validation ------------------------------------------------------
 
-doctor: setup ## Check environment (PATH, commands, host/distrobox context)
+doctor: setup ## Show local command and dotfile diagnostics
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook-doctor.yml
 
 check: setup ## Ansible syntax-check (+ ansible-lint if installed)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --syntax-check
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --syntax-check
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --syntax-check
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --syntax-check
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook-doctor.yml --syntax-check
 	@command -v ansible-lint >/dev/null 2>&1 && ansible-lint -q . || true
 
-# Partial Makefile targets must not pass `--tags foo,home` / `foo,vm` (Ansible OR would run the whole profile).
+# Partial Makefile targets must not pass `--tags foo,aeon` / `foo,tw-vm`
+# (Ansible OR would run the whole profile).
 verify: check
-	@! grep -E 'playbook\.yml.*--tags [^ ]+,(home|vm)' $(MAKEFILE_LIST) \
-		|| (echo >&2 "verify: drop umbrella ,home/,vm from partial playbook invocations"; exit 1)
+	@! grep -E 'playbook\.yml.*--tags [^ ]+,(aeon|tw-vm)' $(MAKEFILE_LIST) \
+		|| (echo >&2 "verify: drop umbrella ,aeon/,tw-vm from partial playbook invocations"; exit 1)
 	@echo "verify: OK"
 
 # ---- Main profiles ---------------------------------------------------
 
-home: setup ## Install/configure the Arch Linux host (home profile)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags home $(HOME_BECOME) $(CHECK)
+aeon: setup ## Configure the openSUSE Aeon host user-space profile
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --tags aeon $(FLATPAK_BECOME) $(CHECK)
 
-vm: setup ## Install/configure the Fedora Distrobox container (vm profile)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags vm $(CHECK)
+tw-vm: setup ## Configure the manually entered Tumbleweed Distrobox profile
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags tw-vm $(CHECK)
+
+home: aeon ## Compatibility alias for aeon
+
+vm: tw-vm ## Compatibility alias for tw-vm
 
 # ---- Dry-run mode ----------------------------------------------------
 
-dry-run-home: ## Like 'home' in Ansible check mode
-	@$(MAKE) home DRY_RUN=1
+dry-run-aeon: ## Like 'aeon' in Ansible check mode
+	@$(MAKE) aeon DRY_RUN=1
 
-dry-run-vm: ## Like 'vm' in Ansible check mode
-	@$(MAKE) vm DRY_RUN=1
+dry-run-tw-vm: ## Like 'tw-vm' in Ansible check mode
+	@$(MAKE) tw-vm DRY_RUN=1
 
-# ---- Auxiliary targets (host) ----------------------------------------
+dry-run-home: dry-run-aeon ## Compatibility alias for dry-run-aeon
 
-# Partial targets pass a single tag so Ansible does not OR-match the umbrella `home`/`vm` tag
-# (which would run every role in the profile).
+dry-run-vm: dry-run-tw-vm ## Compatibility alias for dry-run-tw-vm
 
-fonts-home: setup ## Install Nerd Fonts on the host (~/.local/share/fonts)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags fonts-home
+# ---- Auxiliary targets (Aeon host) -----------------------------------
 
-packages-home: setup ## Install Arch packages with pacman on the host
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags packages-home $(HOME_BECOME)
+# Partial targets pass a single tag so Ansible does not OR-match the umbrella
+# `aeon`/`tw-vm` tag, which would run every role in the profile.
+
+fonts-aeon: setup ## Install Nerd Fonts on the host (~/.local/share/fonts)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --tags fonts-aeon
 
 flatpaks: setup ## Configure user Flathub and install Flatpak apps
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags flatpaks $(FLATPAK_BECOME)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --tags flatpaks $(FLATPAK_BECOME)
 
-distrobox: setup ## Install local distrobox and create the 'fedora' container
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags distrobox
-
-# Same heuristic as roles/common for Distrobox/podman user containers.
-# Override: PYTHON_USER_TOOLS_PROFILE=home|vm make python-user-tools
-python-user-tools: setup ## pip --user + stown (profile home vs vm chosen automatically)
-	@profile="$$PYTHON_USER_TOOLS_PROFILE"; \
-	if [ -z "$$profile" ]; then \
-		profile=home; \
-		if [ -f /run/.containerenv ] || [ -d /run/host ] || [ -n "$$DISTROBOX_ENTER_PATH" ] || [ -n "$$CONTAINER_ID" ]; then profile=vm; fi; \
-	fi; \
+# Override: PYTHON_USER_TOOLS_PROFILE=aeon|tw-vm make python-user-tools
+python-user-tools: setup ## pip --user + stown for the selected profile (default: aeon)
+	@profile="$${PYTHON_USER_TOOLS_PROFILE:-aeon}"; \
+	case "$$profile" in aeon|tw-vm) ;; *) echo >&2 "PYTHON_USER_TOOLS_PROFILE must be aeon or tw-vm"; exit 1;; esac; \
 	"$(ANSIBLE_PLAYBOOK)" -i $(INV) playbook.yml -e dotfiles_profile="$$profile" --tags python-user-tools
 
-stown-home: setup ## Apply home-profile dotfiles with stown
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags stown-home
+stown-aeon: setup ## Apply Aeon-profile dotfiles with stown
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --tags stown-aeon
 
-language-home: languages-home
+language-aeon: languages-aeon
 
-languages-home: setup ## Install fnm/uv/pnpm into ~/.local on the host
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags languages-home
+languages-aeon: setup ## Install fnm/uv/pnpm into ~/.local on the host
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --tags languages-aeon
 
-starship-home: setup ## Install starship (prompt) into ~/.local/bin on the host
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags starship-home
+starship-aeon: setup ## Install starship (prompt) into ~/.local/bin on the host
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --tags starship-aeon
 
-shell-plugins-home: setup ## Install oh-my-zsh + plugins on the host
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=home --tags shell-plugins-home
+shell-plugins-aeon: setup ## Install oh-my-zsh + plugins on the host
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --tags shell-plugins-aeon
 
-# ---- Auxiliary targets (vm) ------------------------------------------
+# ---- Auxiliary targets (Tumbleweed VM) -------------------------------
 
-fonts-vm: setup ## Install Nerd Fonts inside the container (~/.local/share/fonts)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags fonts-vm
+fonts-tw-vm: setup ## Install Nerd Fonts inside the container (~/.local/share/fonts)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags fonts-tw-vm
 
-packages-vm: setup ## Install Fedora packages with dnf inside the container
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags packages-vm
+packages-tw-vm: setup ## Install Tumbleweed packages with zypper inside the container
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags packages-tw-vm
 
 vscode-insiders: setup ## Install VS Code Insiders inside the container
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags vscode-insiders
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags vscode-insiders
 
 podman-compose: setup ## Install podman-compose into ~/.local/bin (container)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags podman-compose
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags podman-compose
 
-starship-vm: setup ## Install starship (prompt) into ~/.local/bin (container)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags starship-vm
+starship-tw-vm: setup ## Install starship (prompt) into ~/.local/bin (container)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags starship-tw-vm
 
-languages-vm: setup ## Install Go/fnm/Julia/JDK/uv/Gradle/pnpm into ~/.local (container)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags languages-vm
+languages-tw-vm: setup ## Install Go/fnm/Julia/JDK/uv/Gradle/pnpm into ~/.local (container)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags languages-tw-vm
 
-shell-plugins-vm: setup ## Install oh-my-zsh + plugins (container)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags shell-plugins-vm
+shell-plugins-tw-vm: setup ## Install oh-my-zsh + plugins (container)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags shell-plugins-tw-vm
 
-stown-vm: setup ## Apply vm-profile dotfiles with stown
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=vm --tags stown-vm
+stown-tw-vm: setup ## Apply tw-vm-profile dotfiles with stown
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags stown-tw-vm
