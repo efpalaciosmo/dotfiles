@@ -1,6 +1,6 @@
 ---
 - name: Starship
-  tags: [tw-vm, aeon, starship-tw-vm, starship-aeon]
+  tags: [tw-vm, aeon, arch, starship-tw-vm, starship-aeon, starship-arch]
   block:
     - name: Check if starship already installed
       ansible.builtin.shell:

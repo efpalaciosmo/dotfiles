@@ -11,11 +11,14 @@ CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
 FLATPAK_BECOME = $(shell flatpak remotes --system 2>/dev/null | awk '$$1 == "flathub" { print "--ask-become-pass"; exit }')
 
 .PHONY: help setup doctor check verify \
-        aeon tw-vm home vm dry-run-aeon dry-run-tw-vm dry-run-home dry-run-vm \
+        aeon tw-vm arch home vm \
+        dry-run-aeon dry-run-tw-vm dry-run-arch dry-run-home dry-run-vm \
         fonts-aeon flatpaks stown-aeon \
         python-user-tools starship-aeon language-aeon languages-aeon shell-plugins-aeon \
         fonts-tw-vm packages-tw-vm vscode-insiders podman-compose \
-        starship-tw-vm languages-tw-vm shell-plugins-tw-vm stown-tw-vm
+        starship-tw-vm languages-tw-vm shell-plugins-tw-vm stown-tw-vm \
+        packages-arch fonts-arch starship-arch languages-arch language-arch \
+        shell-plugins-arch stown-arch
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -38,14 +41,15 @@ doctor: setup ## Show local command and dotfile diagnostics
 check: setup ## Ansible syntax-check (+ ansible-lint if installed)
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --syntax-check
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --syntax-check
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --syntax-check
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook-doctor.yml --syntax-check
 	@command -v ansible-lint >/dev/null 2>&1 && ansible-lint -q . || true
 
-# Partial Makefile targets must not pass `--tags foo,aeon` / `foo,tw-vm`
-# (Ansible OR would run the whole profile).
+# Partial Makefile targets must not pass `--tags foo,aeon` / `foo,tw-vm` /
+# `foo,arch` (Ansible OR would run the whole profile).
 verify: check
-	@! grep -E 'playbook\.yml.*--tags [^ ]+,(aeon|tw-vm)' $(MAKEFILE_LIST) \
-		|| (echo >&2 "verify: drop umbrella ,aeon/,tw-vm from partial playbook invocations"; exit 1)
+	@! grep -E 'playbook\.yml.*--tags [^ ]+,(aeon|tw-vm|arch)' $(MAKEFILE_LIST) \
+		|| (echo >&2 "verify: drop umbrella ,aeon/,tw-vm/,arch from partial playbook invocations"; exit 1)
 	@echo "verify: OK"
 
 # ---- Main profiles ---------------------------------------------------
@@ -55,6 +59,13 @@ aeon: setup ## Configure the openSUSE Aeon host user-space profile
 
 tw-vm: setup ## Configure the manually entered Tumbleweed Distrobox profile
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags tw-vm $(CHECK)
+
+# Arch installs system packages with `sudo pacman -S`, so we always pass
+# --ask-become-pass. Override BECOME_FLAGS to "" if your sudoers allows
+# passwordless sudo for pacman / systemctl / usermod.
+ARCH_BECOME ?= --ask-become-pass
+arch: setup ## Configure the Arch Linux host profile (installs pacman packages)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags arch $(ARCH_BECOME) $(CHECK)
 
 home: aeon ## Compatibility alias for aeon
 
@@ -67,6 +78,9 @@ dry-run-aeon: ## Like 'aeon' in Ansible check mode
 
 dry-run-tw-vm: ## Like 'tw-vm' in Ansible check mode
 	@$(MAKE) tw-vm DRY_RUN=1
+
+dry-run-arch: ## Like 'arch' in Ansible check mode (no sudo prompt)
+	@$(MAKE) arch DRY_RUN=1 ARCH_BECOME=
 
 dry-run-home: dry-run-aeon ## Compatibility alias for dry-run-aeon
 
@@ -83,10 +97,10 @@ fonts-aeon: setup ## Install Nerd Fonts on the host (~/.local/share/fonts)
 flatpaks: setup ## Configure user Flathub and install Flatpak apps
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=aeon --tags flatpaks $(FLATPAK_BECOME)
 
-# Override: PYTHON_USER_TOOLS_PROFILE=aeon|tw-vm make python-user-tools
+# Override: PYTHON_USER_TOOLS_PROFILE=aeon|tw-vm|arch make python-user-tools
 python-user-tools: setup ## pip --user + stown for the selected profile (default: aeon)
 	@profile="$${PYTHON_USER_TOOLS_PROFILE:-aeon}"; \
-	case "$$profile" in aeon|tw-vm) ;; *) echo >&2 "PYTHON_USER_TOOLS_PROFILE must be aeon or tw-vm"; exit 1;; esac; \
+	case "$$profile" in aeon|tw-vm|arch) ;; *) echo >&2 "PYTHON_USER_TOOLS_PROFILE must be aeon, tw-vm, or arch"; exit 1;; esac; \
 	"$(ANSIBLE_PLAYBOOK)" -i $(INV) playbook.yml -e dotfiles_profile="$$profile" --tags python-user-tools
 
 stown-aeon: setup ## Apply Aeon-profile dotfiles with stown
@@ -128,3 +142,25 @@ shell-plugins-tw-vm: setup ## Install oh-my-zsh + plugins (container)
 
 stown-tw-vm: setup ## Apply tw-vm-profile dotfiles with stown
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags stown-tw-vm
+
+# ---- Auxiliary targets (Arch host) -----------------------------------
+
+packages-arch: setup ## Install Arch packages with pacman (sudo required)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags packages-arch $(ARCH_BECOME)
+
+fonts-arch: setup ## Install Nerd Fonts on the Arch host (~/.local/share/fonts)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags fonts-arch
+
+starship-arch: setup ## Install starship (prompt) into ~/.local/bin (Arch host)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags starship-arch
+
+language-arch: languages-arch
+
+languages-arch: setup ## Install fnm/uv/pnpm into ~/.local on the Arch host
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags languages-arch
+
+shell-plugins-arch: setup ## Install oh-my-zsh + plugins on the Arch host
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags shell-plugins-arch
+
+stown-arch: setup ## Apply Arch-profile dotfiles with stown
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags stown-arch

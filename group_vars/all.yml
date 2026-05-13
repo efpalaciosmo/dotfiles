@@ -21,6 +21,20 @@ stown_packages_tw_vm:
   - shell-container
   - starship
 
+# Packages to link on the Arch host. The Arch profile is the full desktop
+# environment: shell, prompt, editor (plugin-free Neovim), and the niri /
+# Wayland stack (waybar, mako, rofi, foot).
+stown_packages_arch:
+  - git
+  - shell-arch
+  - starship
+  - nvim-arch
+  - niri
+  - waybar
+  - mako
+  - rofi
+  - foot
+
 # Flathub / Flatpaks (host, --user)
 flathub_repo_url: "https://dl.flathub.org/repo/flathub.flatpakrepo"
 flatpak_apps:
@@ -100,6 +114,63 @@ jdk_distribution: "{{ lookup('env', 'JDK_DISTRIBUTION', default='tem') }}"
 # Zsh / oh-my-zsh
 zsh_dir: "{{ ansible_facts.env.ZSH | default(ansible_facts.env.HOME + '/.oh-my-zsh') }}"
 zsh_custom: "{{ ansible_facts.env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
+
+# ---------------------------------------------------------------------------
+# Arch Linux host packages (pacman)
+#
+# Installed via the `arch_packages` role with `--needed --noconfirm` so the
+# task is idempotent. `become: true` is required because pacman writes to /.
+# ---------------------------------------------------------------------------
+arch_pacman_packages:
+  - adw-gtk-theme
+  - base-devel
+  - bash-completion
+  - bluez
+  - bluez-utils
+  - brightnessctl
+  - btop
+  - cliphist
+  - cmake
+  - curl
+  - dconf
+  - duf
+  - fastfetch
+  - flatpak
+  - foot
+  - gnome-keyring
+  - grim
+  - gsettings-desktop-schemas
+  - git
+  - libnotify
+  - libpulse
+  - make
+  - mako
+  - ncdu
+  - neovim
+  - networkmanager
+  - niri
+  - nm-connection-editor
+  - nvtop
+  - pavucontrol
+  - playerctl
+  - polkit-gnome
+  - podman
+  - python
+  - python-pip
+  - rofi
+  - slurp
+  - swaybg
+  - swappy
+  - unzip
+  - waybar
+  - wget
+  - wireplumber
+  - wl-clipboard
+  - woff2-font-awesome
+  - xdg-desktop-portal
+  - xdg-desktop-portal-gnome
+  - xdg-desktop-portal-gtk
+  - zsh
 
 # Tumbleweed packages (tw-vm)
 tw_pkg_shell:

@@ -3,12 +3,17 @@
   ansible.builtin.assert:
     that:
       - stown_profile is defined
-      - stown_profile in ['aeon', 'tw-vm']
+      - stown_profile in ['aeon', 'tw-vm', 'arch']
     quiet: true
 
 - name: Select stown package names for this profile
   ansible.builtin.set_fact:
-    _stown_names: "{{ stown_packages_aeon if stown_profile == 'aeon' else stown_packages_tw_vm }}"
+    _stown_names: >-
+      {{
+        stown_packages_aeon if stown_profile == 'aeon'
+        else (stown_packages_arch if stown_profile == 'arch'
+              else stown_packages_tw_vm)
+      }}
 
 - name: Stat each stown package directory
   ansible.builtin.stat:

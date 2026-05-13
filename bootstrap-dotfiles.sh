@@ -18,10 +18,10 @@ DOTFILES_DIR="${DOTFILES_DIR:-$HOME/Projects/dotfiles}"
 PROFILE="${PROFILE:-aeon}"
 
 case "$PROFILE" in
-  aeon|tw-vm) ;;
+  aeon|tw-vm|arch) ;;
   home) PROFILE=aeon ;;
   vm) PROFILE=tw-vm ;;
-  *) echo "ERROR: PROFILE must be 'aeon' or 'tw-vm' (current: $PROFILE)" >&2; exit 1 ;;
+  *) echo "ERROR: PROFILE must be 'aeon', 'tw-vm', or 'arch' (current: $PROFILE)" >&2; exit 1 ;;
 esac
 
 log() { printf '[bootstrap] %s\n' "$*"; }

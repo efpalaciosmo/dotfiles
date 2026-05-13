@@ -1,0 +1,103 @@
+---
+# Install the host-side Arch package set with pacman.
+#
+# The Arch profile assumes you are running on the host (not inside a
+# container) and that your user has passwordless sudo (or that you launch
+# `make arch` with --ask-become-pass, see the Makefile).
+
+- name: Arch packages (pacman)
+  tags: [arch, packages-arch]
+  block:
+    - name: Verify required commands are present (host)
+      ansible.builtin.command:
+        cmd: "command -v {{ item }}"
+      args:
+        executable: /bin/bash
+      loop:
+        - bash
+        - tar
+        - python3
+        - pacman
+        - sudo
+      changed_when: false
+
+    - name: Verify curl or wget exists
+      ansible.builtin.command:
+        cmd: "command -v {{ item }}"
+      args:
+        executable: /bin/bash
+      loop:
+        - curl
+        - wget
+      register: arch_curl_wget
+      changed_when: false
+      failed_when: false
+
+    - name: At least one downloader required (arch)
+      ansible.builtin.assert:
+        that:
+          - arch_curl_wget.results | selectattr('rc', 'equalto', 0) | list | length > 0
+        fail_msg: "Need curl or wget on the host."
+        quiet: true
+      when: not ansible_check_mode
+
+    # Refresh package databases. We don't run a full system upgrade here on
+    # purpose: that's a user decision (Arch is rolling and partial upgrades
+    # are unsupported, but `pacman -Sy` then `-S` of new packages is exactly
+    # what `--needed` is for).
+    - name: Refresh pacman databases (sudo pacman -Sy)
+      ansible.builtin.command:
+        cmd: pacman -Sy --noconfirm
+      become: true
+      when: not ansible_check_mode
+      register: pacman_sync
+      changed_when: pacman_sync.rc == 0
+      failed_when: pacman_sync.rc != 0
+
+    - name: Install Arch package set (sudo pacman -S --needed --noconfirm)
+      ansible.builtin.command:
+        cmd: >-
+          pacman -S --needed --noconfirm
+          {{ arch_pacman_packages | join(' ') }}
+      become: true
+      when: not ansible_check_mode
+      register: pacman_install
+      changed_when: >-
+        ('installing' in (pacman_install.stdout | default(''))
+         or 'upgrading'  in (pacman_install.stdout | default('')))
+      failed_when: pacman_install.rc != 0
+
+    - name: Verify packages with pacman -Q (best-effort)
+      ansible.builtin.command:
+        cmd: "pacman -Q {{ item }}"
+      loop: "{{ arch_pacman_packages }}"
+      register: pacman_q_arch
+      when: not ansible_check_mode
+      changed_when: false
+      failed_when: false
+
+    # ----------------------------------------------------------------------
+    # Service / capability bootstrap. These are user-facing assumptions in
+    # the package list (Bluetooth, NetworkManager, polkit) and would silently
+    # be missing if we left it to the user to remember to enable them.
+    # ----------------------------------------------------------------------
+    - name: Enable system services pulled in by the package list
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      become: true
+      when: not ansible_check_mode
+      register: arch_system_services
+      failed_when: false
+      loop:
+        - NetworkManager.service
+        - bluetooth.service
+
+    - name: Add user to the wheel group (sudoers) if missing
+      ansible.builtin.user:
+        name: "{{ ansible_facts.env.USER }}"
+        groups: wheel
+        append: true
+      become: true
+      when: not ansible_check_mode

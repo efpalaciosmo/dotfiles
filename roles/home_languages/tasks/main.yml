@@ -2,8 +2,8 @@
 # User-local language tooling on the host.
 # Keep this intentionally smaller than the container language stack.
 
-- name: Languages (aeon)
-  tags: [aeon, languages-aeon, language-aeon]
+- name: Languages (aeon / arch host)
+  tags: [aeon, arch, languages-aeon, language-aeon, languages-arch, language-arch]
   when: not ansible_check_mode
   block:
     - name: Language toolchain cache directories
