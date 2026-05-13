@@ -29,14 +29,6 @@ alias pacqi='pacman -Qi'
 alias paclo='pacman -Qdt'
 alias pacc='sudo pacman -Sc'
 
-# flatpak (--user)
-alias fpu='flatpak --user'
-alias fpus='flatpak --user search'
-alias fpui='flatpak --user install -y'
-alias fpuu='flatpak --user uninstall'
-alias fpuup='flatpak --user update -y'
-alias fpul='flatpak list --user'
-
 # podman (docker compatibility shim is optional on Arch)
 alias pod='podman'
 alias podc='podman compose'
@@ -66,9 +58,9 @@ if command -v starship >/dev/null 2>&1; then
 fi
 
 # pnpm
-export PNPM_HOME="$HOME/.local/share/pnpm"
+export PNPM_HOME="/home/efpalaciosmo/Projects/arch/.local/share/pnpm"
 case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
 esac
 # pnpm end

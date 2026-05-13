@@ -1,9 +1,10 @@
 ---
 # Arch Linux host profile.
-# Installs the pacman package set (with sudo), bootstraps user-local tooling
-# (Nerd Fonts, pip, stown, starship, oh-my-zsh plugins) and applies the
-# stown-managed dotfiles (git, shell-arch, starship, nvim-arch, niri,
-# waybar, mako, rofi, foot).
+# Order: common -> system packages (pacman) -> python user tools (pip + stown)
+# -> fonts -> language tools -> starship -> shell plugins -> stown apply.
+#
+# Rationale: pacman installs python/base-devel; python_user_tools then bootstraps
+# pip --user and stown so every later step (and the final stown apply) has them.
 
 # Arch ships an externally-managed Python (PEP 668). The shared
 # python_user_tools role uses pip --user to install stown, so we enable the
@@ -23,15 +24,15 @@
     name: arch_packages
   tags: [packages-arch, arch]
 
-- name: Nerd Fonts (host)
-  ansible.builtin.import_role:
-    name: fonts
-  tags: [fonts-arch, arch]
-
 - name: Python user tools (pip, stown)
   ansible.builtin.import_role:
     name: python_user_tools
   tags: [python-user-tools, arch]
+
+- name: Nerd Fonts (host)
+  ansible.builtin.import_role:
+    name: fonts
+  tags: [fonts-arch, arch]
 
 - name: Language tools (host)
   ansible.builtin.import_role:
@@ -40,12 +41,12 @@
 
 - name: Starship prompt (host)
   ansible.builtin.import_role:
-    name: vm_starship
+    name: starship
   tags: [starship-arch, arch]
 
 - name: Zsh plugins (host)
   ansible.builtin.import_role:
-    name: vm_shell_plugins
+    name: shell_plugins
   tags: [shell-plugins-arch, arch]
 
 - name: Apply dotfiles with stown

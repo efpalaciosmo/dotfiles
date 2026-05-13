@@ -57,14 +57,6 @@ alias pacqi='pacman -Qi'
 alias paclo='pacman -Qdt'
 alias pacc='sudo pacman -Sc'
 
-# flatpak (--user)
-alias fpu='flatpak --user'
-alias fpus='flatpak --user search'
-alias fpui='flatpak --user install -y'
-alias fpuu='flatpak --user uninstall'
-alias fpuup='flatpak --user update -y'
-alias fpul='flatpak list --user'
-
 # podman
 alias pod='podman'
 alias podc='podman compose'

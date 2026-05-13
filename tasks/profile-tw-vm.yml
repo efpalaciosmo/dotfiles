@@ -1,4 +1,9 @@
 ---
+# Tumbleweed Distrobox profile (manually entered).
+# Order: common -> system packages (zypper) -> python user tools (pip + stown)
+# -> fonts -> VS Code Insiders -> language runtimes -> starship -> shell
+# plugins -> stown apply -> podman-compose (pip-based, runs last).
+
 - name: Common setup
   ansible.builtin.import_role:
     name: common
@@ -8,11 +13,6 @@
   ansible.builtin.import_role:
     name: vm_packages
   tags: [packages-tw-vm, tw-vm]
-
-- name: Starship (prompt)
-  ansible.builtin.import_role:
-    name: vm_starship
-  tags: [starship-tw-vm, tw-vm]
 
 - name: Python user tools (pip, stown)
   ansible.builtin.import_role:
@@ -34,9 +34,14 @@
     name: vm_languages
   tags: [languages-tw-vm, tw-vm]
 
+- name: Starship (prompt)
+  ansible.builtin.import_role:
+    name: starship
+  tags: [starship-tw-vm, tw-vm]
+
 - name: Shell plugins (oh-my-zsh)
   ansible.builtin.import_role:
-    name: vm_shell_plugins
+    name: shell_plugins
   tags: [shell-plugins-tw-vm, tw-vm]
 
 - name: Apply dotfiles with stown

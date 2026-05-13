@@ -8,11 +8,11 @@
 - name: Arch packages (pacman)
   tags: [arch, packages-arch]
   block:
+    # `command -v` is a POSIX shell builtin, so we must go through the shell
+    # module (the command module would try to exec a binary called "command").
     - name: Verify required commands are present (host)
-      ansible.builtin.command:
-        cmd: "command -v {{ item }}"
-      args:
-        executable: /bin/bash
+      ansible.builtin.shell:
+        cmd: command -v "{{ item }}"
       loop:
         - bash
         - tar
@@ -22,10 +22,8 @@
       changed_when: false
 
     - name: Verify curl or wget exists
-      ansible.builtin.command:
-        cmd: "command -v {{ item }}"
-      args:
-        executable: /bin/bash
+      ansible.builtin.shell:
+        cmd: command -v "{{ item }}"
       loop:
         - curl
         - wget

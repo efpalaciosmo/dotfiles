@@ -1,5 +1,5 @@
 ---
-# Run with: ansible-playbook playbook.yml -e dotfiles_profile=aeon|tw-vm|arch
+# Run with: ansible-playbook playbook.yml -e dotfiles_profile=tw-vm|arch
 # Makefile sets dotfiles_profile and optional --tags / check mode for dry-run.
 
 - name: Dotfiles automation
@@ -12,8 +12,8 @@
       ansible.builtin.assert:
         that:
           - dotfiles_profile is defined
-          - dotfiles_profile in ['aeon', 'tw-vm', 'arch']
-        fail_msg: "Set -e dotfiles_profile=aeon, dotfiles_profile=tw-vm, or dotfiles_profile=arch"
+          - dotfiles_profile in ['tw-vm', 'arch']
+        fail_msg: "Set -e dotfiles_profile=tw-vm or dotfiles_profile=arch"
         quiet: true
       tags: [always]
 
@@ -23,11 +23,6 @@
       tags: [always]
 
   tasks:
-    - name: Aeon workflow
-      ansible.builtin.include_tasks: tasks/profile-aeon.yml
-      when: dotfiles_profile == 'aeon'
-      tags: [always]
-
     - name: Tumbleweed VM workflow
       ansible.builtin.include_tasks: tasks/profile-tw-vm.yml
       when: dotfiles_profile == 'tw-vm'

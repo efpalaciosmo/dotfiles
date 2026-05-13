@@ -1,5 +1,5 @@
 ---
-# stown_pkg_dir = absolute path to package (e.g. .../packages/shell)
+# stown_pkg_dir = absolute path to package (e.g. .../packages/starship)
 - name: Find files under package
   ansible.builtin.find:
     paths: "{{ stown_pkg_dir }}"
@@ -17,6 +17,36 @@
         | reject('search', dotfiles_ignore_regex)
         | list
       }}
+
+# Without this, stown "tree-folds" any directory whose target does not yet
+# exist (e.g. ~/.config), creating a single symlink to the package's subdir.
+# When a later package shares the same parent, --force makes it overwrite the
+# previous symlink, so the last package effectively claims the whole tree
+# (e.g. ~/.config ends up pointing at packages/foot/.config/ alone).
+# Pre-creating every directory the package contributes guarantees stown only
+# folds leaf files, keeping ~/.config and friends real directories.
+- name: Find directories under package (defeat stown tree-folding)
+  ansible.builtin.find:
+    paths: "{{ stown_pkg_dir }}"
+    recurse: true
+    file_type: directory
+    hidden: true
+  register: _dotfiles_pkg_dirs
+
+- name: Pre-create matching directories under HOME
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: >-
+    {{
+      _dotfiles_pkg_dirs.files
+      | map(attribute='path')
+      | reject('search', dotfiles_ignore_regex)
+      | map('regex_replace', '^' ~ (stown_pkg_dir | regex_escape) ~ '/', '')
+      | reject('equalto', '')
+      | list
+    }}
 
 - name: Prepare backup root
   ansible.builtin.file:

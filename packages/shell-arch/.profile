@@ -9,14 +9,6 @@ if [ -d "$HOME/.local/bin" ]; then
     esac
 fi
 
-# User Flatpak app commands exported by `flatpak --user`.
-if [ -d "$HOME/.local/share/flatpak/exports/bin" ]; then
-    case ":$PATH:" in
-        *":$HOME/.local/share/flatpak/exports/bin:"*) ;;
-        *) PATH="$HOME/.local/share/flatpak/exports/bin:$PATH" ;;
-    esac
-fi
-
 # fnm (Fast Node Manager) and pnpm live in user-local data dirs.
 if [ -d "$HOME/.local/share/fnm" ]; then
     case ":$PATH:" in
@@ -40,15 +32,6 @@ if [ -d "$HOME/.cargo/bin" ]; then
         *":$HOME/.cargo/bin:"*) ;;
         *) PATH="$HOME/.cargo/bin:$PATH" ;;
     esac
-fi
-
-# User flatpak data dir (so launchers and `flatpak run` work consistently).
-if [ -d "$HOME/.local/share/flatpak/exports/share" ]; then
-    case ":${XDG_DATA_DIRS:-}:" in
-        *":$HOME/.local/share/flatpak/exports/share:"*) ;;
-        *) XDG_DATA_DIRS="$HOME/.local/share/flatpak/exports/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" ;;
-    esac
-    export XDG_DATA_DIRS
 fi
 
 export PATH

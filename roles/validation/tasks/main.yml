@@ -35,7 +35,6 @@
     - git
     - make
     - stown
-    - flatpak
     - zypper
     - pacman
     - niri
@@ -98,7 +97,7 @@
     executable: /bin/bash
   environment:
     DOTFILES_PACKAGES_ROOT: "{{ dotfiles_packages_root }}"
-    DOTFILES_STOWN_PKGS: "{{ (stown_packages_aeon + stown_packages_tw_vm + stown_packages_arch) | unique | join(' ') }}"
+    DOTFILES_STOWN_PKGS: "{{ (stown_packages_tw_vm + stown_packages_arch) | unique | join(' ') }}"
   register: doctor_links
   changed_when: false
   failed_when: false
