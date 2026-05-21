@@ -1,4 +1,4 @@
-SHELL := /usr/bin/env bash
+SHELL := /usr/bin/env zsh
 
 VENV := $(CURDIR)/.venv
 PIP := $(VENV)/bin/pip

@@ -81,3 +81,4 @@ _prepend_path "$HOME/.opencode/bin"
 export PATH
 
 unset -f _prepend_path
+. "$HOME/.cargo/env"

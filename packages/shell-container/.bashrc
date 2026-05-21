@@ -76,3 +76,4 @@ fi
 # reference to SDKMAN_DIR in this file and does NOT auto-append a second init
 # block with hardcoded paths. Do not remove.
 # SDKMAN_DIR is configured in ~/.profile.
+. "$HOME/.cargo/env"
