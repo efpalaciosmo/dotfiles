@@ -80,3 +80,14 @@ if [ -f "$HOME/.cargo/env" ]; then
     # shellcheck disable=SC1090
     . "$HOME/.cargo/env"
 fi
+
+# pnpm
+export PNPM_HOME="/home/efpalaciosmo/Projects/suse/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+# pnpm end
+eval "$(/bin/brew shellenv)"
+eval "$(/bin/brew shellenv)"
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

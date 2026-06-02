@@ -117,8 +117,4 @@ if command -v starship >/dev/null 2>&1; then
     eval "$(starship init zsh)"
 fi
 
-# gvm and SDKMAN_DIR are initialised in ~/.profile (POSIX, shared with bash).
-# The marker below is here so the SDKMAN installer's idempotency check sees a
-# reference to SDKMAN_DIR in this file and does NOT auto-append a second init
-# block with hardcoded paths. Do not remove.
-# SDKMAN_DIR is configured in ~/.profile.
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
