@@ -22,6 +22,24 @@
         dotfiles_backup_stamp: "{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
       tags: [always]
 
+    - name: Check sudo access for system-level openSUSE tasks
+      ansible.builtin.command:
+        cmd: id -u
+      become: true
+      register: dotfiles_sudo_check
+      changed_when: false
+      when:
+        - not ansible_check_mode
+        - >
+          ansible_run_tags | default(['all']) | intersect([
+            'all',
+            'suse',
+            'packages-suse',
+            'desktop-suse',
+            'vscode-insiders'
+          ]) | length > 0
+      tags: [always]
+
   tasks:
     - name: openSUSE workflow
       ansible.builtin.include_tasks: tasks/profile-suse.yml

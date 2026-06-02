@@ -7,6 +7,10 @@ ANSIBLE_GALAXY := $(VENV)/bin/ansible-galaxy
 INV := $(CURDIR)/inventory.ini
 # Pass DRY_RUN=1 with --check for dry-run (see README).
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
+# Targets that touch system packages/services need sudo. Override with
+# ASK_BECOME_PASS=0 if sudo is passwordless on the target host.
+ASK_BECOME_PASS ?= 1
+BECOME_ASK := $(if $(filter 1,$(DRY_RUN)),,$(if $(filter 1,$(ASK_BECOME_PASS)),--ask-become-pass,))
 
 .PHONY: help setup doctor check verify \
         suse dry-run-suse audit-suse \
@@ -58,7 +62,7 @@ verify: check
 # ---- Main profile ----------------------------------------------------
 
 suse: setup ## Configure the openSUSE profile
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags suse $(CHECK)
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags suse $(BECOME_ASK) $(CHECK)
 
 dry-run-suse: ## Like 'suse' in Ansible check mode
 	@$(MAKE) suse DRY_RUN=1
@@ -87,16 +91,16 @@ python-user-tools: setup ## pip --user + stown
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags python-user-tools
 
 packages-suse: setup ## Install openSUSE packages with zypper
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags packages-suse
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags packages-suse $(BECOME_ASK)
 
 desktop-suse: setup ## Enable desktop services and create desktop dirs
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags desktop-suse
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags desktop-suse $(BECOME_ASK)
 
 fonts-suse: setup ## Install Nerd Fonts into ~/.local/share/fonts
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags fonts-suse
 
 vscode-insiders: setup ## Install VS Code Insiders from the Microsoft RPM repo
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags vscode-insiders
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags vscode-insiders $(BECOME_ASK)
 
 podman-compose: setup ## Install podman-compose into ~/.local/bin
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags podman-compose

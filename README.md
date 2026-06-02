@@ -58,6 +58,14 @@ make podman-compose
 
 There are no compatibility aliases. The only accepted profile name is `suse`.
 
+Targets that install system packages, enable system services, or add the VS Code
+RPM repo ask for the sudo password up front. If sudo is already passwordless on
+the target host, run with `ASK_BECOME_PASS=0`, for example:
+
+```bash
+ASK_BECOME_PASS=0 make suse
+```
+
 ## What `make suse` Does
 
 1. Installs the openSUSE package set with `zypper --non-interactive`.
