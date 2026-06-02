@@ -1,72 +1,104 @@
 #!/usr/bin/env bash
-# Clone (or update) this dotfiles repo and run a profile via Make + Ansible.
+# Clone or update this dotfiles repo and run the portable Make flow.
 #
 # Usage:
-#   DOTFILES_REPO_URL="https://github.com/USUARIO/dotfiles.git" \
+#   DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \
 #   DOTFILES_DIR="$HOME/Projects/dotfiles" \
-#   PROFILE="suse" \
 #   bash bootstrap-dotfiles.sh
 #
 # Defaults:
 #   DOTFILES_DIR=$HOME/Projects/dotfiles
-#   PROFILE=suse
-#   DOTFILES_REPO_URL=(required if directory does not exist)
+#   DOTFILES_REPO_URL is required when DOTFILES_DIR does not exist.
 set -Eeuo pipefail
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/Projects/dotfiles}"
-PROFILE="${PROFILE:-suse}"
-
-case "$PROFILE" in
-  suse) ;;
-  *) echo "ERROR: PROFILE must be 'suse' (current: $PROFILE)" >&2; exit 1 ;;
-esac
+HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 
 log() { printf '[bootstrap] %s\n' "$*"; }
 die() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
 
-is_opensuse() {
-  [[ -r /etc/os-release ]] || return 1
-  # shellcheck disable=SC1091
-  . /etc/os-release
-  [[ "${ID:-}" == opensuse* || "${ID_LIKE:-}" == *suse* ]]
-}
-
-install_opensuse_prereqs() {
-  is_opensuse || return 0
-  command -v zypper >/dev/null 2>&1 || return 0
-
-  local missing=()
-  for cmd in bash git make python3; do
-    command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
-  done
-  if command -v python3 >/dev/null 2>&1 && ! python3 -m venv --help >/dev/null 2>&1; then
-    missing+=("python3-venv")
-  fi
-
-  if ((${#missing[@]} == 0)); then
+find_brew() {
+  if command -v brew >/dev/null 2>&1; then
+    command -v brew
     return 0
   fi
 
-  log "Installing openSUSE bootstrap prerequisites: ${missing[*]}"
-  if ((EUID == 0)); then
-    zypper install --no-recommends \
-      bash git make python3 python3-pip
-  elif command -v sudo >/dev/null 2>&1; then
-    sudo zypper install --no-recommends \
-      bash git make python3 python3-pip
-  else
-    die "sudo is not available; install prerequisites as root: zypper install bash git make python3 python3-pip"
+  for candidate in \
+    /opt/homebrew/bin/brew \
+    /usr/local/bin/brew \
+    /home/linuxbrew/.linuxbrew/bin/brew; do
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+load_homebrew() {
+  local brew_path
+  brew_path="$(find_brew)" || return 1
+  eval "$("$brew_path" shellenv)"
+
+  local brew_prefix
+  brew_prefix="$("$brew_path" --prefix)"
+  for extra_path in \
+    "$brew_prefix/opt/make/libexec/gnubin" \
+    "$brew_prefix/opt/llvm/bin" \
+    "$brew_prefix/opt/openjdk/bin"; do
+    if [[ -d "$extra_path" ]]; then
+      export PATH="$extra_path:$PATH"
+    fi
+  done
+}
+
+install_homebrew() {
+  log "Installing Homebrew with the official installer"
+  if command -v curl >/dev/null 2>&1; then
+    NONINTERACTIVE="${NONINTERACTIVE:-1}" /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALL_URL")"
+    return 0
   fi
+
+  if command -v wget >/dev/null 2>&1; then
+    local tmp
+    tmp="$(mktemp)"
+    wget -qO "$tmp" "$HOMEBREW_INSTALL_URL"
+    NONINTERACTIVE="${NONINTERACTIVE:-1}" /bin/bash "$tmp"
+    rm -f "$tmp"
+    return 0
+  fi
+
+  die "curl or wget is required to download the Homebrew installer"
 }
 
-ensure_git() {
-  command -v git >/dev/null 2>&1 || die "git is not available"
+ensure_homebrew() {
+  if load_homebrew; then
+    return 0
+  fi
+
+  install_homebrew
+  load_homebrew || die "Homebrew was installed but could not be loaded"
 }
 
-ensure_make_python() {
-  command -v make >/dev/null 2>&1 || die "make is not available"
-  command -v python3 >/dev/null 2>&1 || die "python3 is not available"
+ensure_bootstrap_tools() {
+  ensure_homebrew
+
+  local formulas=()
+  command -v git >/dev/null 2>&1 || formulas+=("git")
+  command -v make >/dev/null 2>&1 || formulas+=("make")
+  command -v python3 >/dev/null 2>&1 || formulas+=("python")
+
+  if ((${#formulas[@]} > 0)); then
+    log "Installing bootstrap tools with Homebrew: ${formulas[*]}"
+    brew install "${formulas[@]}"
+    load_homebrew || true
+  fi
+
+  command -v git >/dev/null 2>&1 || die "git is not available after Homebrew bootstrap"
+  command -v make >/dev/null 2>&1 || die "make is not available after Homebrew bootstrap"
+  command -v python3 >/dev/null 2>&1 || die "python3 is not available after Homebrew bootstrap"
 }
 
 clone_or_update() {
@@ -80,7 +112,7 @@ clone_or_update() {
   fi
 
   if [[ -d "$DOTFILES_DIR" ]]; then
-    die "$DOTFILES_DIR exists but is NOT a git repo. Move or delete that directory."
+    die "$DOTFILES_DIR exists but is not a git repo. Move it and try again."
   fi
 
   if [[ -z "$DOTFILES_REPO_URL" ]]; then
@@ -92,19 +124,16 @@ clone_or_update() {
   git clone "$DOTFILES_REPO_URL" "$DOTFILES_DIR"
 }
 
-run_profile() {
-  log "Running: make setup && make $PROFILE"
+run_make() {
+  log "Running make"
   cd "$DOTFILES_DIR"
-  make setup
-  make "$PROFILE"
+  make
 }
 
 main() {
-  install_opensuse_prereqs
-  ensure_git
-  ensure_make_python
+  ensure_bootstrap_tools
   clone_or_update
-  run_profile
+  run_make
 }
 
 main "$@"

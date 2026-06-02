@@ -60,13 +60,12 @@ require("mason-tool-installer").setup({
     "css-lsp",
     "tailwindcss-language-server",
     "sqlls",
-    -- Formatters.
-    "stylua",
+    -- Formatters not covered by the base Brewfile.
     "prettier",
-    "clang-format",
     "sqlfluff",
-    -- (ruff covers Python format+lint; zig fmt ships with zig itself;
-    --  julia LSP is installed via Julia's Pkg.add("LanguageServer").)
+    -- (stylua and clang-format come from Homebrew/LLVM; ruff covers Python
+    --  format+lint; zig fmt ships with zig itself; julia LSP is installed via
+    --  Julia's Pkg.add("LanguageServer").)
   },
   auto_update = false,
   run_on_start = true,
@@ -527,11 +526,10 @@ require("lualine").setup({
 -- options.lua. Indent is left to smartindent + per-filetype shiftwidth, since
 -- nvim-treesitter's indent module is still flagged experimental upstream.
 --
--- System parsers from /usr/lib64/tree-sitter/ are already registered by the
--- bootstrap in init.lua, so anything you install via zypper "just works"
--- without :TSInstall. Use :TSInstall <lang> for languages not packaged on
--- openSUSE; they go to stdpath('data')/site/parser/ and stay separate from
--- the system set.
+-- Parser libraries from common system and Homebrew locations are registered by
+-- the bootstrap in init.lua. Use :TSInstall <lang> for anything missing; those
+-- parsers go to stdpath('data')/site/parser/ and stay separate from global
+-- parser libraries.
 -- ============================================================================
 do
   local ok, ts = pcall(require, "nvim-treesitter")
@@ -554,9 +552,15 @@ do
       "regex", "diff", "gitcommit",
     }
 
-    -- install() is async. Wrap in pcall so a transient network failure on
-    -- first launch doesn't break startup.
-    pcall(ts.install, ensure)
+    -- install() shells out to the tree-sitter CLI for some parsers/queries.
+    -- Skip auto-install when it is unavailable so startup stays quiet.
+    if vim.fn.executable("tree-sitter") == 1 then
+      -- install() is async. Wrap in pcall so a transient network failure on
+      -- first launch doesn't break startup.
+      pcall(ts.install, ensure)
+    else
+      vim.notify("nvim-treesitter: install tree-sitter CLI to auto-install parsers", vim.log.levels.WARN)
+    end
   end
 end
 

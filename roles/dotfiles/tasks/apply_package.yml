@@ -22,7 +22,7 @@
 # exist (e.g. ~/.config), creating a single symlink to the package's subdir.
 # When a later package shares the same parent, --force makes it overwrite the
 # previous symlink, so the last package effectively claims the whole tree
-# (e.g. ~/.config ends up pointing at packages/foot/.config/ alone).
+# (e.g. ~/.config ends up pointing at a single package's .config/ alone).
 # Pre-creating every directory the package contributes guarantees stown only
 # folds leaf files, keeping ~/.config and friends real directories.
 - name: Find directories under package (defeat stown tree-folding)

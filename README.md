@@ -1,129 +1,81 @@
-# Dotfiles - openSUSE
+# Portable Dotfiles
 
-Reproducible automation for one profile: `suse`.
+Single portable flow for shell, Git, Starship, and Neovim:
 
-The profile configures openSUSE with zypper packages, user-local language
-tooling, shell plugins, Starship, VS Code Insiders, the plugin-based Neovim
-config, and a Niri Wayland desktop stack.
-
-## Layout
-
-```text
-.
-├── packages/
-│   ├── git/              # Git config
-│   ├── shell-container/  # Shell config
-│   ├── nvim-vm/          # Main Neovim config
-│   ├── starship/         # Prompt
-│   ├── niri/             # Niri Wayland compositor
-│   ├── waybar/           # Status bar
-│   ├── mako/             # Notifications
-│   ├── rofi/             # Launcher / scripts
-│   └── foot/             # Terminal
-├── roles/                # Ansible roles
-├── tasks/profile-suse.yml
-├── group_vars/all.yml    # Package lists, fonts, stown list
-├── playbook.yml          # -e dotfiles_profile=suse
-├── playbook-doctor.yml
-├── bootstrap-dotfiles.sh
-└── Makefile
+```sh
+make
 ```
 
-`stown` links each package subtree under `packages/` into `$HOME`. The active
-package list is `stown_packages_suse` in `group_vars/all.yml`.
+`make` installs or loads Homebrew, runs `brew bundle`, applies the portable
+Ansible workflow, and validates the repo. The Ansible profile is internal; no
+profile argument is needed.
 
-## Targets
+## Commands
 
-```bash
-make setup          # .venv + ansible-core + collections + inventory.ini
-make check          # Ansible syntax checks
-make verify         # check + old-profile residue guard
-make doctor         # local command and dotfile diagnostics
-make audit-suse     # versions/package metadata inside distrobox 'suse'
-
-make suse           # configure openSUSE
-make dry-run-suse   # check mode
-
-make packages-suse
-make desktop-suse
-make python-user-tools
-make fonts-suse
-make vscode-insiders
-make languages-suse
-make starship-suse
-make shell-plugins-suse
-make stown-suse
-make podman-compose
+```sh
+make            # same as make setup
+make setup      # Homebrew + Brewfile + fonts + shell plugins + stown dotfiles + validation
+make brew       # install/load Homebrew and run brew bundle
+make fonts      # install user-local fonts
+make shell      # install oh-my-zsh and zsh plugins
+make dotfiles   # install stown if needed and link dotfiles
+make check      # syntax checks
+make doctor     # command and symlink diagnostics
+make verify     # syntax checks plus residue guard
 ```
 
-There are no compatibility aliases. The only accepted profile name is `suse`.
+For a non-mutating check of the Ansible work:
 
-Targets that install system packages, enable system services, or add the VS Code
-RPM repo ask for the sudo password up front. If sudo is already passwordless on
-the target host, run with `ASK_BECOME_PASS=0`, for example:
-
-```bash
-ASK_BECOME_PASS=0 make suse
+```sh
+DRY_RUN=1 make
 ```
 
-## What `make suse` Does
+In dry-run mode, the Homebrew step uses `brew bundle check` and Ansible runs
+with `--check`; it exits non-zero when Brewfile formulas are missing.
 
-1. Installs the openSUSE package set with `zypper`.
-2. Enables desktop services for NetworkManager, Bluetooth, PipeWire,
-   WirePlumber, and PipeWire Pulse when systemd is available.
-3. Bootstraps `pip --user` and installs `stown`.
-4. Installs Nerd Fonts into `~/.local/share/fonts`.
-5. Installs VS Code Insiders from the Microsoft RPM repo.
-6. Installs user-local language tooling: Go via gvm, fnm, Julia, JDK via
-   SDKMAN, uv, Gradle, and pnpm.
-7. Installs Starship and oh-my-zsh plugins.
-8. Links the `suse` dotfiles: `git`, `shell-container`, `starship`, `nvim-vm`,
-   `niri`, `waybar`, `mako`, `rofi`, and `foot`.
-9. Installs `podman-compose` via `pip --user`.
+## Homebrew
 
-## Niri Desktop
+`Brewfile` owns the CLI base:
 
-The package list includes Niri and the supporting desktop stack used by the
-checked-in configs: Waybar, Mako, rofi-wayland, Foot, swaybg, wl-clipboard,
-cliphist, grim, slurp, swappy, PipeWire, WirePlumber, PulseAudio CLI tools,
-portals, polkit, NetworkManager tooling, Bluetooth tooling, brightness/audio
-and media controls, and notification utilities.
+- Shell and dev tools: Bash, Bash completion, Zsh, Git, GitHub CLI, build
+  tools, curl/wget, archives, and JSON tools.
+- Daily CLI: tree, fd, ripgrep, fzf, bat, btop, duf, ncdu, tmux, fastfetch.
+- Neovim tooling: Neovim, tree-sitter, Lua, Stylua.
+- Toolchains and managers: uv, fnm, juliaup, pnpm, Go, rustup-init, Zig, LLVM,
+  OpenJDK, Gradle.
+- Prompt and dotfile helpers: Starship and GNU Stow. `stown` is installed by
+  Ansible with Python only when it is not already available.
 
-The Niri autostart is written to tolerate optional host-specific tools. For
-example, `logid` only runs when installed, and the polkit agent is discovered
-from common openSUSE paths.
+`make brew` runs Homebrew Bundle with parallel jobs by default. Override with
+`BREW_BUNDLE_JOBS=1 make brew` if a formula needs sequential installation.
 
-`xwayland-satellite` is installed for Xwayland support, but Niri starts it
-itself on current releases when the binary is available.
+## Dotfiles
+
+Packages are linked from `packages/` with `stown`:
+
+- `git`
+- `shell-container`
+- `starship`
+- `nvim-vm`
+
+Shell files use portable Homebrew detection for:
+
+- `/opt/homebrew/bin/brew`
+- `/usr/local/bin/brew`
+- `/home/linuxbrew/.linuxbrew/bin/brew`
+
+Fonts install into `~/.local/share/fonts/nerd-fonts`, keeping them user-local
+and portable across Linux and macOS.
 
 ## Bootstrap
 
-```bash
-DOTFILES_REPO_URL="https://github.com/YOUR_USER/dotfiles.git" \
+`bootstrap-dotfiles.sh` is for a fresh machine:
+
+```sh
+DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \
 DOTFILES_DIR="$HOME/Projects/dotfiles" \
-PROFILE="suse" \
 bash bootstrap-dotfiles.sh
 ```
 
-Defaults:
-
-- `DOTFILES_DIR` -> `$HOME/Projects/dotfiles`
-- `PROFILE` -> `suse`
-
-## Checks
-
-```bash
-make verify
-DRY_RUN=1 make suse
-make audit-suse
-nvim --headless -c 'checkhealth' -c qa
-```
-
-Expected behavior:
-
-- `make suse` uses `zypper`.
-- No other profile names are accepted.
-- Niri, Waybar, Mako, rofi-wayland, Foot, clipboard, screenshot, audio,
-  portal, and polkit tooling are installed or reported by `make doctor`.
-- `make audit-suse` reports current versions from inside `distrobox enter suse`.
-- The main Neovim config is `packages/nvim-vm`.
+It installs or loads Homebrew, ensures `git`, `make`, and `python3`, clones or
+updates the repo, then runs `make`.

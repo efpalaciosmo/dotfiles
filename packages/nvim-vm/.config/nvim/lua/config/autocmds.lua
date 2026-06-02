@@ -104,8 +104,8 @@ vim.api.nvim_create_autocmd("TermClose", {
 -- Treesitter: enable highlighting wherever a parser is available.
 -- nvim-treesitter (see lua/config/plugins.lua) handles indent + ensure_installed
 -- for the configured languages; this autocmd is a safety net so any other
--- filetype with a parser registered via the init.lua bootstrap (system
--- /usr/lib64/tree-sitter parsers) still gets highlights.
+-- filetype with a parser registered via the init.lua bootstrap still gets
+-- highlights.
 --
 -- IMPORTANT: do NOT set indentexpr here. Neovim core does not expose
 -- vim.treesitter.indent(); setting it caused E5108 every time indent was

@@ -1,6 +1,6 @@
 ---
 # Shared `pip --user -U <pkg>` with PEP 668 retry. Inputs:
-#   pip_install_pkg  - distribution name (e.g. "stown", "podman-compose")
+#   pip_install_pkg  - distribution name (e.g. "stown")
 #   pip_install_label - human label used in registered fact suffix (defaults to pkg)
 #
 # Idempotent: pip itself reports "Successfully installed" only on actual install/upgrade.

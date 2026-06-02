@@ -1,10 +1,7 @@
-# ~/.profile - openSUSE
-# POSIX-compatible env. Loaded by login shells and sourced from
-# .zshrc/.bashrc. Single source of truth for PATH and language toolchain
-# environment variables; shell-specific bits (eval-style hooks) live in
-# .zshrc / .bashrc.
+# ~/.profile - portable dotfiles
+# POSIX-compatible environment loaded by login shells and sourced from
+# .zshrc/.bashrc. Shell-specific hooks live in those rc files.
 
-# ---- helper: prepend $1 to PATH if it exists and isn't already there.
 _prepend_path() {
     [ -d "$1" ] || return 0
     case ":$PATH:" in
@@ -13,75 +10,60 @@ _prepend_path() {
     esac
 }
 
-# ---- Base user dirs -------------------------------------------------
+_setup_homebrew() {
+    if command -v brew >/dev/null 2>&1; then
+        eval "$(brew shellenv)"
+        return 0
+    fi
+
+    for _brew in \
+        /opt/homebrew/bin/brew \
+        /usr/local/bin/brew \
+        /home/linuxbrew/.linuxbrew/bin/brew; do
+        if [ -x "$_brew" ]; then
+            eval "$("$_brew" shellenv)"
+            return 0
+        fi
+    done
+}
+
+_setup_homebrew
+
+if command -v brew >/dev/null 2>&1; then
+    _brew_prefix="$(brew --prefix 2>/dev/null || true)"
+    if [ -n "$_brew_prefix" ]; then
+        _prepend_path "$_brew_prefix/opt/make/libexec/gnubin"
+        _prepend_path "$_brew_prefix/opt/llvm/bin"
+
+        if [ -d "$_brew_prefix/opt/openjdk" ]; then
+            JAVA_HOME="$_brew_prefix/opt/openjdk"
+            _prepend_path "$JAVA_HOME/bin"
+            export JAVA_HOME
+        fi
+    fi
+fi
+
 _prepend_path "$HOME/bin"
 _prepend_path "$HOME/.local/bin"
 
-# ---- Go (managed by gvm via the suse profile) -----------------------
-# Dot-prefixed GOPATH keeps $HOME tidy. gvm exposes the active toolchain
-# at $HOME/.local/go (versionless symlink) so this profile stays portable.
 GOPATH="$HOME/.go"
 GOBIN="$GOPATH/bin"
 _prepend_path "$GOBIN"
-if [ -d "$HOME/.local/go" ]; then
-    GOROOT="$HOME/.local/go"
-    _prepend_path "$GOROOT/bin"
-    export GOROOT
-fi
 export GOPATH GOBIN
-# gvm itself (only used when switching versions interactively).
-if [ -s "$HOME/.gvm/scripts/gvm" ]; then
-    # gvm references unbound vars internally; isolate the source.
-    # shellcheck disable=SC1090
-    . "$HOME/.gvm/scripts/gvm" 2>/dev/null || true
-fi
 
-# ---- fnm (Fast Node Manager) ----------------------------------------
-# The binary lives in $HOME/.local/share/fnm. Node versions live under
-# XDG_DATA_HOME/fnm or equivalent; `fnm env` runs from shell-specific rc files.
-_prepend_path "$HOME/.local/share/fnm"
-
-# ---- Juliaup ---------------------------------------------------------
 _prepend_path "$HOME/.juliaup/bin"
 
-# ---- Java (JDK managed by SDKMAN!, versionless symlink) -------------
-# The suse profile installs the JDK with SDKMAN! into
-# $HOME/.sdkman/candidates/java/<version> and points the dotfile-managed
-# symlink $HOME/.local/lib/jdk at $HOME/.sdkman/candidates/java/current.
-if [ -d "$HOME/.local/lib/jdk" ]; then
-    JAVA_HOME="$HOME/.local/lib/jdk"
-    _prepend_path "$JAVA_HOME/bin"
-    export JAVA_HOME
-fi
-# SDKMAN! init (exposes `sdk` for managing Java/Gradle/etc.).
-SDKMAN_DIR="$HOME/.sdkman"
-if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
-    export SDKMAN_DIR
-    # shellcheck disable=SC1090,SC1091
-    . "$SDKMAN_DIR/bin/sdkman-init.sh"
-fi
-
-# ---- Gradle (symlink versionless) -----------------------------------
-GRADLE_USER_HOME="$HOME/.gradle"
-if [ -d "$HOME/.local/opt/gradle" ]; then
-    GRADLE_HOME="$HOME/.local/opt/gradle"
-    _prepend_path "$GRADLE_HOME/bin"
-    export GRADLE_HOME
-fi
-export GRADLE_USER_HOME
-
-# ---- pnpm ------------------------------------------------------------
 PNPM_HOME="$HOME/.local/share/pnpm"
 _prepend_path "$PNPM_HOME"
 export PNPM_HOME
 
-# ---- opencode --------------------------------------------------------
-_prepend_path "$HOME/.opencode/bin"
-
-export PATH
-
-unset -f _prepend_path
 if [ -f "$HOME/.cargo/env" ]; then
     # shellcheck disable=SC1090
     . "$HOME/.cargo/env"
 fi
+
+export PATH
+
+unset -f _prepend_path
+unset -f _setup_homebrew
+unset _brew _brew_prefix

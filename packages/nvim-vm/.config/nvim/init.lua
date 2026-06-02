@@ -10,25 +10,52 @@ vim.loader.enable()
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- Make Neovim see Homebrew/Linuxbrew tools even when launched from an
+-- environment that did not source the shell profile.
+do
+  local function prepend_path(dir)
+    if not dir or dir == "" or not vim.uv.fs_stat(dir) then
+      return
+    end
+
+    local path = vim.env.PATH or ""
+    if (":" .. path .. ":"):find(":" .. dir .. ":", 1, true) then
+      return
+    end
+
+    vim.env.PATH = dir .. (path ~= "" and ":" .. path or "")
+  end
+
+  local tool_paths = {
+    vim.fn.expand("~/.local/bin"),
+    "/home/linuxbrew/.linuxbrew/bin",
+    "/home/linuxbrew/.linuxbrew/sbin",
+    "/opt/homebrew/bin",
+    "/opt/homebrew/sbin",
+    "/usr/local/bin",
+    "/usr/local/sbin",
+  }
+
+  for i = #tool_paths, 1, -1 do
+    prepend_path(tool_paths[i])
+  end
+end
+
 -- ============================================================================
 -- Tree-sitter parser bootstrap.
 --
--- Some distros (Fedora / openSUSE / WSL2 derivatives) install parsers under
--- /usr/lib64/tree-sitter/ with the canonical `libtree-sitter-<lang>.so`
--- naming, but wire up a BROKEN symlink at $VIMRUNTIME/parser (it points to
--- `/usr/lib64/tree_sitter` with an underscore that doesn't exist).
--- Result: vim.api.nvim_get_runtime_file('parser/*.so', true) returns nothing,
--- so vim.treesitter.start() silently fails for every language.
---
--- Register every parser we find on disk by hand so the rest of the config
--- (markdown rendering, treesitter folds, treesitter highlights) just works.
+-- Prefer nvim-treesitter-managed parsers, but register parser libraries from
+-- common system and Homebrew locations when they are already present.
 -- ============================================================================
 do
   local candidates = {
-    "/usr/lib64/tree-sitter",
-    "/usr/lib/tree-sitter",
-    "/usr/lib/x86_64-linux-gnu/tree-sitter",
+    vim.fn.expand("~/.local/lib/tree-sitter"),
+    "/opt/homebrew/lib/tree-sitter",
     "/usr/local/lib/tree-sitter",
+    "/home/linuxbrew/.linuxbrew/lib/tree-sitter",
+    "/usr/lib/tree-sitter",
+    "/usr/lib64/tree-sitter",
+    "/usr/lib/x86_64-linux-gnu/tree-sitter",
   }
   for _, dir in ipairs(candidates) do
     if vim.fn.isdirectory(dir) == 1 then
@@ -39,10 +66,6 @@ do
         if t == "file" then
           local lang = name:match("^libtree%-sitter%-(.+)%.so$")
           if lang then
-            -- Some packagers double-prefix (e.g. libtree-sitter-tree-sitter-markdown.so).
-            -- Strip the redundant `tree-sitter-` and convert hyphens to
-            -- underscores so the parser name matches the exported symbol
-            -- (`tree_sitter_<lang>`), which Neovim resolves automatically.
             local stripped = lang:gsub("^tree%-sitter%-", "")
             local short = stripped:gsub("%-", "_")
             pcall(vim.treesitter.language.add, short, { path = dir .. "/" .. name })

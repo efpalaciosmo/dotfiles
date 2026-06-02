@@ -6,81 +6,50 @@
       - "User={{ ansible_facts.user_id | default(ansible_facts.env.USER) }} HOME={{ ansible_facts.env.HOME }}"
       - "Distribution={{ ansible_facts.get('distribution', '?') }} {{ ansible_facts.get('distribution_version', '') }}"
 
-- name: Critical commands availability
+- name: Homebrew prefix
+  ansible.builtin.shell: |
+    set -euo pipefail
+    command -v brew
+    brew --prefix
+  args:
+    executable: /bin/bash
+  register: doctor_brew
+  changed_when: false
+  failed_when: false
+
+- name: Show Homebrew status
+  ansible.builtin.debug:
+    msg: "{{ doctor_brew.stdout_lines if doctor_brew.rc == 0 else ['brew -> MISSING'] }}"
+
+- name: Expected command availability
   ansible.builtin.shell: command -v "{{ item }}"
   args:
     executable: /bin/bash
-  loop:
-    - bash
-    - tar
-    - python3
-  register: doctor_critical
+  loop: "{{ brew_expected_commands }}"
+  register: doctor_commands
   changed_when: false
   failed_when: false
 
-- name: Show critical command paths
+- name: Show expected command paths
   ansible.builtin.debug:
     msg: "{{ item.item }} -> {{ item.stdout if item.rc == 0 else 'MISSING' }}"
-  loop: "{{ doctor_critical.results }}"
+  loop: "{{ doctor_commands.results }}"
   loop_control:
     label: "{{ item.item }}"
 
-- name: Optional commands
-  ansible.builtin.shell: |
-    set -euo pipefail
-    name="{{ item }}"
-    if command -v "$name"; then
-      exit 0
-    fi
-    for candidate in \
-      "/usr/lib/polkit-gnome/$name" \
-      "/usr/libexec/$name" \
-      "/usr/lib/$name"; do
-      if [[ -x "$candidate" ]]; then
-        printf '%s\n' "$candidate"
-        exit 0
-      fi
-    done
-    exit 1
+- name: stown availability
+  ansible.builtin.shell: command -v stown
   args:
     executable: /bin/bash
-  loop:
-    - curl
-    - wget
-    - git
-    - make
-    - stown
-    - zypper
-    - niri
-    - waybar
-    - mako
-    - rofi
-    - foot
-    - grim
-    - slurp
-    - swappy
-    - wl-copy
-    - wl-paste
-    - cliphist
-    - pipewire
-    - pactl
-    - wireplumber
-    - xwayland-satellite
-    - xdg-desktop-portal
-    - polkit-gnome-authentication-agent-1
-    - code-insiders
-    - podman-compose
-    - shellcheck
-  register: doctor_optional
+  environment:
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+  register: doctor_stown
   changed_when: false
   failed_when: false
 
-- name: Show optional command paths
+- name: Show stown path
   ansible.builtin.debug:
-    msg: "{{ item.item }} -> {{ item.stdout if item.rc == 0 else 'MISSING' }}"
-  loop: "{{ doctor_optional.results }}"
-  loop_control:
-    label: "{{ item.item }}"
+    msg: "stown -> {{ doctor_stown.stdout if doctor_stown.rc == 0 else 'MISSING' }}"
 
 - name: PATH contains ~/.local/bin
   ansible.builtin.debug:
@@ -89,23 +58,7 @@
          if (':' ~ ansible_facts.env.PATH ~ ':') is search(':' ~ ansible_facts.env.HOME ~ '/.local/bin:')
          else 'WARN: ~/.local/bin not in PATH for this session' }}
 
-- name: GOPATH hint
-  ansible.builtin.debug:
-    msg: "GOPATH={{ ansible_facts.env.get('GOPATH', '(unset - open a new shell after suse profile)') }}"
-
-- name: MIME default for text/plain
-  ansible.builtin.command:
-    cmd: xdg-mime query default text/plain
-  register: doctor_mime
-  changed_when: false
-  failed_when: false
-
-- name: Show MIME default
-  ansible.builtin.debug:
-    var: doctor_mime.stdout
-  when: doctor_mime.rc == 0
-
-- name: Dotfile symlink sample check (packages/ + stown lists)
+- name: Dotfile symlink sample check
   ansible.builtin.shell: |
     set -euo pipefail
     root="$DOTFILES_PACKAGES_ROOT"
@@ -113,20 +66,23 @@
     for pkg in $DOTFILES_STOWN_PKGS; do
       [[ -d "$root/$pkg" ]] || continue
       prefix="${root}/${pkg}/"
+      count=0
       while IFS= read -r -d '' f; do
         rel="${f#$prefix}"
         target="$HOME/$rel"
         if [[ -L "$target" ]]; then echo "OK link $target"; found=1
         elif [[ -e "$target" ]]; then echo "FILE $target (not symlink)"
         else echo "MISS $target"; fi
+        count=$((count + 1))
+        if [[ $count -ge 24 ]]; then break; fi
         if [[ $found -ge 5 ]]; then break 2; fi
-      done < <(find "$root/$pkg" -type f -print0 | head -z -n 24)
+      done < <(find "$root/$pkg" -type f -print0)
     done
   args:
     executable: /bin/bash
   environment:
     DOTFILES_PACKAGES_ROOT: "{{ dotfiles_packages_root }}"
-    DOTFILES_STOWN_PKGS: "{{ stown_packages_suse | join(' ') }}"
+    DOTFILES_STOWN_PKGS: "{{ stown_packages | join(' ') }}"
   register: doctor_links
   changed_when: false
   failed_when: false

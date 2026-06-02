@@ -1,46 +1,19 @@
 ---
-# Run with: ansible-playbook playbook.yml -e dotfiles_profile=suse
-# Makefile sets dotfiles_profile and optional --tags / check mode for dry-run.
-
-- name: Dotfiles automation
+- name: Portable dotfiles automation
   hosts: local
   connection: local
   gather_facts: true
 
-  pre_tasks:
-    - name: Require dotfiles_profile
-      ansible.builtin.assert:
-        that:
-          - dotfiles_profile is defined
-          - dotfiles_profile == 'suse'
-        fail_msg: "Set -e dotfiles_profile=suse"
-        quiet: true
-      tags: [always]
+  vars:
+    dotfiles_profile: portable
 
+  pre_tasks:
     - name: Set backup stamp for dotfile conflicts
       ansible.builtin.set_fact:
         dotfiles_backup_stamp: "{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
       tags: [always]
 
-    - name: Check sudo access for system-level openSUSE tasks
-      ansible.builtin.command:
-        cmd: id -u
-      become: true
-      register: dotfiles_sudo_check
-      changed_when: false
-      when:
-        - not ansible_check_mode
-        - >
-          ansible_run_tags | default(['all']) | intersect([
-            'all',
-            'suse',
-            'packages-suse',
-            'desktop-suse',
-            'vscode-insiders'
-          ]) | length > 0
-      tags: [always]
-
   tasks:
-    - name: openSUSE workflow
-      ansible.builtin.include_tasks: tasks/profile-suse.yml
+    - name: Portable workflow
+      ansible.builtin.include_tasks: tasks/profile-portable.yml
       tags: [always]

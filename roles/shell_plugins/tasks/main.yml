@@ -1,6 +1,6 @@
 ---
 - name: Shell plugins
-  tags: [suse, shell-plugins-suse]
+  tags: [shell]
   when: not ansible_check_mode
   block:
     - name: Require zsh
@@ -8,13 +8,11 @@
         cmd: command -v zsh
       changed_when: false
 
-    - name: Install oh-my-zsh (keep existing zshrc)
-      ansible.builtin.shell: |
-        env CHSH=no RUNZSH=no KEEP_ZSHRC=yes \
-          sh -c 'curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh -s -- --unattended --keep-zshrc'
-      args:
-        creates: "{{ zsh_dir }}"
-      changed_when: true
+    - name: Install oh-my-zsh
+      ansible.builtin.git:
+        repo: https://github.com/ohmyzsh/ohmyzsh.git
+        dest: "{{ zsh_dir }}"
+        depth: 1
 
     - name: Ensure custom plugins directory
       ansible.builtin.file:

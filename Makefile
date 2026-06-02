@@ -1,118 +1,82 @@
 SHELL := /bin/sh
+.DEFAULT_GOAL := setup
 
 VENV := $(CURDIR)/.venv
 PIP := $(VENV)/bin/pip
 ANSIBLE_PLAYBOOK := $(VENV)/bin/ansible-playbook
-ANSIBLE_GALAXY := $(VENV)/bin/ansible-galaxy
 INV := $(CURDIR)/inventory.ini
-# Pass DRY_RUN=1 with --check for dry-run (see README).
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
-# Targets that touch system packages/services need sudo. Override with
-# ASK_BECOME_PASS=0 if sudo is passwordless on the target host.
-ASK_BECOME_PASS ?= 1
-BECOME_ASK := $(if $(filter 1,$(DRY_RUN)),,$(if $(filter 1,$(ASK_BECOME_PASS)),--ask-become-pass,))
+BREW_BUNDLE_JOBS ?= auto
 
-.PHONY: help setup doctor check verify \
-        suse dry-run-suse audit-suse \
-        python-user-tools \
-        packages-suse desktop-suse fonts-suse vscode-insiders podman-compose \
-        starship-suse languages-suse shell-plugins-suse stown-suse
+.PHONY: help setup brew venv doctor check verify fonts shell dotfiles python-user-tools
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
-		| awk 'BEGIN {FS = ":.*?## "}; {printf "  %-22s %s\n", $$1, $$2}'
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
 
-setup: ## Create .venv, install ansible-core + collections, ensure inventory.ini
-	@command -v python3 >/dev/null 2>&1 \
-		|| { echo >&2 "[setup] python3 not found. On openSUSE: sudo zypper install python3."; exit 1; }
-	@if [ ! -x "$(ANSIBLE_PLAYBOOK)" ] \
-		|| ! "$(ANSIBLE_PLAYBOOK)" --version >/dev/null 2>&1 \
-		|| ! "$(ANSIBLE_GALAXY)" --version >/dev/null 2>&1; then \
-		echo "[setup] (re)creating $(VENV) for $$(python3 -c 'import sys,platform;print(sys.executable, platform.platform())')"; \
-		rm -rf "$(VENV)"; \
-		python3 -m venv "$(VENV)" \
-			|| { echo >&2 "[setup] python3 venv support is missing or broken. On openSUSE install the Python venv/pip packages, then rerun make setup."; exit 1; }; \
-		"$(PIP)" install --upgrade pip >/dev/null; \
-		"$(PIP)" install -r requirements-ansible.txt; \
+setup: brew venv ## Bootstrap Homebrew, apply dotfiles, and validate
+	@"$(CURDIR)/scripts/with-homebrew.sh" \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml $(CHECK)
+	@$(MAKE) verify
+
+brew: Brewfile scripts/ensure-homebrew.sh scripts/with-homebrew.sh ## Install Homebrew if needed and run brew bundle
+	@if [ "$(DRY_RUN)" = "1" ]; then \
+		"$(CURDIR)/scripts/with-homebrew.sh" --no-install env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file="$(CURDIR)/Brewfile"; \
+	else \
+		"$(CURDIR)/scripts/with-homebrew.sh" brew bundle install --jobs="$(BREW_BUNDLE_JOBS)" --file="$(CURDIR)/Brewfile"; \
 	fi
-	@mkdir -p "$(CURDIR)/.ansible/collections"
-	@"$(ANSIBLE_GALAXY)" collection install -r requirements.yml -p "$(CURDIR)/.ansible/collections"
+
+venv: requirements-ansible.txt ## Create the local Ansible virtualenv
+	@brew_env=$$("$(CURDIR)/scripts/ensure-homebrew.sh" --no-install --shellenv 2>/dev/null || true); \
+		eval "$$brew_env"; \
+		command -v python3 >/dev/null 2>&1 \
+			|| { echo >&2 "[venv] python3 not found. Run 'make brew' first or install Python with Homebrew."; exit 1; }; \
+		if [ ! -x "$(ANSIBLE_PLAYBOOK)" ] \
+			|| ! "$(ANSIBLE_PLAYBOOK)" --version >/dev/null 2>&1; then \
+			echo "[venv] (re)creating $(VENV)"; \
+			rm -rf "$(VENV)"; \
+			python3 -m venv "$(VENV)" \
+				|| { echo >&2 "[venv] python3 venv support is missing or broken."; exit 1; }; \
+			"$(PIP)" install --upgrade pip >/dev/null; \
+			"$(PIP)" install -r requirements-ansible.txt; \
+		fi
+	@mkdir -p "$(CURDIR)/.ansible/tmp"
 	@test -f "$(INV)" || cp inventory.ini.example "$(INV)"
 
-# ---- Validation ------------------------------------------------------
+doctor: venv ## Show Homebrew, command, and dotfile diagnostics
+	@brew_env=$$("$(CURDIR)/scripts/ensure-homebrew.sh" --no-install --shellenv 2>/dev/null || true); \
+		eval "$$brew_env"; \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook-doctor.yml
 
-doctor: setup ## Show local command and dotfile diagnostics
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook-doctor.yml
+check: venv ## Ansible syntax-check (+ ansible-lint if installed)
+	@brew_env=$$("$(CURDIR)/scripts/ensure-homebrew.sh" --no-install --shellenv 2>/dev/null || true); \
+		eval "$$brew_env"; \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --syntax-check; \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook-doctor.yml --syntax-check; \
+		command -v ansible-lint >/dev/null 2>&1 && ansible-lint -q . || true
 
-check: setup ## Ansible syntax-check (+ ansible-lint if installed)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --syntax-check
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook-doctor.yml --syntax-check
-	@command -v ansible-lint >/dev/null 2>&1 && ansible-lint -q . || true
-
-# Partial Makefile targets must not pass `--tags foo,suse`
-# (Ansible OR would run the whole profile).
-verify: check
-	@! grep -E 'playbook\.yml.*--tags [^ ]+,suse' $(MAKEFILE_LIST) \
-		|| (echo >&2 "verify: drop umbrella ,suse from partial playbook invocations"; exit 1)
-	@old='tw''-vm|packages-''arch|dry-run-''arch|nvim-''arch|shell-''arch|stown_packages_''arch|stown_packages_''tw_vm|arch_pac''man_''packages|dotfiles_profile=''arch|dotfiles_profile=tw''-vm|pac''man'; \
-		! grep -R -n -I -E "$$old" Makefile playbook.yml bootstrap-dotfiles.sh tasks roles group_vars packages README.md \
-		|| (echo >&2 "verify: old profile residue found"; exit 1)
+verify: check ## Check syntax and guard against distro package-manager residue
+	@old='zyp''per|open''su''se|su''se|d''nf|a''pt|pac''man|rpm-ost''ree'; \
+		files='Makefile Brewfile playbook.yml playbook-doctor.yml bootstrap-dotfiles.sh scripts tasks roles group_vars packages README.md'; \
+		! grep -R -n -I -i -E "(^|[^[:alnum:]_-])($$old)([^[:alnum:]_-]|$$)" $$files \
+		|| (echo >&2 "verify: distro package-manager residue found"; exit 1)
+	@for dir in ni''ri way''bar ma''ko ro''fi fo''ot; do \
+		test ! -d "packages/$$dir" || exit 1; \
+	done
 	@echo "verify: OK"
 
-# ---- Main profile ----------------------------------------------------
+fonts: brew venv ## Install user-local fonts
+	@"$(CURDIR)/scripts/with-homebrew.sh" \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags fonts $(CHECK)
 
-suse: setup ## Configure the openSUSE profile
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags suse $(BECOME_ASK) $(CHECK)
+shell: brew venv ## Install oh-my-zsh and shell plugins
+	@"$(CURDIR)/scripts/with-homebrew.sh" \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags shell $(CHECK)
 
-dry-run-suse: ## Like 'suse' in Ansible check mode
-	@$(MAKE) suse DRY_RUN=1
+dotfiles: brew venv ## Install stown if needed and apply dotfiles
+	@"$(CURDIR)/scripts/with-homebrew.sh" \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags python-user-tools,dotfiles $(CHECK)
 
-audit-suse: ## Report versions and package metadata inside distrobox 'suse'
-	@command -v distrobox >/dev/null 2>&1 \
-		|| { echo >&2 "audit-suse: distrobox not found on PATH"; exit 127; }
-	@distrobox enter suse -- sh -lc '\
-		set -eu; \
-		printf "== OS ==\n"; . /etc/os-release; printf "%s %s\n" "$$NAME" "$${VERSION_ID:-}"; \
-		printf "\n== Tool versions ==\n"; \
-		for cmd in niri waybar xwayland-satellite foot mako rofi wl-copy wl-paste cliphist pactl wireplumber; do \
-			if command -v "$$cmd" >/dev/null 2>&1; then \
-				printf "%-20s " "$$cmd"; "$$cmd" --version 2>&1 | head -n 1 || true; \
-			else \
-				printf "%-20s MISSING\n" "$$cmd"; \
-			fi; \
-		done; \
-		printf "\n== Package metadata ==\n"; \
-		zypper --no-refresh info niri waybar mako rofi-wayland foot cliphist xwayland-satellite pulseaudio-utils pipewire pipewire-pulseaudio wireplumber wl-clipboard grim slurp swappy pavucontrol libnotify-tools NetworkManager-gnome bluez playerctl brightnessctl \
-	'
-
-# ---- Auxiliary targets ----------------------------------------------
-
-python-user-tools: setup ## pip --user + stown
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags python-user-tools
-
-packages-suse: setup ## Install openSUSE packages with zypper
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags packages-suse $(BECOME_ASK)
-
-desktop-suse: setup ## Enable desktop services and create desktop dirs
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags desktop-suse $(BECOME_ASK)
-
-fonts-suse: setup ## Install Nerd Fonts into ~/.local/share/fonts
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags fonts-suse
-
-vscode-insiders: setup ## Install VS Code Insiders from the Microsoft RPM repo
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags vscode-insiders $(BECOME_ASK)
-
-podman-compose: setup ## Install podman-compose into ~/.local/bin
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags podman-compose
-
-starship-suse: setup ## Install starship into ~/.local/bin
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags starship-suse
-
-languages-suse: setup ## Install Go/fnm/Julia/JDK/uv/Gradle/pnpm into ~/.local
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags languages-suse
-
-shell-plugins-suse: setup ## Install oh-my-zsh + plugins
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags shell-plugins-suse
-
-stown-suse: setup ## Apply suse-profile dotfiles with stown
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags stown-suse
+python-user-tools: brew venv
+	@"$(CURDIR)/scripts/with-homebrew.sh" \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags python-user-tools $(CHECK)

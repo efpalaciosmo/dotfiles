@@ -1,24 +1,55 @@
 ---
-# Repository root (playbook lives in repo root)
 dotfiles_repo_root: "{{ playbook_dir }}"
-
-# GNU Stow / stown layout: each subdir of `packages/` mirrors paths under $HOME
-# (e.g. packages/nvim-vm/.config/nvim/init.lua -> ~/.config/nvim/init.lua).
 dotfiles_packages_root: "{{ playbook_dir }}/packages"
 
-# Packages to link for the single openSUSE profile.
-stown_packages_suse:
+stown_packages:
   - git
   - shell-container
   - starship
   - nvim-vm
-  - niri
-  - waybar
-  - mako
-  - rofi
-  - foot
 
-# Nerd Fonts
+brew_expected_commands:
+  - brew
+  - bash
+  - zsh
+  - git
+  - gh
+  - make
+  - cmake
+  - ninja
+  - pkgconf
+  - curl
+  - wget
+  - unzip
+  - xz
+  - jq
+  - tree
+  - fd
+  - rg
+  - fzf
+  - bat
+  - btop
+  - duf
+  - ncdu
+  - tmux
+  - fastfetch
+  - nvim
+  - tree-sitter
+  - lua
+  - stylua
+  - uv
+  - fnm
+  - juliaup
+  - pnpm
+  - go
+  - rustup-init
+  - zig
+  - clang
+  - java
+  - gradle
+  - starship
+  - stow
+
 nerd_fonts_version: v3.4.0
 nerd_fonts_base_url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}"
 nerd_fonts_list:
@@ -33,136 +64,14 @@ nerd_fonts_list:
 nerd_fonts_root: "{{ ansible_facts.env.HOME }}/.local/share/fonts/nerd-fonts"
 nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/nerd-fonts/{{ nerd_fonts_version }}"
 
-# pip / stown
-get_pip_url: "https://bootstrap.pypa.io/get-pip.py"
-# True => retry pip --user installs with --break-system-packages on PEP 668 hosts.
-# openSUSE may mark the distro Python as externally managed, so the profile
-# enables this by default for user-local CLI tools.
 allow_pip_break_system_packages: true
-# Set ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1 in the environment to force this if a
-# profile overrides the variable.
 pip_break_allowed: >-
   {{
     (allow_pip_break_system_packages | bool)
     or (lookup('env', 'ALLOW_PIP_BREAK_SYSTEM_PACKAGES', default='0') == '1')
   }}
 
-# VS Code Insiders (openSUSE)
-vscode_repo_file: /etc/zypp/repos.d/vscode.repo
-microsoft_key_url: "https://packages.microsoft.com/keys/microsoft.asc"
-
-# Starship
-starship_install_url: "https://starship.rs/install.sh"
-starship_bin_dir: "{{ ansible_facts.env.HOME }}/.local/bin"
-
-# Languages - SKIP_* equivalent
-skip_go: "{{ lookup('env', 'SKIP_GO', default='0') == '1' }}"
-skip_fnm: "{{ lookup('env', 'SKIP_FNM', default='0') == '1' }}"
-skip_julia: "{{ lookup('env', 'SKIP_JULIA', default='0') == '1' }}"
-skip_java: "{{ lookup('env', 'SKIP_JAVA', default='0') == '1' }}"
-skip_uv: "{{ lookup('env', 'SKIP_UV', default='0') == '1' }}"
-skip_gradle: "{{ lookup('env', 'SKIP_GRADLE', default='0') == '1' }}"
-skip_pnpm: "{{ lookup('env', 'SKIP_PNPM', default='0') == '1' }}"
-
-jdk_feature_version: "{{ lookup('env', 'JDK_FEATURE_VERSION', default='21') }}"
-jdk_distribution: "{{ lookup('env', 'JDK_DISTRIBUTION', default='tem') }}"
-
-# Zsh / oh-my-zsh
 zsh_dir: "{{ ansible_facts.env.ZSH | default(ansible_facts.env.HOME + '/.oh-my-zsh') }}"
 zsh_custom: "{{ ansible_facts.env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
 
-# openSUSE packages
-suse_pkg_shell:
-  - zsh
-  - bash-completion
-suse_pkg_terminal:
-  - tree
-  - fastfetch
-  - jq
-  - fd
-  - ripgrep
-  - fzf
-  - bat
-  - btop
-  - tmux
-  - duf
-  - ncdu
-suse_pkg_devtools:
-  - git
-  - gh
-  - neovim
-  - unzip
-  - tar
-  - xz
-  - wget
-  - curl
-  - ca-certificates
-suse_pkg_build:
-  - gcc
-  - gcc-c++
-  - clang
-  - clang-tools
-  - llvm
-  - lldb
-  - cmake
-  - make
-  - ninja
-  - pkgconf-pkg-config
-  - gawk
-  - findutils
-  - bison
-suse_pkg_languages:
-  - python3
-  - python3-pip
-  - zig
-suse_pkg_desktop:
-  - NetworkManager
-  - NetworkManager-gnome
-  - bluez
-  - brightnessctl
-  - cliphist
-  - dbus-1
-  - dconf
-  - foot
-  - gnome-keyring
-  - glib2-tools
-  - gsettings-desktop-schemas
-  - adwaita-icon-theme
-  - grim
-  - libnotify-tools
-  - mako
-  - niri
-  - nvtop
-  - pavucontrol
-  - pipewire
-  - pipewire-pulseaudio
-  - playerctl
-  - polkit-gnome
-  - pulseaudio-utils
-  - rofi-wayland
-  - slurp
-  - swaybg
-  - swappy
-  - waybar
-  - wireplumber
-  - wl-clipboard
-  - xwayland-satellite
-  - xdg-utils
-  - xdg-desktop-portal
-  - xdg-desktop-portal-gnome
-  - xdg-desktop-portal-gtk
-suse_pkg_containers:
-  - podman
-suse_packages_all: "{{ suse_pkg_shell + suse_pkg_terminal + suse_pkg_devtools + suse_pkg_build + suse_pkg_languages + suse_pkg_desktop + suse_pkg_containers }}"
-
-suse_system_services:
-  - NetworkManager.service
-  - bluetooth.service
-
-suse_user_services:
-  - pipewire.socket
-  - pipewire-pulse.socket
-  - wireplumber.service
-
-# Dotfiles / stown
 dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|.*\.md\.template)$'

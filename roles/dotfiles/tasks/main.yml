@@ -1,14 +1,14 @@
 ---
-- name: Require stown_profile
+- name: Require stown package list
   ansible.builtin.assert:
     that:
-      - stown_profile is defined
-      - stown_profile == 'suse'
+      - stown_packages is defined
+      - stown_packages | length > 0
     quiet: true
 
 - name: Select stown package names for this profile
   ansible.builtin.set_fact:
-    _stown_names: "{{ stown_packages_suse }}"
+    _stown_names: "{{ stown_packages }}"
 
 - name: Stat each stown package directory
   ansible.builtin.stat:

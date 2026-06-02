@@ -14,25 +14,17 @@
     follow: false
   register: _ht
 
-- name: Canonical source path
-  ansible.builtin.command:
-    argv:
-      - readlink
-      - -f
-      - "{{ _leaf }}"
-  register: _src_canon
-  changed_when: false
-  failed_when: false
+- name: Stat source target
+  ansible.builtin.stat:
+    path: "{{ _leaf }}"
+    follow: true
+  register: _src_target
 
-- name: Canonical destination path
-  ansible.builtin.command:
-    argv:
-      - readlink
-      - -f
-      - "{{ _home_target }}"
-  register: _dst_canon
-  changed_when: false
-  failed_when: false
+- name: Stat home target destination
+  ansible.builtin.stat:
+    path: "{{ _home_target }}"
+    follow: true
+  register: _dst_target
   when: _ht.stat.exists | default(false) or (_ht.stat.islnk | default(false))
 
 - name: Decide if backup is needed
@@ -43,7 +35,11 @@
           (_ht.stat.exists | default(false))
           or (_ht.stat.islnk | default(false))
         )
-        and ((_dst_canon.stdout | default('')) != (_src_canon.stdout | default('')))
+        and not (
+          (_dst_target.stat.exists | default(false))
+          and ((_dst_target.stat.dev | default('')) == (_src_target.stat.dev | default('__src_dev__')))
+          and ((_dst_target.stat.inode | default('')) == (_src_target.stat.inode | default('__src_inode__')))
+        )
       }}
 
 - name: Ensure backup parent directory
