@@ -25,6 +25,41 @@ esac
 log() { printf '[bootstrap] %s\n' "$*"; }
 die() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
 
+is_opensuse() {
+  [[ -r /etc/os-release ]] || return 1
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  [[ "${ID:-}" == opensuse* || "${ID_LIKE:-}" == *suse* ]]
+}
+
+install_opensuse_prereqs() {
+  is_opensuse || return 0
+  command -v zypper >/dev/null 2>&1 || return 0
+
+  local missing=()
+  for cmd in bash git make python3; do
+    command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+  done
+  if command -v python3 >/dev/null 2>&1 && ! python3 -m venv --help >/dev/null 2>&1; then
+    missing+=("python3-venv")
+  fi
+
+  if ((${#missing[@]} == 0)); then
+    return 0
+  fi
+
+  log "Installing openSUSE bootstrap prerequisites: ${missing[*]}"
+  if ((EUID == 0)); then
+    zypper --non-interactive --gpg-auto-import-keys install --no-recommends \
+      bash git make python3 python3-pip
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo zypper --non-interactive --gpg-auto-import-keys install --no-recommends \
+      bash git make python3 python3-pip
+  else
+    die "sudo is not available; install prerequisites as root: zypper install bash git make python3 python3-pip"
+  fi
+}
+
 ensure_git() {
   command -v git >/dev/null 2>&1 || die "git is not available"
 }
@@ -65,6 +100,7 @@ run_profile() {
 }
 
 main() {
+  install_opensuse_prereqs
   ensure_git
   ensure_make_python
   clone_or_update

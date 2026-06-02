@@ -76,4 +76,7 @@ fi
 # reference to SDKMAN_DIR in this file and does NOT auto-append a second init
 # block with hardcoded paths. Do not remove.
 # SDKMAN_DIR is configured in ~/.profile.
-. "$HOME/.cargo/env"
+if [ -f "$HOME/.cargo/env" ]; then
+    # shellcheck disable=SC1090
+    . "$HOME/.cargo/env"
+fi

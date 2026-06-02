@@ -19,6 +19,7 @@
     set -euo pipefail
     curl -fsSL https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer | bash
   args:
+    executable: /bin/bash
     creates: "{{ ansible_facts.env.HOME }}/.gvm/scripts/gvm"
   environment:
     PATH: "/usr/bin:/bin:{{ ansible_facts.env.PATH | default('') }}"
@@ -35,6 +36,8 @@
       wget -qO- https://go.dev/VERSION?m=text | head -n1 | sed 's/^go//'
     fi
   register: go_version_resolve
+  args:
+    executable: /bin/bash
   changed_when: false
   retries: 4
   delay: 3
@@ -83,6 +86,8 @@
     gvm install '{{ go_dotfiles_pkg }}' -B || gvm install '{{ go_dotfiles_pkg }}'
     gvm use '{{ go_dotfiles_pkg }}' --default
     touch "$HOME/.gvm/.dotfiles-installed-{{ go_dotfiles_pkg }}"
+  args:
+    executable: /bin/bash
   when: go_needs_gvm_install | bool
   register: gvm_go_install
   changed_when: gvm_go_install.rc == 0

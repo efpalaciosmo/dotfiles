@@ -15,6 +15,7 @@
     export ENV="$HOME/.cache/dotfiles/pnpm-env"
     curl -fsSL https://get.pnpm.io/install.sh | "$shell_bin" -s -- -y
   args:
+    executable: /bin/bash
     creates: "{{ ansible_facts.env.HOME }}/.local/share/pnpm/pnpm"
   when: not pnpm_stat.stat.exists | default(false)
   changed_when: true

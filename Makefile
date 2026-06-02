@@ -1,4 +1,4 @@
-SHELL := /usr/bin/env zsh
+SHELL := /bin/sh
 
 VENV := $(CURDIR)/.venv
 PIP := $(VENV)/bin/pip
@@ -26,7 +26,8 @@ setup: ## Create .venv, install ansible-core + collections, ensure inventory.ini
 		|| ! "$(ANSIBLE_GALAXY)" --version >/dev/null 2>&1; then \
 		echo "[setup] (re)creating $(VENV) for $$(python3 -c 'import sys,platform;print(sys.executable, platform.platform())')"; \
 		rm -rf "$(VENV)"; \
-		python3 -m venv "$(VENV)"; \
+		python3 -m venv "$(VENV)" \
+			|| { echo >&2 "[setup] python3 venv support is missing or broken. On openSUSE install the Python venv/pip packages, then rerun make setup."; exit 1; }; \
 		"$(PIP)" install --upgrade pip >/dev/null; \
 		"$(PIP)" install -r requirements-ansible.txt; \
 	fi

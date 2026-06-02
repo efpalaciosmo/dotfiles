@@ -4,6 +4,7 @@
     set -euo pipefail
     curl -fsSL https://get.sdkman.io | bash -s -- -y
   args:
+    executable: /bin/bash
     creates: "{{ ansible_facts.env.HOME }}/.sdkman/bin/sdkman-init.sh"
   environment:
     SDKMAN_DIR: "{{ ansible_facts.env.HOME }}/.sdkman"
@@ -15,6 +16,8 @@
     export SDKMAN_DIR="$HOME/.sdkman"
     source "$SDKMAN_DIR/bin/sdkman-init.sh"
     sdk list java 2>/dev/null | awk -v dist='{{ jdk_distribution }}' -v feat='{{ jdk_feature_version }}' '$NF ~ ("^" feat "[.\\-].*-" dist "$") {print $NF; exit}'
+  args:
+    executable: /bin/bash
   register: sdk_java_id
   changed_when: false
   failed_when: false
@@ -36,6 +39,7 @@
     source "$SDKMAN_DIR/bin/sdkman-init.sh"
     yes n | sdk install java '{{ sdk_java_id.stdout | trim }}' || sdk install java '{{ sdk_java_id.stdout | trim }}' < /dev/null
   args:
+    executable: /bin/bash
     creates: "{{ ansible_facts.env.HOME }}/.sdkman/candidates/java/{{ sdk_java_id.stdout | trim }}"
   register: sdk_java_install
   changed_when: sdk_java_install.rc == 0
@@ -47,6 +51,8 @@
     export SDKMAN_DIR="$HOME/.sdkman"
     source "$SDKMAN_DIR/bin/sdkman-init.sh"
     sdk default java '{{ sdk_java_id.stdout | trim }}'
+  args:
+    executable: /bin/bash
   changed_when: true
   failed_when: false
 

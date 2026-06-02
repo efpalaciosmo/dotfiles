@@ -81,4 +81,7 @@ _prepend_path "$HOME/.opencode/bin"
 export PATH
 
 unset -f _prepend_path
-. "$HOME/.cargo/env"
+if [ -f "$HOME/.cargo/env" ]; then
+    # shellcheck disable=SC1090
+    . "$HOME/.cargo/env"
+fi

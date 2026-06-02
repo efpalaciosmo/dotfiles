@@ -9,6 +9,7 @@
     set -euo pipefail
     curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
   args:
+    executable: /bin/bash
     creates: "{{ ansible_facts.env.HOME }}/.local/share/fnm/fnm"
   when: not fnm_bin.stat.exists | default(false)
   changed_when: true

@@ -13,6 +13,7 @@
     set -euo pipefail
     curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="$HOME/.local/bin" sh -s -- --quiet
   args:
+    executable: /bin/bash
     creates: "{{ ansible_facts.env.HOME }}/.local/bin/uv"
   when: uv_which.rc != 0
   changed_when: true
