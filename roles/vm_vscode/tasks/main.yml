@@ -35,28 +35,14 @@
           gpgkey=https://packages.microsoft.com/keys/microsoft.asc
       become: true
 
-    - name: Refresh VS Code zypper repo
-      ansible.builtin.command:
-        cmd: zypper --non-interactive --gpg-auto-import-keys refresh code
-      become: true
-      changed_when: false
-      failed_when: false
-
-    - name: Check whether VS Code Insiders is already installed
-      ansible.builtin.command:
-        cmd: rpm -q code-insiders
-      become: true
-      register: code_insiders_rpm
-      changed_when: false
-      failed_when: false
-
     - name: Install VS Code Insiders
-      ansible.builtin.command:
-        cmd: zypper --non-interactive --gpg-auto-import-keys install --no-recommends code-insiders
+      community.general.zypper:
+        name: code-insiders
+        state: present
+        auto_import_keys: false
+        disable_recommends: true
+        update_cache: true
       become: true
-      when: code_insiders_rpm.rc != 0
-      register: code_insiders_install
-      changed_when: code_insiders_install.rc == 0
 
     - name: Ensure XDG config dir for mimeapps
       ansible.builtin.file:

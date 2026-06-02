@@ -50,10 +50,10 @@ install_opensuse_prereqs() {
 
   log "Installing openSUSE bootstrap prerequisites: ${missing[*]}"
   if ((EUID == 0)); then
-    zypper --non-interactive --gpg-auto-import-keys install --no-recommends \
+    zypper install --no-recommends \
       bash git make python3 python3-pip
   elif command -v sudo >/dev/null 2>&1; then
-    sudo zypper --non-interactive --gpg-auto-import-keys install --no-recommends \
+    sudo zypper install --no-recommends \
       bash git make python3 python3-pip
   else
     die "sudo is not available; install prerequisites as root: zypper install bash git make python3 python3-pip"

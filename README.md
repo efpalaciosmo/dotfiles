@@ -68,7 +68,7 @@ ASK_BECOME_PASS=0 make suse
 
 ## What `make suse` Does
 
-1. Installs the openSUSE package set with `zypper --non-interactive`.
+1. Installs the openSUSE package set with `zypper`.
 2. Enables desktop services for NetworkManager, Bluetooth, PipeWire,
    WirePlumber, and PipeWire Pulse when systemd is available.
 3. Bootstraps `pip --user` and installs `stown`.

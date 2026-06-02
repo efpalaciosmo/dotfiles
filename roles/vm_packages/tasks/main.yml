@@ -30,30 +30,24 @@
         quiet: true
       when: not ansible_check_mode
 
-    - name: Refresh zypper metadata
-      ansible.builtin.command:
-        cmd: zypper --non-interactive refresh
-      become: true
-      when: not ansible_check_mode
-      register: zypper_refresh
-      changed_when: zypper_refresh.rc == 0
-      failed_when: false
-
     - name: Install openSUSE package set
-      ansible.builtin.command:
-        cmd: >-
-          zypper --non-interactive --gpg-auto-import-keys install
-          --no-recommends {{ suse_packages_all | join(' ') }}
-      become: true
+      community.general.zypper:
+        name: "{{ suse_packages_all | unique | list }}"
+        state: present
+        auto_import_keys: false
+        disable_recommends: true
+        update_cache: true
       when: not ansible_check_mode
-      register: zypper_install_suse
-      changed_when: "'Nothing to do' not in (zypper_install_suse.stdout | default(''))"
-      failed_when: zypper_install_suse.rc != 0
+      become: true
 
-    - name: Verify packages with rpm (best-effort)
+    - name: Verify packages or capabilities with rpm (best-effort)
       ansible.builtin.command:
-        cmd: rpm -q "{{ item }}"
-      loop: "{{ suse_packages_all }}"
+        argv:
+          - rpm
+          - -q
+          - --whatprovides
+          - "{{ item }}"
+      loop: "{{ suse_packages_all | unique | list }}"
       register: rpm_q_suse
       when: not ansible_check_mode
       changed_when: false
