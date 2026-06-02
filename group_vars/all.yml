@@ -35,9 +35,12 @@ nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_fac
 
 # pip / stown
 get_pip_url: "https://bootstrap.pypa.io/get-pip.py"
-# Also set ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1 in the environment to force retry with --break-system-packages
-allow_pip_break_system_packages: false
 # True => retry pip --user installs with --break-system-packages on PEP 668 hosts.
+# openSUSE may mark the distro Python as externally managed, so the profile
+# enables this by default for user-local CLI tools.
+allow_pip_break_system_packages: true
+# Set ALLOW_PIP_BREAK_SYSTEM_PACKAGES=1 in the environment to force this if a
+# profile overrides the variable.
 pip_break_allowed: >-
   {{
     (allow_pip_break_system_packages | bool)
