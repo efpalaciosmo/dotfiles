@@ -26,7 +26,22 @@
     label: "{{ item.item }}"
 
 - name: Optional commands
-  ansible.builtin.shell: command -v "{{ item }}"
+  ansible.builtin.shell: |
+    set -euo pipefail
+    name="{{ item }}"
+    if command -v "$name"; then
+      exit 0
+    fi
+    for candidate in \
+      "/usr/lib/polkit-gnome/$name" \
+      "/usr/libexec/$name" \
+      "/usr/lib/$name"; do
+      if [[ -x "$candidate" ]]; then
+        printf '%s\n' "$candidate"
+        exit 0
+      fi
+    done
+    exit 1
   args:
     executable: /bin/bash
   loop:
@@ -36,9 +51,23 @@
     - make
     - stown
     - zypper
-    - pacman
     - niri
     - waybar
+    - mako
+    - rofi
+    - foot
+    - grim
+    - slurp
+    - swappy
+    - wl-copy
+    - wl-paste
+    - cliphist
+    - pipewire
+    - pactl
+    - wireplumber
+    - xwayland-satellite
+    - xdg-desktop-portal
+    - polkit-gnome-authentication-agent-1
     - code-insiders
     - podman-compose
     - shellcheck
@@ -62,7 +91,7 @@
 
 - name: GOPATH hint
   ansible.builtin.debug:
-    msg: "GOPATH={{ ansible_facts.env.get('GOPATH', '(unset - open a new shell after tw-vm profile)') }}"
+    msg: "GOPATH={{ ansible_facts.env.get('GOPATH', '(unset - open a new shell after suse profile)') }}"
 
 - name: MIME default for text/plain
   ansible.builtin.command:
@@ -97,7 +126,7 @@
     executable: /bin/bash
   environment:
     DOTFILES_PACKAGES_ROOT: "{{ dotfiles_packages_root }}"
-    DOTFILES_STOWN_PKGS: "{{ (stown_packages_tw_vm + stown_packages_arch) | unique | join(' ') }}"
+    DOTFILES_STOWN_PKGS: "{{ stown_packages_suse | join(' ') }}"
   register: doctor_links
   changed_when: false
   failed_when: false

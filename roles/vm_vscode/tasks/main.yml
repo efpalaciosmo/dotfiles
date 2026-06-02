@@ -1,6 +1,6 @@
 ---
-- name: VS Code Insiders (tw-vm)
-  tags: [tw-vm, vscode-insiders]
+- name: VS Code Insiders
+  tags: [suse, vscode-insiders]
   when: not ansible_check_mode
   block:
     - name: Import Microsoft RPM key

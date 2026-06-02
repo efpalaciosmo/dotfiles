@@ -6,22 +6,12 @@ dotfiles_repo_root: "{{ playbook_dir }}"
 # (e.g. packages/nvim-vm/.config/nvim/init.lua -> ~/.config/nvim/init.lua).
 dotfiles_packages_root: "{{ playbook_dir }}/packages"
 
-# Packages to link in the manually entered Tumbleweed Distrobox.
-# Include the shell + starship configs so .zshrc/.profile stay stown-managed
-# (otherwise installers such as SDKMAN may drop a partial rc file).
-stown_packages_tw_vm:
-  - nvim-vm
+# Packages to link for the single openSUSE profile.
+stown_packages_suse:
+  - git
   - shell-container
   - starship
-
-# Packages to link on the Arch host. The Arch profile is the full desktop
-# environment: shell, prompt, editor (plugin-free Neovim), and the niri /
-# Wayland stack (waybar, mako, rofi, foot).
-stown_packages_arch:
-  - git
-  - shell-arch
-  - starship
-  - nvim-arch
+  - nvim-vm
   - niri
   - waybar
   - mako
@@ -54,7 +44,7 @@ pip_break_allowed: >-
     or (lookup('env', 'ALLOW_PIP_BREAK_SYSTEM_PACKAGES', default='0') == '1')
   }}
 
-# VS Code Insiders (Tumbleweed VM)
+# VS Code Insiders (openSUSE)
 vscode_repo_file: /etc/zypp/repos.d/vscode.repo
 microsoft_key_url: "https://packages.microsoft.com/keys/microsoft.asc"
 
@@ -62,7 +52,7 @@ microsoft_key_url: "https://packages.microsoft.com/keys/microsoft.asc"
 starship_install_url: "https://starship.rs/install.sh"
 starship_bin_dir: "{{ ansible_facts.env.HOME }}/.local/bin"
 
-# Languages — SKIP_* equivalent
+# Languages - SKIP_* equivalent
 skip_go: "{{ lookup('env', 'SKIP_GO', default='0') == '1' }}"
 skip_fnm: "{{ lookup('env', 'SKIP_FNM', default='0') == '1' }}"
 skip_julia: "{{ lookup('env', 'SKIP_JULIA', default='0') == '1' }}"
@@ -78,67 +68,11 @@ jdk_distribution: "{{ lookup('env', 'JDK_DISTRIBUTION', default='tem') }}"
 zsh_dir: "{{ ansible_facts.env.ZSH | default(ansible_facts.env.HOME + '/.oh-my-zsh') }}"
 zsh_custom: "{{ ansible_facts.env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
 
-# ---------------------------------------------------------------------------
-# Arch Linux host packages (pacman)
-#
-# Installed via the `arch_packages` role with `--needed --noconfirm` so the
-# task is idempotent. `become: true` is required because pacman writes to /.
-# ---------------------------------------------------------------------------
-arch_pacman_packages:
-  - adw-gtk-theme
-  - base-devel
-  - bash-completion
-  - bluez
-  - bluez-utils
-  - brightnessctl
-  - btop
-  - cliphist
-  - cmake
-  - curl
-  - dconf
-  - duf
-  - fastfetch
-  - foot
-  - gnome-keyring
-  - grim
-  - gsettings-desktop-schemas
-  - git
-  - libnotify
-  - libpulse
-  - make
-  - mako
-  - ncdu
-  - neovim
-  - networkmanager
-  - niri
-  - nm-connection-editor
-  - nvtop
-  - pavucontrol
-  - playerctl
-  - polkit-gnome
-  - podman
-  - python
-  - python-pip
-  - rofi
-  - slurp
-  - swaybg
-  - swappy
-  - unzip
-  - waybar
-  - wget
-  - wireplumber
-  - wl-clipboard
-  - woff2-font-awesome
-  - xdg-desktop-portal
-  - xdg-desktop-portal-gnome
-  - xdg-desktop-portal-gtk
-  - zsh
-
-# Tumbleweed packages (tw-vm)
-tw_pkg_shell:
+# openSUSE packages
+suse_pkg_shell:
   - zsh
   - bash-completion
-tw_pkg_terminal:
+suse_pkg_terminal:
   - tree
   - fastfetch
   - jq
@@ -148,7 +82,9 @@ tw_pkg_terminal:
   - bat
   - btop
   - tmux
-tw_pkg_devtools:
+  - duf
+  - ncdu
+suse_pkg_devtools:
   - git
   - gh
   - neovim
@@ -158,7 +94,7 @@ tw_pkg_devtools:
   - wget
   - curl
   - ca-certificates
-tw_pkg_build:
+suse_pkg_build:
   - gcc
   - gcc-c++
   - clang
@@ -172,11 +108,58 @@ tw_pkg_build:
   - gawk
   - findutils
   - bison
-tw_pkg_languages:
+suse_pkg_languages:
   - python3
   - python3-pip
   - zig
-tw_packages_all: "{{ tw_pkg_shell + tw_pkg_terminal + tw_pkg_devtools + tw_pkg_build + tw_pkg_languages }}"
+suse_pkg_desktop:
+  - NetworkManager
+  - NetworkManager-gnome
+  - bluez
+  - brightnessctl
+  - cliphist
+  - dbus-1
+  - dconf
+  - foot
+  - gnome-keyring
+  - glib2-tools
+  - gsettings-desktop-schemas
+  - adwaita-icon-theme
+  - grim
+  - libnotify-tools
+  - mako
+  - niri
+  - nvtop
+  - pavucontrol
+  - pipewire
+  - pipewire-pulseaudio
+  - playerctl
+  - polkit-gnome
+  - pulseaudio-utils
+  - rofi-wayland
+  - slurp
+  - swaybg
+  - swappy
+  - waybar
+  - wireplumber
+  - wl-clipboard
+  - xwayland-satellite
+  - xdg-utils
+  - xdg-desktop-portal
+  - xdg-desktop-portal-gnome
+  - xdg-desktop-portal-gtk
+suse_pkg_containers:
+  - podman
+suse_packages_all: "{{ suse_pkg_shell + suse_pkg_terminal + suse_pkg_devtools + suse_pkg_build + suse_pkg_languages + suse_pkg_desktop + suse_pkg_containers }}"
+
+suse_system_services:
+  - NetworkManager.service
+  - bluetooth.service
+
+suse_user_services:
+  - pipewire.socket
+  - pipewire-pulse.socket
+  - wireplumber.service
 
 # Dotfiles / stown
 dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|.*\.md\.template)$'

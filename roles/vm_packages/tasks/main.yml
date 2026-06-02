@@ -1,6 +1,6 @@
 ---
-- name: Tumbleweed packages (tw-vm)
-  tags: [tw-vm, packages-tw-vm]
+- name: openSUSE packages
+  tags: [suse, packages-suse]
   block:
     - name: Verify required commands are present
       ansible.builtin.shell:
@@ -18,15 +18,15 @@
       loop:
         - curl
         - wget
-      register: tw_vm_curl_wget
+      register: suse_curl_wget
       changed_when: false
       failed_when: false
 
-    - name: At least one downloader required (tw-vm)
+    - name: At least one downloader required
       ansible.builtin.assert:
         that:
-          - tw_vm_curl_wget.results | selectattr('rc', 'equalto', 0) | list | length > 0
-        fail_msg: "Need curl or wget inside the container."
+          - suse_curl_wget.results | selectattr('rc', 'equalto', 0) | list | length > 0
+        fail_msg: "Need curl or wget on openSUSE."
         quiet: true
       when: not ansible_check_mode
 
@@ -39,22 +39,22 @@
       changed_when: zypper_refresh.rc == 0
       failed_when: false
 
-    - name: Install Tumbleweed package set
+    - name: Install openSUSE package set
       ansible.builtin.command:
         cmd: >-
           zypper --non-interactive --gpg-auto-import-keys install
-          --no-recommends {{ tw_packages_all | join(' ') }}
+          --no-recommends {{ suse_packages_all | join(' ') }}
       become: true
       when: not ansible_check_mode
-      register: zypper_install_tw_vm
-      changed_when: "'Nothing to do' not in (zypper_install_tw_vm.stdout | default(''))"
-      failed_when: zypper_install_tw_vm.rc != 0
+      register: zypper_install_suse
+      changed_when: "'Nothing to do' not in (zypper_install_suse.stdout | default(''))"
+      failed_when: zypper_install_suse.rc != 0
 
     - name: Verify packages with rpm (best-effort)
       ansible.builtin.command:
         cmd: rpm -q "{{ item }}"
-      loop: "{{ tw_packages_all }}"
-      register: rpm_q_tw_vm
+      loop: "{{ suse_packages_all }}"
+      register: rpm_q_suse
       when: not ansible_check_mode
       changed_when: false
       failed_when: false

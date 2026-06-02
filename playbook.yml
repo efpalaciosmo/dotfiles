@@ -1,5 +1,5 @@
 ---
-# Run with: ansible-playbook playbook.yml -e dotfiles_profile=tw-vm|arch
+# Run with: ansible-playbook playbook.yml -e dotfiles_profile=suse
 # Makefile sets dotfiles_profile and optional --tags / check mode for dry-run.
 
 - name: Dotfiles automation
@@ -12,8 +12,8 @@
       ansible.builtin.assert:
         that:
           - dotfiles_profile is defined
-          - dotfiles_profile in ['tw-vm', 'arch']
-        fail_msg: "Set -e dotfiles_profile=tw-vm or dotfiles_profile=arch"
+          - dotfiles_profile == 'suse'
+        fail_msg: "Set -e dotfiles_profile=suse"
         quiet: true
       tags: [always]
 
@@ -23,12 +23,6 @@
       tags: [always]
 
   tasks:
-    - name: Tumbleweed VM workflow
-      ansible.builtin.include_tasks: tasks/profile-tw-vm.yml
-      when: dotfiles_profile == 'tw-vm'
-      tags: [always]
-
-    - name: Arch host workflow
-      ansible.builtin.include_tasks: tasks/profile-arch.yml
-      when: dotfiles_profile == 'arch'
+    - name: openSUSE workflow
+      ansible.builtin.include_tasks: tasks/profile-suse.yml
       tags: [always]

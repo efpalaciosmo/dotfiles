@@ -11,7 +11,7 @@
   ansible.builtin.assert:
     that:
       - git_cmd.rc == 0
-    fail_msg: "git is required by gvm; run `make packages-tw-vm` (or ensure vm_packages succeeds) before `make tw-vm`."
+    fail_msg: "git is required by gvm; run `make packages-suse` (or ensure vm_packages succeeds) before `make suse`."
     quiet: true
 
 - name: Install gvm

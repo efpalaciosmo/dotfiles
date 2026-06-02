@@ -9,13 +9,10 @@ INV := $(CURDIR)/inventory.ini
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
 
 .PHONY: help setup doctor check verify \
-        tw-vm arch vm \
-        dry-run-tw-vm dry-run-arch dry-run-vm \
+        suse dry-run-suse audit-suse \
         python-user-tools \
-        fonts-tw-vm packages-tw-vm vscode-insiders podman-compose \
-        starship-tw-vm languages-tw-vm shell-plugins-tw-vm stown-tw-vm \
-        packages-arch fonts-arch starship-arch languages-arch language-arch \
-        shell-plugins-arch stown-arch
+        packages-suse desktop-suse fonts-suse vscode-insiders podman-compose \
+        starship-suse languages-suse shell-plugins-suse stown-suse
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -23,7 +20,7 @@ help: ## List available targets
 
 setup: ## Create .venv, install ansible-core + collections, ensure inventory.ini
 	@command -v python3 >/dev/null 2>&1 \
-		|| { echo >&2 "[setup] python3 not found. On Arch: sudo pacman -S python; on Tumbleweed: zypper install python3."; exit 1; }
+		|| { echo >&2 "[setup] python3 not found. On openSUSE: sudo zypper install python3."; exit 1; }
 	@if [ ! -x "$(ANSIBLE_PLAYBOOK)" ] \
 		|| ! "$(ANSIBLE_PLAYBOOK)" --version >/dev/null 2>&1 \
 		|| ! "$(ANSIBLE_GALAXY)" --version >/dev/null 2>&1; then \
@@ -43,95 +40,74 @@ doctor: setup ## Show local command and dotfile diagnostics
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook-doctor.yml
 
 check: setup ## Ansible syntax-check (+ ansible-lint if installed)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --syntax-check
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --syntax-check
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --syntax-check
 	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook-doctor.yml --syntax-check
 	@command -v ansible-lint >/dev/null 2>&1 && ansible-lint -q . || true
 
-# Partial Makefile targets must not pass `--tags foo,tw-vm` / `foo,arch`
+# Partial Makefile targets must not pass `--tags foo,suse`
 # (Ansible OR would run the whole profile).
 verify: check
-	@! grep -E 'playbook\.yml.*--tags [^ ]+,(tw-vm|arch)' $(MAKEFILE_LIST) \
-		|| (echo >&2 "verify: drop umbrella ,tw-vm/,arch from partial playbook invocations"; exit 1)
+	@! grep -E 'playbook\.yml.*--tags [^ ]+,suse' $(MAKEFILE_LIST) \
+		|| (echo >&2 "verify: drop umbrella ,suse from partial playbook invocations"; exit 1)
+	@old='tw''-vm|packages-''arch|dry-run-''arch|nvim-''arch|shell-''arch|stown_packages_''arch|stown_packages_''tw_vm|arch_pac''man_''packages|dotfiles_profile=''arch|dotfiles_profile=tw''-vm|pac''man'; \
+		! grep -R -n -I -E "$$old" Makefile playbook.yml bootstrap-dotfiles.sh tasks roles group_vars packages README.md \
+		|| (echo >&2 "verify: old profile residue found"; exit 1)
 	@echo "verify: OK"
 
-# ---- Main profiles ---------------------------------------------------
+# ---- Main profile ----------------------------------------------------
 
-tw-vm: setup ## Configure the manually entered Tumbleweed Distrobox profile
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags tw-vm $(CHECK)
+suse: setup ## Configure the openSUSE profile
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags suse $(CHECK)
 
-# Arch installs system packages with `sudo pacman -S`, so we always pass
-# --ask-become-pass. Override BECOME_FLAGS to "" if your sudoers allows
-# passwordless sudo for pacman / systemctl / usermod.
-ARCH_BECOME ?= --ask-become-pass
-arch: setup ## Configure the Arch Linux host profile (installs pacman packages)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags arch $(ARCH_BECOME) $(CHECK)
+dry-run-suse: ## Like 'suse' in Ansible check mode
+	@$(MAKE) suse DRY_RUN=1
 
-vm: tw-vm ## Compatibility alias for tw-vm
+audit-suse: ## Report versions and package metadata inside distrobox 'suse'
+	@command -v distrobox >/dev/null 2>&1 \
+		|| { echo >&2 "audit-suse: distrobox not found on PATH"; exit 127; }
+	@distrobox enter suse -- sh -lc '\
+		set -eu; \
+		printf "== OS ==\n"; . /etc/os-release; printf "%s %s\n" "$$NAME" "$${VERSION_ID:-}"; \
+		printf "\n== Tool versions ==\n"; \
+		for cmd in niri waybar xwayland-satellite foot mako rofi wl-copy wl-paste cliphist pactl wireplumber; do \
+			if command -v "$$cmd" >/dev/null 2>&1; then \
+				printf "%-20s " "$$cmd"; "$$cmd" --version 2>&1 | head -n 1 || true; \
+			else \
+				printf "%-20s MISSING\n" "$$cmd"; \
+			fi; \
+		done; \
+		printf "\n== Package metadata ==\n"; \
+		zypper --no-refresh info niri waybar mako rofi-wayland foot cliphist xwayland-satellite pulseaudio-utils pipewire pipewire-pulseaudio wireplumber wl-clipboard grim slurp swappy pavucontrol libnotify-tools NetworkManager-gnome bluez playerctl brightnessctl \
+	'
 
-# ---- Dry-run mode ----------------------------------------------------
+# ---- Auxiliary targets ----------------------------------------------
 
-dry-run-tw-vm: ## Like 'tw-vm' in Ansible check mode
-	@$(MAKE) tw-vm DRY_RUN=1
+python-user-tools: setup ## pip --user + stown
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags python-user-tools
 
-dry-run-arch: ## Like 'arch' in Ansible check mode (no sudo prompt)
-	@$(MAKE) arch DRY_RUN=1 ARCH_BECOME=
+packages-suse: setup ## Install openSUSE packages with zypper
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags packages-suse
 
-dry-run-vm: dry-run-tw-vm ## Compatibility alias for dry-run-tw-vm
+desktop-suse: setup ## Enable desktop services and create desktop dirs
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags desktop-suse
 
-# Override: PYTHON_USER_TOOLS_PROFILE=tw-vm|arch make python-user-tools
-python-user-tools: setup ## pip --user + stown for the selected profile (default: tw-vm)
-	@profile="$${PYTHON_USER_TOOLS_PROFILE:-tw-vm}"; \
-	case "$$profile" in tw-vm|arch) ;; *) echo >&2 "PYTHON_USER_TOOLS_PROFILE must be tw-vm or arch"; exit 1;; esac; \
-	"$(ANSIBLE_PLAYBOOK)" -i $(INV) playbook.yml -e dotfiles_profile="$$profile" --tags python-user-tools
+fonts-suse: setup ## Install Nerd Fonts into ~/.local/share/fonts
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags fonts-suse
 
-# ---- Auxiliary targets (Tumbleweed VM) -------------------------------
+vscode-insiders: setup ## Install VS Code Insiders from the Microsoft RPM repo
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags vscode-insiders
 
-# Partial targets pass a single tag so Ansible does not OR-match the umbrella
-# `tw-vm` tag, which would run every role in the profile.
+podman-compose: setup ## Install podman-compose into ~/.local/bin
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags podman-compose
 
-fonts-tw-vm: setup ## Install Nerd Fonts inside the container (~/.local/share/fonts)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags fonts-tw-vm
+starship-suse: setup ## Install starship into ~/.local/bin
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags starship-suse
 
-packages-tw-vm: setup ## Install Tumbleweed packages with zypper inside the container
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags packages-tw-vm
+languages-suse: setup ## Install Go/fnm/Julia/JDK/uv/Gradle/pnpm into ~/.local
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags languages-suse
 
-vscode-insiders: setup ## Install VS Code Insiders inside the container
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags vscode-insiders
+shell-plugins-suse: setup ## Install oh-my-zsh + plugins
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags shell-plugins-suse
 
-podman-compose: setup ## Install podman-compose into ~/.local/bin (container)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags podman-compose
-
-starship-tw-vm: setup ## Install starship (prompt) into ~/.local/bin (container)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags starship-tw-vm
-
-languages-tw-vm: setup ## Install Go/fnm/Julia/JDK/uv/Gradle/pnpm into ~/.local (container)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags languages-tw-vm
-
-shell-plugins-tw-vm: setup ## Install oh-my-zsh + plugins (container)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags shell-plugins-tw-vm
-
-stown-tw-vm: setup ## Apply tw-vm-profile dotfiles with stown
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=tw-vm --tags stown-tw-vm
-
-# ---- Auxiliary targets (Arch host) -----------------------------------
-
-packages-arch: setup ## Install Arch packages with pacman (sudo required)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags packages-arch $(ARCH_BECOME)
-
-fonts-arch: setup ## Install Nerd Fonts on the Arch host (~/.local/share/fonts)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags fonts-arch
-
-starship-arch: setup ## Install starship (prompt) into ~/.local/bin (Arch host)
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags starship-arch
-
-language-arch: languages-arch
-
-languages-arch: setup ## Install fnm/uv/pnpm into ~/.local on the Arch host
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags languages-arch
-
-shell-plugins-arch: setup ## Install oh-my-zsh + plugins on the Arch host
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags shell-plugins-arch
-
-stown-arch: setup ## Apply Arch-profile dotfiles with stown
-	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=arch --tags stown-arch
+stown-suse: setup ## Apply suse-profile dotfiles with stown
+	@$(ANSIBLE_PLAYBOOK) -i $(INV) playbook.yml -e dotfiles_profile=suse --tags stown-suse

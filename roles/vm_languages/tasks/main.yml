@@ -1,9 +1,9 @@
 ---
-# User-local language runtimes inside the Tumbleweed Distrobox.
+# User-local language runtimes for openSUSE.
 # Order: go, fnm, julia, java, uv, gradle, pnpm
 
-- name: Languages (tw-vm)
-  tags: [tw-vm, languages-tw-vm]
+- name: Languages
+  tags: [suse, languages-suse]
   when: not ansible_check_mode
   block:
     - name: Language toolchain cache directories

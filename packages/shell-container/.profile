@@ -1,4 +1,4 @@
-# ~/.profile - Tumbleweed Distrobox container
+# ~/.profile - openSUSE
 # POSIX-compatible env. Loaded by login shells and sourced from
 # .zshrc/.bashrc. Single source of truth for PATH and language toolchain
 # environment variables; shell-specific bits (eval-style hooks) live in
@@ -17,7 +17,7 @@ _prepend_path() {
 _prepend_path "$HOME/bin"
 _prepend_path "$HOME/.local/bin"
 
-# ---- Go (managed by gvm via the tw-vm profile) ----------------------
+# ---- Go (managed by gvm via the suse profile) -----------------------
 # Dot-prefixed GOPATH keeps $HOME tidy. gvm exposes the active toolchain
 # at $HOME/.local/go (versionless symlink) so this profile stays portable.
 GOPATH="$HOME/.go"
@@ -45,7 +45,7 @@ _prepend_path "$HOME/.local/share/fnm"
 _prepend_path "$HOME/.juliaup/bin"
 
 # ---- Java (JDK managed by SDKMAN!, versionless symlink) -------------
-# The tw-vm profile installs the JDK with SDKMAN! into
+# The suse profile installs the JDK with SDKMAN! into
 # $HOME/.sdkman/candidates/java/<version> and points the dotfile-managed
 # symlink $HOME/.local/lib/jdk at $HOME/.sdkman/candidates/java/current.
 if [ -d "$HOME/.local/lib/jdk" ]; then

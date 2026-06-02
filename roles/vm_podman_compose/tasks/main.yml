@@ -1,6 +1,6 @@
 ---
-- name: podman-compose (tw-vm)
-  tags: [tw-vm, podman-compose]
+- name: podman-compose
+  tags: [suse, podman-compose]
   block:
     - name: Install podman-compose (pip --user)
       ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/pip_user_install.yml"

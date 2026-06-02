@@ -1,0 +1,62 @@
+---
+# openSUSE profile.
+# Order: common -> system packages (zypper) -> desktop services -> python user
+# tools (pip + stown) -> fonts -> VS Code Insiders -> language runtimes ->
+# starship -> shell plugins -> stown apply -> podman-compose.
+
+- name: Common setup
+  ansible.builtin.import_role:
+    name: common
+  tags: [always, common, suse]
+
+- name: openSUSE packages (zypper)
+  ansible.builtin.import_role:
+    name: vm_packages
+  tags: [packages-suse, suse]
+
+- name: openSUSE desktop services
+  ansible.builtin.import_role:
+    name: suse_desktop
+  tags: [desktop-suse, suse]
+
+- name: Python user tools (pip, stown)
+  ansible.builtin.import_role:
+    name: python_user_tools
+  tags: [python-user-tools, suse]
+
+- name: Nerd Fonts
+  ansible.builtin.import_role:
+    name: fonts
+  tags: [fonts-suse, suse]
+
+- name: VS Code Insiders
+  ansible.builtin.import_role:
+    name: vm_vscode
+  tags: [vscode-insiders, suse]
+
+- name: Languages / runtimes
+  ansible.builtin.import_role:
+    name: vm_languages
+  tags: [languages-suse, suse]
+
+- name: Starship prompt
+  ansible.builtin.import_role:
+    name: starship
+  tags: [starship-suse, suse]
+
+- name: Shell plugins
+  ansible.builtin.import_role:
+    name: shell_plugins
+  tags: [shell-plugins-suse, suse]
+
+- name: Apply dotfiles with stown
+  ansible.builtin.import_role:
+    name: dotfiles
+  vars:
+    stown_profile: suse
+  tags: [stown-suse, suse]
+
+- name: podman-compose (pip --user)
+  ansible.builtin.import_role:
+    name: vm_podman_compose
+  tags: [podman-compose, suse]

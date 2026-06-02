@@ -12,6 +12,16 @@ if [ -f "$HOME/.profile" ]; then
     . "$HOME/.profile"
 fi
 
+# Pull in distro/site completions before oh-my-zsh runs compinit.
+if [ -d /usr/share/zsh/site-functions ]; then
+    fpath=(/usr/share/zsh/site-functions $fpath)
+fi
+
+# History file (zsh defaults are too small and may not persist history).
+export HISTFILE="$HOME/.zsh_history"
+export HISTSIZE=10000
+export SAVEHIST=10000
+
 # ---- oh-my-zsh ------------------------------------------------------
 
 export ZSH="$HOME/.oh-my-zsh"
@@ -19,11 +29,11 @@ export ZSH="$HOME/.oh-my-zsh"
 plugins=(
   git
 )
-if [ -d "$ZSH/custom/plugins/zsh-syntax-highlighting" ]; then
-    plugins+=(zsh-syntax-highlighting)
-fi
 if [ -d "$ZSH/custom/plugins/zsh-autosuggestions" ]; then
     plugins+=(zsh-autosuggestions)
+fi
+if [ -d "$ZSH/custom/plugins/zsh-syntax-highlighting" ]; then
+    plugins+=(zsh-syntax-highlighting)
 fi
 
 if [ -f "$ZSH/oh-my-zsh.sh" ]; then

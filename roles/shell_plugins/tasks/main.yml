@@ -1,6 +1,6 @@
 ---
 - name: Shell plugins
-  tags: [tw-vm, arch, shell-plugins-tw-vm, shell-plugins-arch]
+  tags: [suse, shell-plugins-suse]
   when: not ansible_check_mode
   block:
     - name: Require zsh
