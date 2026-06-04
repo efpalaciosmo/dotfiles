@@ -19,7 +19,17 @@
     name: shell_plugins
   tags: [shell]
 
+- name: Rust toolchain
+  ansible.builtin.import_role:
+    name: rustup
+  tags: [rustup]
+
 - name: Apply dotfiles with stown
   ansible.builtin.import_role:
     name: dotfiles
   tags: [dotfiles]
+
+- name: Neovim Tree-sitter parsers
+  ansible.builtin.import_role:
+    name: nvim_treesitter
+  tags: [dotfiles, nvim-treesitter]

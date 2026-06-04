@@ -41,8 +41,8 @@ with `--check`; it exits non-zero when Brewfile formulas are missing.
   tools, curl/wget, archives, and JSON tools.
 - Daily CLI: tree, fd, ripgrep, fzf, bat, btop, duf, ncdu, tmux, fastfetch.
 - Neovim tooling: Neovim, tree-sitter, Lua, Stylua.
-- Toolchains and managers: uv, fnm, juliaup, pnpm, Go, rustup-init, Zig, LLVM,
-  OpenJDK, Gradle.
+- Toolchains and managers: uv, fnm, juliaup, pnpm, Go, Rust via official
+  rustup installer, Zig, LLVM, OpenJDK, Gradle.
 - Prompt and dotfile helpers: Starship and GNU Stow. `stown` is installed by
   Ansible with Python only when it is not already available.
 

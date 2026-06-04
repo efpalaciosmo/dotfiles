@@ -44,11 +44,12 @@ end
 -- ============================================================================
 -- Tree-sitter parser bootstrap.
 --
--- Prefer nvim-treesitter-managed parsers, but register parser libraries from
--- common system and Homebrew locations when they are already present.
+-- Prefer parsers installed under this config, but also register parser
+-- libraries from common system and Homebrew locations when they are present.
 -- ============================================================================
 do
   local candidates = {
+    vim.fn.stdpath("config") .. "/parser",
     vim.fn.expand("~/.local/lib/tree-sitter"),
     "/opt/homebrew/lib/tree-sitter",
     "/usr/local/lib/tree-sitter",
@@ -64,8 +65,9 @@ do
         local name, t = vim.uv.fs_scandir_next(handle)
         if not name then break end
         if t == "file" then
-          local lang = name:match("^libtree%-sitter%-(.+)%.so$")
+          local lang = name:match("^(.+)%.so$")
           if lang then
+            lang = lang:gsub("^libtree%-sitter%-", "")
             local stripped = lang:gsub("^tree%-sitter%-", "")
             local short = stripped:gsub("%-", "_")
             pcall(vim.treesitter.language.add, short, { path = dir .. "/" .. name })
@@ -76,14 +78,19 @@ do
   end
 end
 
--- Make vim.treesitter.start() tolerant of *still*-missing parsers so that
--- built-in ftplugins (e.g. ftplugin/lua.lua) which call it unconditionally
--- don't crash file opens. Highlighting silently degrades to syntax.lua.
+-- Make vim.treesitter.start() tolerant of missing or broken parsers so file
+-- opens never fail. Highlighting silently degrades to syntax.lua.
 do
   local orig_start = vim.treesitter.start
   vim.treesitter.start = function(bufnr, lang)
     local ok, err = pcall(orig_start, bufnr, lang)
-    if not ok and not tostring(err):match("Parser could not be created") then
+    local msg = tostring(err)
+    local parser_error = msg:match("Parser could not be created")
+      or msg:match("Failed to load parser")
+      or msg:match("no parser")
+      or msg:match("treesitter.*parser")
+      or msg:match("parser.*treesitter")
+    if not ok and not parser_error then
       vim.notify(err, vim.log.levels.WARN)
     end
   end

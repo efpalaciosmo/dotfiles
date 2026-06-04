@@ -1,0 +1,92 @@
+---
+- name: Ensure Neovim Tree-sitter cache dirs
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ nvim_treesitter_cache_dir }}"
+    - "{{ nvim_treesitter_bin_dir }}"
+    - "{{ ansible_facts.env.HOME }}/.config/nvim/parser"
+    - "{{ ansible_facts.env.HOME }}/.config/nvim/queries"
+
+- name: Check Neovim Tree-sitter build commands
+  ansible.builtin.command:
+    argv:
+      - bash
+      - -lc
+      - "command -v {{ item }}"
+  loop:
+    - git
+    - nvim
+    - tree-sitter
+    - zig
+  register: _nvim_ts_commands
+  check_mode: false
+  changed_when: false
+  failed_when: _nvim_ts_commands.rc != 0
+
+- name: Install cc wrapper for Tree-sitter builds
+  ansible.builtin.copy:
+    dest: "{{ nvim_treesitter_bin_dir }}/cc"
+    mode: '0755'
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      args=()
+      for arg in "$@"; do
+        case "$arg" in
+          --target=x86_64-unknown-linux-gnu) continue ;;
+        esac
+        args+=("$arg")
+      done
+
+      exec zig cc -target x86_64-linux-gnu "${args[@]}"
+
+- name: Clone nvim-treesitter as parser installer source
+  ansible.builtin.git:
+    repo: "{{ nvim_treesitter_installer_repo }}"
+    dest: "{{ nvim_treesitter_checkout_dir }}"
+    version: "{{ nvim_treesitter_installer_version }}"
+    update: true
+  when: not ansible_check_mode
+
+- name: Install Neovim Tree-sitter parsers
+  ansible.builtin.command:
+    argv:
+      - nvim
+      - --headless
+      - --cmd
+      - "set runtimepath^={{ nvim_treesitter_checkout_dir }}"
+      - "+lua local ts = require('nvim-treesitter'); ts.setup({ install_dir = vim.fn.expand('~/.config/nvim') }); local ok = ts.install({ {{ nvim_treesitter_parser_languages | map('to_json') | join(', ') }} }, { force = false, summary = true, max_jobs = {{ nvim_treesitter_install_jobs }} }):wait({{ nvim_treesitter_install_timeout_ms }}); if not ok then vim.cmd('cquit') end"
+      - +qa
+  environment:
+    PATH: "{{ nvim_treesitter_bin_dir }}:{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+  register: _nvim_ts_install
+  changed_when: "'Language installed' in ((_nvim_ts_install.stdout | default('')) ~ (_nvim_ts_install.stderr | default('')))"
+  when: not ansible_check_mode
+
+- name: Find query symlinks created by installer
+  ansible.builtin.find:
+    paths: "{{ ansible_facts.env.HOME }}/.config/nvim/queries"
+    file_type: link
+  register: _nvim_ts_query_links
+  when: not ansible_check_mode
+
+- name: Remove query symlinks
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ _nvim_ts_query_links.files | default([]) }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  when: not ansible_check_mode
+
+- name: Copy Tree-sitter queries locally
+  ansible.builtin.copy:
+    src: "{{ nvim_treesitter_checkout_dir }}/runtime/queries/"
+    dest: "{{ ansible_facts.env.HOME }}/.config/nvim/queries/"
+    remote_src: true
+    mode: preserve
+  when: not ansible_check_mode

@@ -25,6 +25,8 @@
   ansible.builtin.shell: command -v "{{ item }}"
   args:
     executable: /bin/bash
+  environment:
+    PATH: "{{ cargo_home }}/bin:{{ ansible_facts.env.PATH | default('') }}"
   loop: "{{ brew_expected_commands }}"
   register: doctor_commands
   changed_when: false

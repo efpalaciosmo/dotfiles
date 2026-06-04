@@ -13,9 +13,6 @@ vim.pack.add({
   -- Tooling: install / manage LSP servers, formatters, linters from one place.
   { src = "https://github.com/mason-org/mason.nvim" },
   { src = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" },
-  -- Tree-sitter parsers + indent on top of the bootstrap in init.lua.
-  -- Use the `main` branch (the new layout shipped 2024+).
-  { src = "https://github.com/nvim-treesitter/nvim-treesitter",        version = "main" },
   -- In-buffer markdown rendering (headings, code blocks, lists, checkboxes...).
   { src = "https://github.com/MeanderingProgrammer/render-markdown.nvim" },
 })
@@ -53,6 +50,7 @@ require("mason-tool-installer").setup({
     "vtsls",
     "clangd",
     "zls",
+    "rust-analyzer",
     "marksman",
     "json-lsp",
     "yaml-language-server",
@@ -60,17 +58,15 @@ require("mason-tool-installer").setup({
     "css-lsp",
     "tailwindcss-language-server",
     "sqlls",
-    -- Formatters not covered by the base Brewfile.
     "prettier",
     "sqlfluff",
-    -- (stylua and clang-format come from Homebrew/LLVM; ruff covers Python
-    --  format+lint; zig fmt ships with zig itself; julia LSP is installed via
-    --  Julia's Pkg.add("LanguageServer").)
   },
   auto_update = false,
   run_on_start = true,
   start_delay = 3000,
-  debounce_hours = 24,
+  -- Do not debounce installs: a failed run (for example, npm missing from PATH)
+  -- otherwise blocks retries until the debounce window expires.
+  debounce_hours = nil,
 })
 
 -- ============================================================================
@@ -517,52 +513,6 @@ require("lualine").setup({
   },
   extensions = { "oil", "fzf", "quickfix", "man" },
 })
-
--- ============================================================================
--- nvim-treesitter (main branch) — install / update parsers + queries.
---
--- Highlighting is started by the FileType autocmd in lua/config/autocmds.lua
--- (calls vim.treesitter.start). Folds use vim.treesitter.foldexpr() set in
--- options.lua. Indent is left to smartindent + per-filetype shiftwidth, since
--- nvim-treesitter's indent module is still flagged experimental upstream.
---
--- Parser libraries from common system and Homebrew locations are registered by
--- the bootstrap in init.lua. Use :TSInstall <lang> for anything missing; those
--- parsers go to stdpath('data')/site/parser/ and stay separate from global
--- parser libraries.
--- ============================================================================
-do
-  local ok, ts = pcall(require, "nvim-treesitter")
-  if ok then
-    ts.setup({
-      install_dir = vim.fn.stdpath("data") .. "/site",
-    })
-
-    local ensure = {
-      "lua", "vim", "vimdoc", "query",
-      "python",
-      "zig",
-      "c", "cpp",
-      "javascript", "typescript", "tsx", "jsdoc",
-      "html", "css", "scss",
-      "json", "yaml", "toml",
-      "julia",
-      "sql",
-      "markdown", "markdown_inline",
-      "regex", "diff", "gitcommit",
-    }
-
-    -- install() shells out to the tree-sitter CLI for some parsers/queries.
-    -- Skip auto-install when it is unavailable so startup stays quiet.
-    if vim.fn.executable("tree-sitter") == 1 then
-      -- install() is async. Wrap in pcall so a transient network failure on
-      -- first launch doesn't break startup.
-      pcall(ts.install, ensure)
-    else
-      vim.notify("nvim-treesitter: install tree-sitter CLI to auto-install parsers", vim.log.levels.WARN)
-    end
-  end
-end
 
 -- ============================================================================
 -- render-markdown.nvim — pretty in-buffer rendering of markdown.

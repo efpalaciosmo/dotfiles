@@ -21,9 +21,18 @@ brew "cmake"
 brew "ninja"
 brew "pkgconf"
 
+if OS.linux?
+  brew "binutils"
+  brew "gcc"
+  brew "glibc"
+end
+
 # Daily CLI tools.
 brew "tree"
 brew "fd"
+brew "fd"
+brew "rg"
+brew "jq"
 brew "ripgrep"
 brew "fzf"
 brew "bat"
@@ -31,6 +40,9 @@ brew "duf"
 brew "ncdu"
 brew "tmux"
 brew "fastfetch"
+brew "zoxide"
+brew "resvg"
+brew "sevenzip"
 
 # Editor tooling.
 brew "neovim"
@@ -43,13 +55,14 @@ brew "lazydocker"
 brew "uv"
 brew "fnm"
 brew "pnpm"
-brew "rustup-init"
+brew "rustup"
 
 # Heavier toolchains and dependency-heavy formulas.
 brew "go"
 brew "zig"
 brew "juliaup"
 brew "llvm"
-brew "openjdk"
-brew "gradle"
-brew "btop" # Pulls gcc/binutils on Linuxbrew.
+brew "poppler"
+brew "imagemagick-full"
+brew "ffmpeg-full"
+brew "yazi"

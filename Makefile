@@ -8,7 +8,7 @@ INV := $(CURDIR)/inventory.ini
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
 BREW_BUNDLE_JOBS ?= auto
 
-.PHONY: help setup brew venv doctor check verify fonts shell dotfiles python-user-tools
+.PHONY: help setup brew venv doctor check verify fonts shell dotfiles treesitter python-user-tools
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -23,6 +23,11 @@ brew: Brewfile scripts/ensure-homebrew.sh scripts/with-homebrew.sh ## Install Ho
 	@if [ "$(DRY_RUN)" = "1" ]; then \
 		"$(CURDIR)/scripts/with-homebrew.sh" --no-install env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file="$(CURDIR)/Brewfile"; \
 	else \
+		if ! command -v brew >/dev/null 2>&1 && [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then \
+			echo "[brew] Preparing Homebrew prefix with root privileges..."; \
+			sudo install -d -m 0755 -o "$$(id -u)" -g "$$(id -g)" /home/linuxbrew; \
+			sudo install -d -m 0755 -o "$$(id -u)" -g "$$(id -g)" /home/linuxbrew/.linuxbrew; \
+		fi; \
 		"$(CURDIR)/scripts/with-homebrew.sh" brew bundle install --jobs="$(BREW_BUNDLE_JOBS)" --file="$(CURDIR)/Brewfile"; \
 	fi
 
@@ -76,6 +81,10 @@ shell: brew venv ## Install oh-my-zsh and shell plugins
 dotfiles: brew venv ## Install stown if needed and apply dotfiles
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags python-user-tools,dotfiles $(CHECK)
+
+treesitter: brew venv ## Install Neovim Tree-sitter parsers
+	@"$(CURDIR)/scripts/with-homebrew.sh" \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags nvim-treesitter $(CHECK)
 
 python-user-tools: brew venv
 	@"$(CURDIR)/scripts/with-homebrew.sh" \

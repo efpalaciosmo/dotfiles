@@ -42,7 +42,9 @@ brew_expected_commands:
   - juliaup
   - pnpm
   - go
-  - rustup-init
+  - rustup
+  - cargo
+  - rustc
   - zig
   - clang
   - java
@@ -64,6 +66,40 @@ nerd_fonts_list:
 nerd_fonts_root: "{{ ansible_facts.env.HOME }}/.local/share/fonts/nerd-fonts"
 nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/nerd-fonts/{{ nerd_fonts_version }}"
 
+nvim_treesitter_installer_repo: https://github.com/nvim-treesitter/nvim-treesitter
+nvim_treesitter_installer_version: 4916d6592ede8c07973490d9322f187e07dfefac
+nvim_treesitter_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/nvim-treesitter"
+nvim_treesitter_checkout_dir: "{{ nvim_treesitter_cache_dir }}/nvim-treesitter"
+nvim_treesitter_bin_dir: "{{ nvim_treesitter_cache_dir }}/bin"
+nvim_treesitter_install_jobs: 4
+nvim_treesitter_install_timeout_ms: 900000
+nvim_treesitter_parser_languages:
+  - lua
+  - vim
+  - vimdoc
+  - query
+  - python
+  - zig
+  - c
+  - cpp
+  - javascript
+  - typescript
+  - tsx
+  - jsdoc
+  - html
+  - css
+  - scss
+  - json
+  - yaml
+  - toml
+  - julia
+  - sql
+  - markdown
+  - markdown_inline
+  - regex
+  - diff
+  - gitcommit
+
 allow_pip_break_system_packages: true
 pip_break_allowed: >-
   {{
@@ -73,5 +109,10 @@ pip_break_allowed: >-
 
 zsh_dir: "{{ ansible_facts.env.ZSH | default(ansible_facts.env.HOME + '/.oh-my-zsh') }}"
 zsh_custom: "{{ ansible_facts.env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
+
+rustup_installer_url: https://sh.rustup.rs
+rustup_default_toolchain: stable
+cargo_home: "{{ ansible_facts.env.CARGO_HOME | default(ansible_facts.env.HOME + '/.cargo') }}"
+rustup_home: "{{ ansible_facts.env.RUSTUP_HOME | default(ansible_facts.env.HOME + '/.rustup') }}"
 
 dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|.*\.md\.template)$'

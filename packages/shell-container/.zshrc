@@ -66,3 +66,6 @@ fi
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init zsh)"
 fi
+
+# LazyDocker usando Podman rootless
+alias lazypodman="DOCKER_HOST=unix:///run/user/1000/podman/podman.sock lazydocker"
