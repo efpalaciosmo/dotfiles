@@ -9,6 +9,11 @@
     name: python_user_tools
   tags: [python-user-tools, dotfiles]
 
+- name: Node user tools
+  ansible.builtin.import_role:
+    name: node_user_tools
+  tags: [node-user-tools, dotfiles]
+
 - name: Nerd Fonts
   ansible.builtin.import_role:
     name: fonts

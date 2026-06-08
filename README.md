@@ -22,6 +22,7 @@ make dotfiles   # install stown if needed and link dotfiles
 make check      # syntax checks
 make doctor     # command and symlink diagnostics
 make verify     # syntax checks plus residue guard
+make node-user-tools # install Neovim Node tooling with pnpm
 ```
 
 For a non-mutating check of the Ansible work:
@@ -45,6 +46,9 @@ with `--check`; it exits non-zero when Brewfile formulas are missing.
   rustup installer, Zig, LLVM, OpenJDK, Gradle.
 - Prompt and dotfile helpers: Starship and GNU Stow. `stown` is installed by
   Ansible with Python only when it is not already available.
+
+Neovim's Node-based LSP/formatter tools are installed globally with `pnpm`,
+not through Mason's npm backend.
 
 `make brew` runs Homebrew Bundle with parallel jobs by default. Override with
 `BREW_BUNDLE_JOBS=1 make brew` if a formula needs sequential installation.

@@ -8,7 +8,7 @@ INV := $(CURDIR)/inventory.ini
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
 BREW_BUNDLE_JOBS ?= auto
 
-.PHONY: help setup brew venv doctor check verify fonts shell dotfiles treesitter python-user-tools
+.PHONY: help setup brew venv doctor check verify fonts shell dotfiles treesitter python-user-tools node-user-tools
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -89,3 +89,7 @@ treesitter: brew venv ## Install Neovim Tree-sitter parsers
 python-user-tools: brew venv
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags python-user-tools $(CHECK)
+
+node-user-tools: brew venv ## Install pnpm global Node tools
+	@"$(CURDIR)/scripts/with-homebrew.sh" \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags node-user-tools $(CHECK)

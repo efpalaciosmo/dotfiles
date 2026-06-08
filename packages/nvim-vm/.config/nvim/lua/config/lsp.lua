@@ -61,6 +61,7 @@ vim.lsp.config("pyright", {
   settings = {
     python = {
       analysis = {
+        autoImportCompletions = true,
         typeCheckingMode = "basic",
         useLibraryCodeForTypes = true,
         diagnosticMode = "openFilesOnly",

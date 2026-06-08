@@ -38,6 +38,11 @@ if command -v fnm >/dev/null 2>&1; then
     eval "$(fnm env --use-on-cd --shell bash)"
 fi
 
+if command -v pnpm >/dev/null 2>&1; then
+    alias npm="pnpm"
+    alias npx="pnpm dlx"
+fi
+
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init bash)"
 else

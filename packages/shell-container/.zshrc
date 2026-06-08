@@ -63,9 +63,36 @@ if command -v fnm >/dev/null 2>&1; then
     eval "$(fnm env --use-on-cd --shell zsh)"
 fi
 
+if command -v pnpm >/dev/null 2>&1; then
+    alias npm="pnpm"
+    alias npx="pnpm dlx"
+fi
+
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init zsh)"
 fi
 
 # LazyDocker usando Podman rootless
 alias lazypodman="DOCKER_HOST=unix:///run/user/1000/podman/podman.sock lazydocker"
+
+wifi() {
+    case "$1" in
+        list)
+            nmcli dev wifi list
+            ;;
+        connect)
+            if [ -z "$2" ] || [ -z "$3" ]; then
+                printf 'Usage: wifi connect "SSID" "PASSWORD"\n' >&2
+                return 1
+            fi
+
+            nmcli dev wifi connect "$2" password "$3"
+            ;;
+        *)
+            printf 'Usage:\n  wifi list\n  wifi connect "SSID" "PASSWORD"\n' >&2
+            return 1
+            ;;
+    esac
+}
+
+eval "$(zoxide init zsh)"

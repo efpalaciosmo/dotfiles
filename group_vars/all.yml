@@ -52,6 +52,17 @@ brew_expected_commands:
   - starship
   - stow
 
+pnpm_home: "{{ ansible_facts.env.PNPM_HOME | default(ansible_facts.env.HOME + '/.local/share/pnpm') }}"
+node_user_tools_packages:
+  - pyright
+  - typescript
+  - "@vtsls/language-server"
+  - prettier
+  - vscode-langservers-extracted
+  - yaml-language-server
+  - "@tailwindcss/language-server"
+  - sql-language-server
+
 nerd_fonts_version: v3.4.0
 nerd_fonts_base_url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}"
 nerd_fonts_list:

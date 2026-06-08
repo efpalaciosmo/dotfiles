@@ -33,8 +33,8 @@ require("mason").setup({
       package_uninstalled = "✗",
     },
   },
-  -- Allow Mason to install global npm packages without polluting the user's
-  -- system Node — everything lives under stdpath('data')/mason.
+  -- Keep Python package installs isolated under stdpath('data')/mason.
+  -- Node tooling is installed by Ansible with pnpm instead of Mason's npm backend.
   pip = { upgrade_pip = false },
   max_concurrent_installers = 6,
 })
@@ -43,28 +43,20 @@ require("mason").setup({
 -- New tools installed automatically; existing ones updated on demand.
 require("mason-tool-installer").setup({
   ensure_installed = {
+    -- Node-based tools are intentionally omitted: Ansible installs them with pnpm.
     -- LSP servers (names are Mason package names, not lspconfig names).
     "lua-language-server",
-    "pyright",
     "ruff",
-    "vtsls",
     "clangd",
     "zls",
     "rust-analyzer",
     "marksman",
-    "json-lsp",
-    "yaml-language-server",
-    "html-lsp",
-    "css-lsp",
-    "tailwindcss-language-server",
-    "sqlls",
-    "prettier",
     "sqlfluff",
   },
   auto_update = false,
   run_on_start = true,
   start_delay = 3000,
-  -- Do not debounce installs: a failed run (for example, npm missing from PATH)
+  -- Do not debounce installs: a failed run (for example, a provider missing from PATH)
   -- otherwise blocks retries until the debounce window expires.
   debounce_hours = nil,
 })

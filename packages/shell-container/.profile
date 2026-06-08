@@ -56,8 +56,17 @@ export GOPATH GOBIN
 _prepend_path "$HOME/.juliaup/bin"
 
 PNPM_HOME="$HOME/.local/share/pnpm"
-_prepend_path "$PNPM_HOME"
+_prepend_path "$PNPM_HOME/bin"
 export PNPM_HOME
+
+_flatpak_export_share="$HOME/.local/share/flatpak/exports/share"
+if [ -d "$_flatpak_export_share" ]; then
+    case ":${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:" in
+        *":$_flatpak_export_share:"*) ;;
+        *) XDG_DATA_DIRS="$_flatpak_export_share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" ;;
+    esac
+    export XDG_DATA_DIRS
+fi
 
 if command -v brew >/dev/null 2>&1; then
     _brew_prefix="$(brew --prefix 2>/dev/null || true)"
@@ -128,4 +137,4 @@ export PATH
 unset -f _prepend_path
 unset -f _prepend_path_first
 unset -f _setup_homebrew
-unset _brew _brew_prefix _brew_binutils_bin _brew_gcc _brew_gcc_bin _brew_gcc_candidate _brew_gcc_version _brew_glibc_prefix _brew_gxx _brew_linux_headers_prefix _brew_llvm_bin _brew_rustup_bin
+unset _brew _brew_prefix _brew_binutils_bin _brew_gcc _brew_gcc_bin _brew_gcc_candidate _brew_gcc_version _brew_glibc_prefix _brew_gxx _brew_linux_headers_prefix _brew_llvm_bin _brew_rustup_bin _flatpak_export_share
