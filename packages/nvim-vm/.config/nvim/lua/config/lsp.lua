@@ -204,6 +204,49 @@ vim.lsp.config("tailwindcss", {
   },
 })
 
+local function create_tinymist_command(command_name, client, bufnr)
+  local target = command_name:match("tinymist%.export(%w+)") or command_name
+  local command_label = "Export" .. target
+
+  local function run()
+    local filepath = vim.api.nvim_buf_get_name(bufnr)
+    if filepath == "" then
+      vim.notify("Save the Typst file before exporting", vim.log.levels.WARN)
+      return
+    end
+
+    return client:exec_cmd({
+      title = "Export " .. target,
+      command = command_name,
+      arguments = { filepath },
+    }, { bufnr = bufnr })
+  end
+
+  return run, command_label, "Export Typst to " .. target
+end
+
+vim.lsp.config("tinymist", {
+  cmd = { "tinymist" },
+  filetypes = { "typst" },
+  root_markers = { "typst.toml", ".git" },
+  single_file_support = true,
+  settings = {
+    formatterMode = "typstyle",
+  },
+  on_attach = function(client, bufnr)
+    for _, command in ipairs({
+      "tinymist.exportSvg",
+      "tinymist.exportPng",
+      "tinymist.exportPdf",
+      "tinymist.exportHtml",
+      "tinymist.exportMarkdown",
+    }) do
+      local cmd_func, cmd_name, cmd_desc = create_tinymist_command(command, client, bufnr)
+      vim.api.nvim_buf_create_user_command(bufnr, cmd_name, cmd_func, { nargs = 0, desc = cmd_desc })
+    end
+  end,
+})
+
 -- ============================================================================
 -- Enable servers whose first cmd entry is actually executable.
 -- ============================================================================
@@ -233,6 +276,8 @@ local servers = {
   "html",
   "cssls",
   "tailwindcss",
+  -- typst
+  "tinymist",
   -- misc
   "jsonls",
   "yamlls",

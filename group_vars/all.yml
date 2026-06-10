@@ -101,6 +101,7 @@ nvim_treesitter_parser_languages:
   - sql
   - markdown
   - markdown_inline
+  - typst
   - regex
   - diff
   - gitcommit

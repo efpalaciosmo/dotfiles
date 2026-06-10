@@ -60,10 +60,12 @@ require("mason-tool-installer").setup({
     "html-lsp",
     "css-lsp",
     "tailwindcss-language-server",
+    "tinymist",
 
     -- Extra CLI tools.
     "prettier",
     "stylua",
+    "typstyle",
     "sqlfluff",
     "shfmt",
     "shellcheck",

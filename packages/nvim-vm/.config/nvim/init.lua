@@ -7,6 +7,10 @@ end
 
 vim.loader.enable()
 
+vim.filetype.add({
+  extension = { typ = "typst" },
+})
+
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
