@@ -12,6 +12,8 @@ if vim.fn.executable("clang-format") == 1 then
     .. vim.fn.shellescape(vim.fn.expand("%:p"))
 end
 
+ft.format_on_save({ lsp = false })
+
 ft.suffixes({ ".h", ".c", ".hpp", ".cpp" })
 
 -- Quick header/source toggle (clangd switchSourceHeader).

@@ -10,4 +10,6 @@ if vim.fn.executable("sqlfluff") == 1 then
   vim.opt_local.formatprg = "sqlfluff format --dialect ansi -"
 end
 
+ft.format_on_save({ lsp = false })
+
 ft.suffixes({ ".sql" })

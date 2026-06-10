@@ -64,6 +64,24 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+-- Shell's builtin ftplugin sets b:did_ftplugin, so keep local shell overrides here.
+vim.api.nvim_create_autocmd("FileType", {
+  group = augroup,
+  pattern = { "sh", "bash", "zsh" },
+  callback = function()
+    local ft = require("config.ft")
+    ft.indent(2)
+
+    local o = vim.opt_local
+    o.colorcolumn = "100"
+    o.commentstring = "# %s"
+
+    ft.formatprg("shfmt", "shfmt -filename " .. vim.fn.shellescape(vim.fn.expand("%:p")) .. " -i 2 -ci -")
+    ft.format_on_save({ lsp = false })
+    ft.suffixes({ ".sh", ".bash", ".zsh" })
+  end,
+})
+
 -- Auto-create parent directories on save (also handled by ':write ++p',
 -- but kept for plain :w / external writes).
 vim.api.nvim_create_autocmd("BufWritePre", {

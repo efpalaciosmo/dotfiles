@@ -9,5 +9,6 @@ o.indentkeys:append({ "0}", "0]", "0)" })
 
 ft.formatprg("stylua", "stylua --search-parent-directories --stdin-filepath "
   .. vim.fn.shellescape(vim.fn.expand("%:p")) .. " -")
+ft.format_on_save({ lsp = false })
 
 ft.suffixes({ ".lua" })

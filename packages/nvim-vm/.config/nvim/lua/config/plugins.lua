@@ -43,15 +43,30 @@ require("mason").setup({
 -- New tools installed automatically; existing ones updated on demand.
 require("mason-tool-installer").setup({
   ensure_installed = {
-    -- Node-based tools are intentionally omitted: Ansible installs them with pnpm.
     -- LSP servers (names are Mason package names, not lspconfig names).
-    "lua-language-server",
+    "basedpyright",
     "ruff",
+    "lua-language-server",
+    "vtsls",
     "clangd",
     "zls",
     "rust-analyzer",
+    "julia-lsp",
     "marksman",
+    "sqls",
+    "bash-language-server",
+    "json-lsp",
+    "yaml-language-server",
+    "html-lsp",
+    "css-lsp",
+    "tailwindcss-language-server",
+
+    -- Extra CLI tools.
+    "prettier",
+    "stylua",
     "sqlfluff",
+    "shfmt",
+    "shellcheck",
   },
   auto_update = false,
   run_on_start = true,

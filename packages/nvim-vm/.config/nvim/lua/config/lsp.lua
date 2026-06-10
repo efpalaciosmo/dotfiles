@@ -54,17 +54,26 @@ vim.lsp.config("lua_ls", {
   },
 })
 
-vim.lsp.config("pyright", {
-  cmd = { "pyright-langserver", "--stdio" },
+vim.lsp.config("basedpyright", {
+  cmd = { "basedpyright-langserver", "--stdio" },
   filetypes = { "python" },
   root_markers = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "Pipfile", ".git" },
   settings = {
-    python = {
+    basedpyright = {
+      disableOrganizeImports = true,
       analysis = {
+        autoSearchPaths = true,
         autoImportCompletions = true,
+        diagnosticMode = "openFilesOnly",
+        enableTypeIgnoreComments = false,
         typeCheckingMode = "basic",
         useLibraryCodeForTypes = true,
-        diagnosticMode = "openFilesOnly",
+        diagnosticSeverityOverrides = {
+          reportArgumentType = "none",
+          reportAssignmentType = "none",
+          reportGeneralTypeIssues = "none",
+          reportUnknownMemberType = "none",
+        },
       },
     },
   },
@@ -74,6 +83,10 @@ vim.lsp.config("ruff", {
   cmd = { "ruff", "server" },
   filetypes = { "python" },
   root_markers = { "pyproject.toml", "ruff.toml", ".ruff.toml", ".git" },
+  on_attach = function(client)
+    -- Let basedpyright own Python hover/type information; ruff handles lint/format/code actions.
+    client.server_capabilities.hoverProvider = false
+  end,
 })
 
 vim.lsp.config("vtsls", {
@@ -115,7 +128,6 @@ vim.lsp.config("rust_analyzer", {
       cargo = { allFeatures = true },
       check = {
         command = "clippy",
-        extraArgs = { "--all-targets", "--all-features" },
       },
       inlayHints = {
         bindingModeHints = { enable = true },
@@ -132,18 +144,21 @@ vim.lsp.config("rust_analyzer", {
 })
 
 vim.lsp.config("julials", {
-  cmd = { "julia", "--startup-file=no", "--history-file=no", "-e", [[
-    using LanguageServer
-    runserver()
-  ]] },
+  cmd = { "julia-lsp" },
   filetypes = { "julia" },
   root_markers = { "Project.toml", "JuliaProject.toml", ".git" },
 })
 
-vim.lsp.config("sqlls", {
-  cmd = { "sql-language-server", "up", "--method", "stdio" },
+vim.lsp.config("sqls", {
+  cmd = { "sqls" },
   filetypes = { "sql", "mysql" },
-  root_markers = { ".sqllsrc.json", ".git" },
+  root_markers = { ".sqls.yml", ".sqls.yaml", ".git" },
+})
+
+vim.lsp.config("bashls", {
+  cmd = { "bash-language-server", "start" },
+  filetypes = { "sh", "bash", "zsh" },
+  root_markers = { ".git" },
 })
 
 vim.lsp.config("marksman", {
@@ -196,7 +211,7 @@ vim.lsp.config("tailwindcss", {
 local servers = {
   "lua_ls",
   -- python
-  "pyright",
+  "basedpyright",
   "ruff",
   -- javascript / typescript
   "vtsls",
@@ -209,7 +224,9 @@ local servers = {
   -- julia
   "julials",
   -- sql
-  "sqlls",
+  "sqls",
+  -- shell
+  "bashls",
   -- markdown
   "marksman",
   -- web
