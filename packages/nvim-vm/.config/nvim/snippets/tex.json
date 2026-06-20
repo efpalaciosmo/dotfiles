@@ -1,0 +1,296 @@
+{
+  "Inline math": {
+    "prefix": "mt",
+    "body": "\\$${1:expr}\\$",
+    "description": "Inline math"
+  },
+  "Display math": {
+    "prefix": "mmt",
+    "body": ["\\[", "  ${1:expr}", "\\]"],
+    "description": "Display math"
+  },
+  "Equation": {
+    "prefix": "eq",
+    "body": ["\\begin{equation}", "  ${1:equation}", "\\end{equation}"],
+    "description": "Numbered equation"
+  },
+  "Equation with label": {
+    "prefix": "eql",
+    "body": ["\\begin{equation}\\label{eq:${1:name}}", "  ${2:equation}", "\\end{equation}"],
+    "description": "Numbered equation with label"
+  },
+  "Aligned equations": {
+    "prefix": "align",
+    "body": ["\\begin{align*}", "  ${1:lhs} &= ${2:rhs} \\\\ ", "  ${3:lhs} &= ${4:rhs}", "\\end{align*}"],
+    "description": "Aligned equations"
+  },
+  "Cases": {
+    "prefix": "cases",
+    "body": ["\\begin{cases}", "  ${1:expr_1}, & ${2:condition_1} \\\\ ", "  ${3:expr_2}, & ${4:condition_2}", "\\end{cases}"],
+    "description": "Piecewise definition"
+  },
+
+  "Section": {
+    "prefix": "sec",
+    "body": "\\section{${1:Section Title}}",
+    "description": "Section heading"
+  },
+  "Subsection": {
+    "prefix": "ssec",
+    "body": "\\subsection{${1:Subsection Title}}",
+    "description": "Subsection heading"
+  },
+  "Theorem": {
+    "prefix": "thm",
+    "body": ["\\begin{theorem}", "  ${1:statement}", "\\end{theorem}"],
+    "description": "Theorem block"
+  },
+  "Theorem with label": {
+    "prefix": "thml",
+    "body": ["\\begin{theorem}\\label{thm:${1:name}}", "  ${2:statement}", "\\end{theorem}"],
+    "description": "Theorem block with label"
+  },
+  "Definition": {
+    "prefix": "defn",
+    "body": ["\\begin{definition}", "  ${1:definition}", "\\end{definition}"],
+    "description": "Definition block"
+  },
+  "Lemma": {
+    "prefix": "lem",
+    "body": ["\\begin{lemma}", "  ${1:statement}", "\\end{lemma}"],
+    "description": "Lemma block"
+  },
+  "Proposition": {
+    "prefix": "prop",
+    "body": ["\\begin{proposition}", "  ${1:statement}", "\\end{proposition}"],
+    "description": "Proposition block"
+  },
+  "Corollary": {
+    "prefix": "cor",
+    "body": ["\\begin{corollary}", "  ${1:statement}", "\\end{corollary}"],
+    "description": "Corollary block"
+  },
+  "Remark": {
+    "prefix": "rem",
+    "body": ["\\begin{remark}", "  ${1:remark}", "\\end{remark}"],
+    "description": "Remark block"
+  },
+  "Example": {
+    "prefix": "ex",
+    "body": ["\\begin{example}", "  ${1:example}", "\\end{example}"],
+    "description": "Example block"
+  },
+  "Proof": {
+    "prefix": "proof",
+    "body": ["\\begin{proof}", "  ${1:argument}", "\\end{proof}"],
+    "description": "Proof block"
+  },
+
+  "Definite integral": {
+    "prefix": "int",
+    "body": "\\int_{${1:a}}^{${2:b}} ${3:f(x)}\\,\\mathrm{d}${4:x}",
+    "description": "Definite integral"
+  },
+  "Domain integral": {
+    "prefix": "intom",
+    "body": "\\int_{${1:\\Omega}} ${2:f(x)}\\,\\mathrm{d}${3:x}",
+    "description": "Integral over a domain"
+  },
+  "Boundary integral": {
+    "prefix": "intbd",
+    "body": "\\int_{\\partial ${1:\\Omega}} ${2:g(x)}\\,\\mathrm{d}\\mathcal{H}^{${3:n-1}}",
+    "description": "Boundary integral"
+  },
+  "Limit": {
+    "prefix": "lim",
+    "body": "\\lim_{${1:n \\to \\infty}} ${2:a_n}",
+    "description": "Limit"
+  },
+  "Liminf": {
+    "prefix": "liminf",
+    "body": "\\liminf_{${1:n \\to \\infty}} ${2:a_n}",
+    "description": "Liminf"
+  },
+  "Norm": {
+    "prefix": "norm",
+    "body": "\\norm{${1:u}}_{${2:L^2(${3:\\Omega})}}",
+    "description": "Norm"
+  },
+  "Absolute value": {
+    "prefix": "abs",
+    "body": "\\abs{${1:x}}",
+    "description": "Absolute value"
+  },
+  "Inner product": {
+    "prefix": "ip",
+    "body": "\\ip{${1:u}}{${2:v}}",
+    "description": "Inner product"
+  },
+  "Derivative": {
+    "prefix": "der",
+    "body": "\\frac{\\mathrm{d} ${1:f}}{\\mathrm{d} ${2:x}}",
+    "description": "Ordinary derivative"
+  },
+  "Partial derivative": {
+    "prefix": "pd",
+    "body": "\\frac{\\partial ${1:u}}{\\partial ${2:x}}",
+    "description": "Partial derivative"
+  },
+  "Second partial derivative": {
+    "prefix": "pdd",
+    "body": "\\frac{\\partial^2 ${1:u}}{\\partial ${2:x}^2}",
+    "description": "Second partial derivative"
+  },
+  "Gradient": {
+    "prefix": "grad",
+    "body": "\\nabla ${1:u}",
+    "description": "Gradient"
+  },
+  "Divergence": {
+    "prefix": "div",
+    "body": "\\Div ${1:F}",
+    "description": "Divergence"
+  },
+  "Laplacian": {
+    "prefix": "lap",
+    "body": "\\Delta ${1:u}",
+    "description": "Laplacian"
+  },
+  "Weak convergence": {
+    "prefix": "weak",
+    "body": "${1:u_n} \\weakto ${2:u} \\quad\\text{in } ${3:X}",
+    "description": "Weak convergence"
+  },
+  "Strong convergence": {
+    "prefix": "strong",
+    "body": "${1:u_n} \\to ${2:u} \\quad\\text{in } ${3:X}",
+    "description": "Strong convergence"
+  },
+  "Lower semicontinuity": {
+    "prefix": "lsc",
+    "body": "${1:F}(${2:u}) \\le \\liminf_{${3:n \\to \\infty}} ${1:F}(${4:u_n})",
+    "description": "Lower semicontinuity inequality"
+  },
+
+  "Euler Lagrange equation": {
+    "prefix": "el",
+    "body": ["\\[", "  \\frac{\\partial ${1:L}}{\\partial ${2:u}}", "  - \\Div\\left(\\frac{\\partial ${1:L}}{\\partial \\nabla ${2:u}}\\right) = 0", "\\]"],
+    "description": "Euler-Lagrange equation"
+  },
+  "First variation": {
+    "prefix": "fv",
+    "body": ["\\[", "  \\delta ${1:J}(${2:u})[${3:\\varphi}]", "  = \\left.\\frac{\\mathrm{d}}{\\mathrm{d}\\eps} ${1:J}(${2:u} + \\eps ${3:\\varphi})\\right|_{\\eps = 0}", "\\]"],
+    "description": "First variation"
+  },
+  "Minimization problem": {
+    "prefix": "minp",
+    "body": ["\\[", "  ${1:u} \\in \\argmin_{${2:v \\in ${3:X}}} ${4:J}(v)", "\\]"],
+    "description": "Variational minimization problem"
+  },
+  "Direct method": {
+    "prefix": "direct",
+    "body": [
+      "To prove existence of a minimizer, we use the direct method of the calculus of variations.",
+      "Let $${1:(u_n)}$ be a minimizing sequence for $${2:J}$, that is,",
+      "\\[",
+      "  ${2:J}(u_n) \\to \\inf_{${3:v \\in X}} ${2:J}(v).",
+      "\\]",
+      "By coercivity, $${1:(u_n)}$ is bounded in $${4:X}$. Hence, up to a subsequence,",
+      "\\[",
+      "  u_n \\weakto u \\quad\\text{in } ${4:X}.",
+      "\\]",
+      "By weak lower semicontinuity,",
+      "\\[",
+      "  ${2:J}(u) \\le \\liminf_{${5:n \\to \\infty}} ${2:J}(u_n) = \\inf_{${3:v \\in X}} ${2:J}(v).",
+      "\\]",
+      "Therefore, $u$ is a minimizer."
+    ],
+    "description": "Direct method proof template"
+  },
+
+  "Sobolev space": {
+    "prefix": "sob",
+    "body": "W^{${1:k,${2:p}}}(${3:\\Omega})",
+    "description": "Sobolev space"
+  },
+  "L2 space": {
+    "prefix": "l2",
+    "body": "L^2(${1:\\Omega})",
+    "description": "L2 space"
+  },
+  "Lp space": {
+    "prefix": "lp",
+    "body": "L^{${1:p}}(${2:\\Omega})",
+    "description": "Lp space"
+  },
+  "BV space": {
+    "prefix": "bv",
+    "body": "BV(${1:\\Omega})",
+    "description": "BV space"
+  },
+  "Total variation": {
+    "prefix": "tv",
+    "body": "\\abs{D${1:u}}(${2:\\Omega})",
+    "description": "Total variation of a BV function"
+  },
+  "Characteristic function": {
+    "prefix": "chi",
+    "body": "\\chi_{${1:E}}",
+    "description": "Characteristic function"
+  },
+  "Perimeter": {
+    "prefix": "per",
+    "body": "P(${1:E}; ${2:\\Omega})",
+    "description": "Perimeter of a set in a domain"
+  },
+  "Hausdorff measure": {
+    "prefix": "haus",
+    "body": "\\mathcal{H}^{${1:n-1}}(${2:S})",
+    "description": "Hausdorff measure"
+  },
+  "Assume Omega": {
+    "prefix": "om",
+    "body": "Let $\\Omega \\subset \\R^{${1:n}}$ be a bounded open set with Lipschitz boundary.",
+    "description": "Standard assumption on domain"
+  },
+  "Let sequence": {
+    "prefix": "seq",
+    "body": "Let $(${1:u_n})_n \\subset ${2:X}$ be a sequence such that ${3:condition}.$",
+    "description": "Introduce a sequence"
+  },
+  "Up to subsequence": {
+    "prefix": "subseq",
+    "body": "Up to extracting a subsequence, not relabeled, we have",
+    "description": "Subsequence phrase"
+  },
+  "Without loss of generality": {
+    "prefix": "wlog",
+    "body": "Without loss of generality, we may assume that ${1:assumption}.",
+    "description": "WLOG phrase"
+  },
+  "It follows": {
+    "prefix": "itf",
+    "body": "It follows that ${1:conclusion}.",
+    "description": "It follows phrase"
+  },
+  "Therefore": {
+    "prefix": "tf",
+    "body": "Therefore, ${1:conclusion}.",
+    "description": "Therefore phrase"
+  },
+  "Equation derivation": {
+    "prefix": "calc",
+    "body": ["\\begin{align*}", "  ${1:A}", "  &= ${2:B} \\\\ ", "  &= ${3:C} \\\\ ", "  &= ${4:D}.", "\\end{align*}"],
+    "description": "Multi-line calculation"
+  },
+  "Citation": {
+    "prefix": "cite",
+    "body": "\\cite{${1:key}}",
+    "description": "Citation"
+  },
+  "Bibliography": {
+    "prefix": "bib",
+    "body": ["\\bibliographystyle{plain}", "\\bibliography{${1:references}}"],
+    "description": "Bibliography"
+  }
+}

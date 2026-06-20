@@ -181,6 +181,29 @@ map("n", "<leader>tf", function()
 end, { desc = "Floating terminal" })
 
 -- ============================================================================
+-- LaTeX
+-- ============================================================================
+local function set_tex_keymaps(bufnr)
+  map("n", "<localleader>lc", "<cmd>VimtexCompile<cr>", { buffer = bufnr, desc = "Start LaTeX autocompile" })
+  map("n", "<localleader>ls", "<cmd>VimtexStop<cr>", { buffer = bufnr, desc = "Stop LaTeX autocompile" })
+  map("n", "<localleader>lv", "<cmd>VimtexView<cr>", { buffer = bufnr, desc = "View LaTeX PDF" })
+  map("n", "<localleader>le", "<cmd>VimtexErrors<cr>", { buffer = bufnr, desc = "Show LaTeX errors" })
+  map("n", "<localleader>lt", "<cmd>LatexTemplate<cr>", { buffer = bufnr, desc = "Insert LaTeX template" })
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "tex",
+  desc = "Set LaTeX keymaps",
+  callback = function(args)
+    set_tex_keymaps(args.buf)
+  end,
+})
+
+if vim.bo.filetype == "tex" then
+  set_tex_keymaps(vim.api.nvim_get_current_buf())
+end
+
+-- ============================================================================
 -- Insert-mode helpers
 -- blink.cmp owns <Tab>, <S-Tab>, <CR>, <C-Space>, <C-n>, <C-p>, <C-e>, <C-b>,
 -- and <C-f> while the completion popup is active. See lua/config/plugins.lua.

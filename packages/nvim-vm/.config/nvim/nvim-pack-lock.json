@@ -36,6 +36,10 @@
     "render-markdown.nvim": {
       "rev": "3f3eea97b80839f629c951ca660ffd125bfa5b34",
       "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
+    },
+    "vimtex": {
+      "rev": "fedb7ffc1bebf254cc74e7419c3a5930b6719065",
+      "src": "https://github.com/lervag/vimtex"
     }
   }
 }
