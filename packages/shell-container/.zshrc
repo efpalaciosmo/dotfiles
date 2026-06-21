@@ -1,4 +1,4 @@
-# ~/.zshrc - portable dotfiles
+# ~/.zshrc - macOS dotfiles
 # Shared PATH and environment live in ~/.profile.
 
 if [ -f "$HOME/.profile" ]; then
@@ -11,10 +11,6 @@ if command -v brew >/dev/null 2>&1; then
     fpath=("$_brew_prefix/share/zsh/site-functions" $fpath)
   fi
   unset _brew_prefix
-fi
-
-if [ -d /usr/share/zsh/site-functions ]; then
-  fpath=(/usr/share/zsh/site-functions $fpath)
 fi
 
 export HISTFILE="$HOME/.zsh_history"
@@ -72,30 +68,11 @@ if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
 
-# LazyDocker usando Podman rootless
-alias lazypodman="DOCKER_HOST=unix:///run/user/1000/podman/podman.sock lazydocker"
-
 # Clean brew
-alias brewup="brew update && brew upgrade && brew cleanup"
+if command -v brew >/dev/null 2>&1; then
+  alias brewup="brew update && brew upgrade && brew cleanup"
+fi
 
-wifi() {
-  case "$1" in
-    list)
-      nmcli dev wifi list
-      ;;
-    connect)
-      if [ -z "$2" ] || [ -z "$3" ]; then
-        printf 'Usage: wifi connect "SSID" "PASSWORD"\n' >&2
-        return 1
-      fi
-
-      nmcli dev wifi connect "$2" password "$3"
-      ;;
-    *)
-      printf 'Usage:\n  wifi list\n  wifi connect "SSID" "PASSWORD"\n' >&2
-      return 1
-      ;;
-  esac
-}
-
-eval "$(zoxide init zsh)"
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi

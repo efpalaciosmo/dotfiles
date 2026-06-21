@@ -63,14 +63,12 @@
 - name: Run stown for package
   ansible.builtin.command:
     argv:
-      - stown
+      - "{{ dotfiles_stown_bin }}"
       - --force
       - --ignore
       - "{{ dotfiles_ignore_regex }}"
       - "{{ ansible_facts.env.HOME }}"
       - "{{ stown_pkg_dir }}"
-  environment:
-    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
   register: _stown_out
   changed_when: _stown_out.rc == 0
   failed_when: _stown_out.rc != 0

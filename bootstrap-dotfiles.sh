@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Clone or update this dotfiles repo and run the portable Make flow.
+# Clone or update this dotfiles repo and run the macOS Make flow.
 #
 # Usage:
 #   DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \
@@ -18,6 +18,10 @@ HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/in
 log() { printf '[bootstrap] %s\n' "$*"; }
 die() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
 
+require_macos() {
+  [[ "$(uname -s)" == "Darwin" ]] || die "This dotfiles setup is macOS-only."
+}
+
 find_brew() {
   if command -v brew >/dev/null 2>&1; then
     command -v brew
@@ -26,8 +30,7 @@ find_brew() {
 
   for candidate in \
     /opt/homebrew/bin/brew \
-    /usr/local/bin/brew \
-    /home/linuxbrew/.linuxbrew/bin/brew; do
+    /usr/local/bin/brew; do
     if [[ -x "$candidate" ]]; then
       printf '%s\n' "$candidate"
       return 0
@@ -46,8 +49,11 @@ load_homebrew() {
   brew_prefix="$("$brew_path" --prefix)"
   for extra_path in \
     "$brew_prefix/opt/make/libexec/gnubin" \
+    "$brew_prefix/opt/gnu-tar/libexec/gnubin" \
     "$brew_prefix/opt/llvm/bin" \
-    "$brew_prefix/opt/openjdk/bin"; do
+    "$brew_prefix/opt/ffmpeg-full/bin" \
+    "$brew_prefix/opt/imagemagick-full/bin" \
+    /Library/TeX/texbin; do
     if [[ -d "$extra_path" ]]; then
       export PATH="$extra_path:$PATH"
     fi
@@ -57,7 +63,7 @@ load_homebrew() {
 install_homebrew() {
   log "Installing Homebrew with the official installer"
   if command -v curl >/dev/null 2>&1; then
-    NONINTERACTIVE="${NONINTERACTIVE:-1}" /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALL_URL")"
+    /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALL_URL")"
     return 0
   fi
 
@@ -65,7 +71,7 @@ install_homebrew() {
     local tmp
     tmp="$(mktemp)"
     wget -qO "$tmp" "$HOMEBREW_INSTALL_URL"
-    NONINTERACTIVE="${NONINTERACTIVE:-1}" /bin/bash "$tmp"
+    /bin/bash "$tmp"
     rm -f "$tmp"
     return 0
   fi
@@ -131,6 +137,7 @@ run_make() {
 }
 
 main() {
+  require_macos
   ensure_bootstrap_tools
   clone_or_update
   run_make

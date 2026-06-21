@@ -21,13 +21,23 @@
   ansible.builtin.debug:
     msg: "{{ doctor_brew.stdout_lines if doctor_brew.rc == 0 else ['brew -> MISSING'] }}"
 
+- name: Resolve project command paths for diagnostics
+  ansible.builtin.shell: |
+    set -euo pipefail
+    printf '%s\n' "{{ ansible_playbook_python | dirname }}"
+  args:
+    executable: /bin/bash
+  register: doctor_project_path_prefix
+  changed_when: false
+  failed_when: false
+
 - name: Expected command availability
   ansible.builtin.shell: command -v "{{ item }}"
   args:
     executable: /bin/bash
   environment:
-    PATH: "{{ cargo_home }}/bin:{{ ansible_facts.env.PATH | default('') }}"
-  loop: "{{ brew_expected_commands }}"
+    PATH: "{{ doctor_project_path_prefix.stdout | default('') }}:{{ cargo_home }}/bin:{{ ansible_facts.env.PATH | default('') }}"
+  loop: "{{ expected_commands }}"
   register: doctor_commands
   changed_when: false
   failed_when: false
@@ -44,7 +54,7 @@
   args:
     executable: /bin/bash
   environment:
-    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+    PATH: "{{ doctor_project_path_prefix.stdout | default('') }}:{{ ansible_facts.env.PATH | default('') }}"
   register: doctor_stown
   changed_when: false
   failed_when: false
@@ -53,12 +63,9 @@
   ansible.builtin.debug:
     msg: "stown -> {{ doctor_stown.stdout if doctor_stown.rc == 0 else 'MISSING' }}"
 
-- name: PATH contains ~/.local/bin
+- name: PATH contains project tool bin
   ansible.builtin.debug:
-    msg: >-
-      {{ 'OK: ~/.local/bin in PATH'
-         if (':' ~ ansible_facts.env.PATH ~ ':') is search(':' ~ ansible_facts.env.HOME ~ '/.local/bin:')
-         else 'WARN: ~/.local/bin not in PATH for this session' }}
+    msg: "Project tools are resolved from {{ doctor_project_path_prefix.stdout | default('UNKNOWN') }}"
 
 - name: Dotfile symlink sample check
   ansible.builtin.shell: |

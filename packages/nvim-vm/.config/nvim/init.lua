@@ -10,7 +10,7 @@ vim.loader.enable()
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- Make Neovim see Homebrew/Linuxbrew tools even when launched from an
+-- Make Neovim see Homebrew tools even when launched from an
 -- environment that did not source the shell profile.
 do
   local function prepend_path(dir)
@@ -28,13 +28,22 @@ do
 
   local tool_paths = {
     vim.fn.expand("~/.local/bin"),
-    "/home/linuxbrew/.linuxbrew/bin",
-    "/home/linuxbrew/.linuxbrew/sbin",
-    "/opt/homebrew/bin",
-    "/opt/homebrew/sbin",
-    "/usr/local/bin",
-    "/usr/local/sbin",
+    "/Library/TeX/texbin",
   }
+
+  for _, prefix in ipairs({
+    "/opt/homebrew",
+    "/usr/local",
+  }) do
+    vim.list_extend(tool_paths, {
+      prefix .. "/bin",
+      prefix .. "/sbin",
+      prefix .. "/opt/make/libexec/gnubin",
+      prefix .. "/opt/llvm/bin",
+      prefix .. "/opt/ffmpeg-full/bin",
+      prefix .. "/opt/imagemagick-full/bin",
+    })
+  end
 
   for i = #tool_paths, 1, -1 do
     prepend_path(tool_paths[i])
@@ -45,7 +54,7 @@ end
 -- Tree-sitter parser bootstrap.
 --
 -- Prefer parsers installed under this config, but also register parser
--- libraries from common system and Homebrew locations when they are present.
+-- libraries from common Homebrew locations when they are present.
 -- ============================================================================
 do
   local candidates = {
@@ -53,10 +62,6 @@ do
     vim.fn.expand("~/.local/lib/tree-sitter"),
     "/opt/homebrew/lib/tree-sitter",
     "/usr/local/lib/tree-sitter",
-    "/home/linuxbrew/.linuxbrew/lib/tree-sitter",
-    "/usr/lib/tree-sitter",
-    "/usr/lib64/tree-sitter",
-    "/usr/lib/x86_64-linux-gnu/tree-sitter",
   }
   for _, dir in ipairs(candidates) do
     if vim.fn.isdirectory(dir) == 1 then

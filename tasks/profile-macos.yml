@@ -1,4 +1,12 @@
 ---
+- name: Require macOS
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.system == "Darwin"
+    fail_msg: "This dotfiles automation is macOS-only."
+    quiet: true
+  tags: [always]
+
 - name: Common setup
   ansible.builtin.import_role:
     name: common
@@ -33,8 +41,3 @@
   ansible.builtin.import_role:
     name: dotfiles
   tags: [dotfiles]
-
-- name: Neovim Tree-sitter parsers
-  ansible.builtin.import_role:
-    name: nvim_treesitter
-  tags: [dotfiles, nvim-treesitter]

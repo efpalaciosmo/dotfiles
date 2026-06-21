@@ -12,7 +12,9 @@
     url: "{{ rustup_installer_url }}"
     dest: "{{ ansible_facts.env.HOME }}/.cache/dotfiles/rustup-init.sh"
     mode: '0755'
-  when: _rustup_check.rc != 0
+  when:
+    - _rustup_check.rc != 0
+    - not ansible_check_mode
 
 - name: Install Rust with rustup
   ansible.builtin.command:

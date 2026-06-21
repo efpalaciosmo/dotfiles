@@ -1,4 +1,4 @@
-# ~/.bashrc - portable dotfiles
+# ~/.bashrc - macOS dotfiles
 # Interactive bash configuration. Shared PATH and environment live in ~/.profile.
 
 [[ $- != *i* ]] && return

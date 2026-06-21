@@ -1,5 +1,5 @@
 ---
-- name: Resolve python interpreter used for pip --user
+- name: Resolve fallback python interpreter
   ansible.builtin.command:
     cmd: bash -lc 'command -v python3 || command -v python'
   register: _pip_python_which
@@ -13,6 +13,13 @@
     dotfiles_pip_python: "{{ _pip_python_which.stdout | trim }}"
   tags: [always]
 
+- name: Set project Python tool facts
+  ansible.builtin.set_fact:
+    dotfiles_python_tools_python: "{{ ansible_playbook_python | default(dotfiles_pip_python) }}"
+    dotfiles_python_tools_bin: "{{ (ansible_playbook_python | default(dotfiles_pip_python)) | dirname }}"
+    dotfiles_stown_bin: "{{ ((ansible_playbook_python | default(dotfiles_pip_python)) | dirname) }}/stown"
+  tags: [always]
+
 - name: Ensure user-local layout dirs
   ansible.builtin.file:
     path: "{{ item }}"
@@ -23,64 +30,4 @@
     - "{{ ansible_facts.env.HOME }}/.local/lib"
     - "{{ ansible_facts.env.HOME }}/.local/opt"
     - "{{ ansible_facts.env.HOME }}/.cache/dotfiles"
-  tags: [always]
-
-# --- PATH ----------------------------------------------------------------
-# Ensure ~/.profile mentions ~/.local/bin. Shell-specific rc files source
-# ~/.profile, and may be stown-managed symlinks back into this repository.
-- name: Resolve PATH targets for this profile
-  ansible.builtin.set_fact:
-    _path_line: 'export PATH="$HOME/.local/bin:$PATH"'
-    _profile_path: "{{ ansible_facts.env.HOME }}/.profile"
-  tags: [always]
-
-- name: Stat ~/.profile link
-  ansible.builtin.stat:
-    path: "{{ _profile_path }}"
-    follow: false
-  register: _profile_lstat
-  tags: [always]
-
-- name: Stat ~/.profile target
-  ansible.builtin.stat:
-    path: "{{ _profile_path }}"
-    follow: true
-  register: _profile_tstat
-  when: _profile_lstat.stat.islnk | default(false)
-  tags: [always]
-
-- name: Set ~/.profile symlink state
-  ansible.builtin.set_fact:
-    _profile_is_broken_symlink: >-
-      {{
-        (_profile_lstat.stat.islnk | default(false))
-        and not (_profile_tstat.stat.exists | default(false))
-      }}
-  tags: [always]
-
-- name: Report broken ~/.profile symlink
-  ansible.builtin.debug:
-    msg: "Skipping PATH update because {{ _profile_path }} is a broken symlink; stown will replace it later in the profile."
-  when: _profile_is_broken_symlink | bool
-  tags: [always]
-
-- name: Check ~/.profile for .local/bin
-  ansible.builtin.command:
-    cmd: grep -q '\.local/bin' "{{ _profile_path }}"
-  register: _profile_has_local_bin
-  check_mode: false
-  changed_when: false
-  failed_when: false
-  when: not (_profile_is_broken_symlink | bool)
-  tags: [always]
-
-- name: Ensure PATH line in ~/.profile
-  ansible.builtin.lineinfile:
-    path: "{{ _profile_path }}"
-    line: "{{ _path_line }}"
-    create: true
-    mode: '0644'
-  when:
-    - not (_profile_is_broken_symlink | bool)
-    - _profile_has_local_bin.rc | default(1) != 0
   tags: [always]

@@ -1,36 +1,39 @@
 ---
-- name: Check if stown is already available
-  ansible.builtin.command:
-    cmd: bash -lc 'command -v stown'
-  environment:
-    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+- name: Check if project stown is already available
+  ansible.builtin.stat:
+    path: "{{ dotfiles_stown_bin }}"
   register: stown_present
   check_mode: false
-  changed_when: false
-  failed_when: false
 
 - name: Check if pip is available
   ansible.builtin.command:
-    argv: ["{{ dotfiles_pip_python }}", "-m", "pip", "--version"]
+    argv: ["{{ dotfiles_python_tools_python }}", "-m", "pip", "--version"]
   register: pip_check
   check_mode: false
   changed_when: false
   failed_when: pip_check.rc != 0
-  when: stown_present.rc != 0
+  when: not stown_present.stat.exists | default(false)
 
-- name: Install stown (pip --user)
-  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/pip_user_install.yml"
-  vars:
-    pip_install_pkg: stown
+- name: Install stown in Ansible virtualenv
+  ansible.builtin.command:
+    argv:
+      - "{{ dotfiles_python_tools_python }}"
+      - -m
+      - pip
+      - install
+      - -U
+      - stown
+  register: stown_install
+  changed_when: "'Successfully installed' in stown_install.stdout"
   when:
     - not ansible_check_mode
-    - stown_present.rc != 0
+    - not stown_present.stat.exists | default(false)
 
-- name: Verify stown is on PATH
+- name: Verify project stown is available
   ansible.builtin.command:
-    cmd: bash -lc 'command -v stown'
-  environment:
-    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+    argv:
+      - "{{ dotfiles_stown_bin }}"
+      - --version
   register: stown_verify
   when: not ansible_check_mode
   changed_when: false

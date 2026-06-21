@@ -1,6 +1,6 @@
-# Portable Brewfile for Linux and macOS.
+# macOS Brewfile.
 # Optimized for CLI development, Neovim, LaTeX/math writing, data work,
-# and immutable Linux systems such as Fedora Silverblue.
+# and dotfile automation.
 
 # =============================================================================
 # 1. Bootstrap essentials
@@ -14,6 +14,7 @@ brew "curl"
 brew "wget"
 brew "make"
 brew "stow"
+brew "python"
 brew "unzip"
 brew "xz"
 brew "sevenzip"
@@ -25,28 +26,17 @@ brew "jq"
 
 
 # =============================================================================
-# 2. GNU compatibility / OS-specific base
+# 2. GNU compatibility
 # =============================================================================
-# macOS ships BSD variants of many tools. These GNU versions make scripts
-# more portable between macOS and Linux.
-#
-# On Linux/Silverblue, many of these may already exist at the system level,
-# but installing them with Brew gives you a consistent Homebrew-managed toolset.
+# macOS ships BSD variants of many tools. These GNU versions keep shell scripts
+# and Neovim helpers predictable.
 
-if OS.mac?
-  brew "coreutils"
-  brew "findutils"
-  brew "gnu-sed"
-  brew "grep"
-  brew "gawk"
-end
-
-if OS.linux?
-  # Useful when Homebrew needs a self-contained Linux toolchain.
-  brew "binutils"
-  brew "gcc"
-  brew "glibc"
-end
+brew "coreutils"
+brew "findutils"
+brew "gnu-tar"
+brew "gnu-sed"
+brew "grep"
+brew "gawk"
 
 
 # =============================================================================
@@ -61,16 +51,13 @@ brew "pkgconf"
 # =============================================================================
 # 4. Daily CLI tools
 # =============================================================================
-# Removed duplicates:
-# - fd appeared twice
-# - jq appeared twice
-# - rg and ripgrep are the same idea; the formula name is ripgrep
 
 brew "tree"
 brew "fd"
 brew "ripgrep"
 brew "fzf"
 brew "bat"
+brew "btop"
 brew "tmux"
 brew "zoxide"
 brew "duf"
@@ -104,26 +91,8 @@ brew "stylua"
 # =============================================================================
 # 7. LaTeX / thesis writing
 # =============================================================================
-# Linux:
-#   Use TeX Live directly through Homebrew.
-#
-# macOS:
-#   Prefer MacTeX through cask. For a terminal/Neovim workflow, mactex-no-gui
-#   is usually better than full mactex because it avoids extra GUI apps.
-#
-# Do not install both texlive and mactex/mactex-no-gui on macOS unless you
-# intentionally want parallel TeX installations.
-
-if OS.linux?
-  brew "texlive"
-  brew "biber"
-end
-
-if OS.mac?
-  cask "mactex-no-gui"
-  # Alternative if you want TeXShop and other GUI applications:
-  cask "mactex"
-end
+# Full TeX Live distribution without GUI apps. Good fit for terminal/Neovim.
+cask "mactex-no-gui"
 
 
 # =============================================================================
@@ -132,15 +101,14 @@ end
 
 brew "uv"
 brew "fnm"
+brew "node"
 brew "pnpm"
-brew "rustup"
 
 
 # =============================================================================
 # 9. Programming languages / heavier toolchains
 # =============================================================================
 
-brew "go"
 brew "zig"
 brew "juliaup"
 brew "llvm"

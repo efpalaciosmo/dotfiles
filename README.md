@@ -1,12 +1,12 @@
-# Portable Dotfiles
+# macOS Dotfiles
 
-Single portable flow for shell, Git, Starship, and Neovim:
+Single macOS flow for shell, Git, Starship, and Neovim:
 
 ```sh
 make
 ```
 
-`make` installs or loads Homebrew, runs `brew bundle`, applies the portable
+`make` installs or loads Homebrew, runs `brew bundle`, applies the macOS
 Ansible workflow, and validates the repo. The Ansible profile is internal; no
 profile argument is needed.
 
@@ -40,10 +40,13 @@ with `--check`; it exits non-zero when Brewfile formulas are missing.
 
 - Shell and dev tools: Bash, Bash completion, Zsh, Git, GitHub CLI, build
   tools, curl/wget, archives, and JSON tools.
-- Daily CLI: tree, fd, ripgrep, fzf, bat, btop, duf, ncdu, tmux, fastfetch.
-- Neovim tooling: Neovim, tree-sitter, Lua, Stylua.
-- Toolchains and managers: uv, fnm, juliaup, pnpm, Go, Rust via official
-  rustup installer, Zig, LLVM, OpenJDK, Gradle.
+- Daily CLI: tree, fd, ripgrep, fzf, bat, btop, duf, ncdu, tmux, zoxide,
+  fastfetch, lazygit, lazydocker, yazi, and related CLI helpers.
+- Neovim tooling: Neovim, tree-sitter, Lua, Stylua, ShellCheck, and shfmt.
+- Writing/media tooling: MacTeX no-GUI, Poppler, ImageMagick Full, and FFmpeg
+  Full.
+- Toolchains and managers: uv, fnm, Node, pnpm, juliaup, Rust via the official
+  rustup installer, Zig, LLVM, and Python for Ansible.
 - Prompt and dotfile helpers: Starship and GNU Stow. `stown` is installed by
   Ansible with Python only when it is not already available.
 
@@ -52,6 +55,15 @@ not through Mason's npm backend.
 
 `make brew` runs Homebrew Bundle with parallel jobs by default. Override with
 `BREW_BUNDLE_JOBS=1 make brew` if a formula needs sequential installation.
+
+Ansible does not ask for the sudo/become password by default. Use
+`ASK_BECOME_PASS=1 make setup` only if you add or run tasks that explicitly
+need elevated privileges.
+
+Homebrew bootstrap has one owner: `scripts/ensure-homebrew.sh`. `make` calls it
+through `scripts/with-homebrew.sh` so commands see Homebrew's PATH. The
+standalone `bootstrap-dotfiles.sh` keeps a tiny copy of the same Homebrew
+bootstrap logic because it may run before this repo exists on a fresh machine.
 
 ## Dotfiles
 
@@ -62,14 +74,13 @@ Packages are linked from `packages/` with `stown`:
 - `starship`
 - `nvim-vm`
 
-Shell files use portable Homebrew detection for:
+Shell files use Homebrew detection for:
 
 - `/opt/homebrew/bin/brew`
 - `/usr/local/bin/brew`
-- `/home/linuxbrew/.linuxbrew/bin/brew`
 
-Fonts install into `~/.local/share/fonts/nerd-fonts`, keeping them user-local
-and portable across Linux and macOS.
+Font archives are kept under `~/Library/Fonts/nerd-fonts`, and the font files
+are copied into `~/Library/Fonts` for native font discovery.
 
 ## Bootstrap
 

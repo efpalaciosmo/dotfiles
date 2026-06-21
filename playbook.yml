@@ -1,11 +1,8 @@
 ---
-- name: Portable dotfiles automation
+- name: macOS dotfiles automation
   hosts: local
   connection: local
   gather_facts: true
-
-  vars:
-    dotfiles_profile: portable
 
   pre_tasks:
     - name: Set backup stamp for dotfile conflicts
@@ -14,6 +11,6 @@
       tags: [always]
 
   tasks:
-    - name: Portable workflow
-      ansible.builtin.include_tasks: tasks/profile-portable.yml
+    - name: macOS workflow
+      ansible.builtin.include_tasks: tasks/profile-macos.yml
       tags: [always]

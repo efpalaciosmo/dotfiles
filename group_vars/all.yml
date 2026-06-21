@@ -8,7 +8,7 @@ stown_packages:
   - starship
   - nvim-vm
 
-brew_expected_commands:
+expected_commands:
   - brew
   - bash
   - zsh
@@ -18,10 +18,13 @@ brew_expected_commands:
   - cmake
   - ninja
   - pkgconf
+  - python3
+  - node
   - curl
   - wget
   - unzip
   - xz
+  - 7zz
   - jq
   - tree
   - fd
@@ -32,7 +35,15 @@ brew_expected_commands:
   - duf
   - ncdu
   - tmux
+  - zoxide
   - fastfetch
+  - lazygit
+  - lazydocker
+  - yazi
+  - harlequin
+  - resvg
+  - shellcheck
+  - shfmt
   - nvim
   - tree-sitter
   - lua
@@ -41,16 +52,24 @@ brew_expected_commands:
   - fnm
   - juliaup
   - pnpm
-  - go
   - rustup
   - cargo
   - rustc
   - zig
   - clang
-  - java
-  - gradle
   - starship
   - stow
+  - pdftotext
+  - magick
+  - ffmpeg
+  - pdflatex
+  - latexmk
+  - biber
+  - gawk
+  - gfind
+  - ggrep
+  - gsed
+  - gtar
 
 pnpm_home: "{{ ansible_facts.env.PNPM_HOME | default(ansible_facts.env.HOME + '/.local/share/pnpm') }}"
 node_user_tools_packages:
@@ -67,44 +86,11 @@ nerd_fonts_list:
     subdir: Inter
     version: v4.1
     url: https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip
-nerd_fonts_root: "{{ ansible_facts.env.HOME }}/.local/share/fonts/nerd-fonts"
+nerd_fonts_user_fonts_dir: "{{ ansible_facts.env.HOME }}/Library/Fonts"
+nerd_fonts_root: "{{ nerd_fonts_user_fonts_dir }}/nerd-fonts"
 nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/nerd-fonts/{{ nerd_fonts_version }}"
-
-nvim_treesitter_installer_repo: https://github.com/nvim-treesitter/nvim-treesitter
-nvim_treesitter_installer_version: 4916d6592ede8c07973490d9322f187e07dfefac
-nvim_treesitter_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/nvim-treesitter"
-nvim_treesitter_checkout_dir: "{{ nvim_treesitter_cache_dir }}/nvim-treesitter"
-nvim_treesitter_bin_dir: "{{ nvim_treesitter_cache_dir }}/bin"
-nvim_treesitter_install_jobs: 4
-nvim_treesitter_install_timeout_ms: 900000
-nvim_treesitter_parser_languages:
-  - lua
-  - vim
-  - vimdoc
-  - query
-  - bash
-  - python
-  - zig
-  - c
-  - cpp
-  - javascript
-  - typescript
-  - tsx
-  - jsdoc
-  - html
-  - css
-  - scss
-  - json
-  - yaml
-  - toml
-  - julia
-  - sql
-  - markdown
-  - markdown_inline
-  - typst
-  - regex
-  - diff
-  - gitcommit
+homebrew_prefix: "{{ lookup('env', 'HOMEBREW_PREFIX') | default('/opt/homebrew', true) }}"
+homebrew_gnu_tar_path: "{{ homebrew_prefix }}/opt/gnu-tar/libexec/gnubin"
 
 allow_pip_break_system_packages: true
 pip_break_allowed: >-
@@ -121,4 +107,4 @@ rustup_default_toolchain: stable
 cargo_home: "{{ ansible_facts.env.CARGO_HOME | default(ansible_facts.env.HOME + '/.cargo') }}"
 rustup_home: "{{ ansible_facts.env.RUSTUP_HOME | default(ansible_facts.env.HOME + '/.rustup') }}"
 
-dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|.*\.md\.template)$'
+dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|.*\.md\.template|templates/.*\.(aux|fdb_latexmk|fls|synctex\.gz|pdf))$'

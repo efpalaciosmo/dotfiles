@@ -7,8 +7,10 @@ ANSIBLE_PLAYBOOK := $(VENV)/bin/ansible-playbook
 INV := $(CURDIR)/inventory.ini
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
 BREW_BUNDLE_JOBS ?= auto
+ASK_BECOME_PASS ?= 0
+BECOME := $(if $(filter 1,$(DRY_RUN)),,$(if $(filter 1,$(ASK_BECOME_PASS)),--ask-become-pass,))
 
-.PHONY: help setup brew venv doctor check verify fonts shell dotfiles treesitter python-user-tools node-user-tools
+.PHONY: help setup brew venv doctor check verify fonts shell dotfiles python-user-tools node-user-tools
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -16,18 +18,13 @@ help: ## List available targets
 
 setup: brew venv ## Bootstrap Homebrew, apply dotfiles, and validate
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml $(CHECK)
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml $(CHECK)
 	@$(MAKE) verify
 
 brew: Brewfile scripts/ensure-homebrew.sh scripts/with-homebrew.sh ## Install Homebrew if needed and run brew bundle
 	@if [ "$(DRY_RUN)" = "1" ]; then \
 		"$(CURDIR)/scripts/with-homebrew.sh" --no-install env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file="$(CURDIR)/Brewfile"; \
 	else \
-		if ! command -v brew >/dev/null 2>&1 && [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then \
-			echo "[brew] Preparing Homebrew prefix with root privileges..."; \
-			sudo install -d -m 0755 -o "$$(id -u)" -g "$$(id -g)" /home/linuxbrew; \
-			sudo install -d -m 0755 -o "$$(id -u)" -g "$$(id -g)" /home/linuxbrew/.linuxbrew; \
-		fi; \
 		"$(CURDIR)/scripts/with-homebrew.sh" brew bundle install --jobs="$(BREW_BUNDLE_JOBS)" --file="$(CURDIR)/Brewfile"; \
 	fi
 
@@ -72,24 +69,20 @@ verify: check ## Check syntax and guard against distro package-manager residue
 
 fonts: brew venv ## Install user-local fonts
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags fonts $(CHECK)
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags fonts $(CHECK)
 
 shell: brew venv ## Install oh-my-zsh and shell plugins
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags shell $(CHECK)
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags shell $(CHECK)
 
 dotfiles: brew venv ## Install stown if needed and apply dotfiles
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags python-user-tools,dotfiles $(CHECK)
-
-treesitter: brew venv ## Install Neovim Tree-sitter parsers
-	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags nvim-treesitter $(CHECK)
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools,dotfiles $(CHECK)
 
 python-user-tools: brew venv
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags python-user-tools $(CHECK)
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools $(CHECK)
 
 node-user-tools: brew venv ## Install pnpm global Node tools
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags node-user-tools $(CHECK)
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags node-user-tools $(CHECK)
