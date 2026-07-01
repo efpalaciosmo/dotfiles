@@ -1,0 +1,59 @@
+---
+# _leaf = source file under package; stown_pkg_dir = package root directory
+- name: Relative path under package
+  ansible.builtin.set_fact:
+    _rel_under_pkg: "{{ _leaf | regex_replace('^' ~ (stown_pkg_dir | regex_escape) ~ '/', '') }}"
+
+- name: Target path under HOME
+  ansible.builtin.set_fact:
+    _home_target: "{{ ansible_facts.env.HOME }}/{{ _rel_under_pkg }}"
+
+- name: Stat home target
+  ansible.builtin.stat:
+    path: "{{ _home_target }}"
+    follow: false
+  register: _ht
+
+- name: Stat source target
+  ansible.builtin.stat:
+    path: "{{ _leaf }}"
+    follow: true
+  register: _src_target
+
+- name: Stat home target destination
+  ansible.builtin.stat:
+    path: "{{ _home_target }}"
+    follow: true
+  register: _dst_target
+  when: _ht.stat.exists | default(false) or (_ht.stat.islnk | default(false))
+
+- name: Decide if backup is needed
+  ansible.builtin.set_fact:
+    _need_backup: >-
+      {{
+        (
+          (_ht.stat.exists | default(false))
+          or (_ht.stat.islnk | default(false))
+        )
+        and not (
+          (_dst_target.stat.exists | default(false))
+          and ((_dst_target.stat.dev | default('')) == (_src_target.stat.dev | default('__src_dev__')))
+          and ((_dst_target.stat.inode | default('')) == (_src_target.stat.inode | default('__src_inode__')))
+        )
+      }}
+
+- name: Ensure backup parent directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}/{{ _rel_under_pkg | dirname }}"
+    state: directory
+    mode: '0755'
+  when: _need_backup | bool
+
+- name: Move conflicting path to backup tree
+  ansible.builtin.command:
+    argv:
+      - mv
+      - "{{ _home_target }}"
+      - "{{ ansible_facts.env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}/{{ _rel_under_pkg }}"
+  when: _need_backup | bool
+  changed_when: true

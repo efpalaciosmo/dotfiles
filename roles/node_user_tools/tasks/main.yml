@@ -1,0 +1,47 @@
+---
+- name: Ensure pnpm global bin dir exists
+  ansible.builtin.file:
+    path: "{{ pnpm_home }}/bin"
+    state: directory
+    mode: '0755'
+
+- name: List pnpm global packages
+  ansible.builtin.command:
+    argv:
+      - pnpm
+      - list
+      - --global
+      - --depth
+      - "-1"
+      - --json
+  environment:
+    PNPM_HOME: "{{ pnpm_home }}"
+    PATH: "{{ pnpm_home }}/bin:{{ ansible_facts.env.PATH | default('') }}"
+  register: _pnpm_global_list
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Initialize pnpm global dependency facts
+  ansible.builtin.set_fact:
+    _pnpm_global_dependencies: {}
+
+- name: Read pnpm global dependency facts
+  ansible.builtin.set_fact:
+    _pnpm_global_dependencies: >-
+      {{ ((((_pnpm_global_list.stdout | from_json) | first | default({})).dependencies) | default({})) }}
+  when:
+    - _pnpm_global_list.rc == 0
+    - (_pnpm_global_list.stdout | trim | length) > 0
+
+- name: Calculate missing pnpm global packages
+  ansible.builtin.set_fact:
+    _pnpm_global_missing: "{{ node_user_tools_packages | difference(_pnpm_global_dependencies.keys() | list) }}"
+
+- name: Install missing Node user tools with pnpm
+  ansible.builtin.command:
+    argv: "{{ ['pnpm', 'add', '--global'] + _pnpm_global_missing }}"
+  environment:
+    PNPM_HOME: "{{ pnpm_home }}"
+    PATH: "{{ pnpm_home }}/bin:{{ ansible_facts.env.PATH | default('') }}"
+  when: (_pnpm_global_missing | length) > 0

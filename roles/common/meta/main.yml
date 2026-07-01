@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: common
+  author: dotfiles
+  description: Shared dirs, facts, PATH for dotfiles profiles
+  license: MIT
+  min_ansible_version: "2.15"
+
+dependencies: []

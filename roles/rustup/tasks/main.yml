@@ -1,0 +1,39 @@
+---
+- name: Check rustup installation
+  ansible.builtin.command:
+    cmd: "{{ cargo_home }}/bin/rustup --version"
+  register: _rustup_check
+  check_mode: false
+  changed_when: false
+  failed_when: false
+
+- name: Download official rustup installer
+  ansible.builtin.get_url:
+    url: "{{ rustup_installer_url }}"
+    dest: "{{ ansible_facts.env.HOME }}/.cache/dotfiles/rustup-init.sh"
+    mode: '0755'
+  when:
+    - _rustup_check.rc != 0
+    - not ansible_check_mode
+
+- name: Install Rust with rustup
+  ansible.builtin.command:
+    cmd: >-
+      {{ ansible_facts.env.HOME }}/.cache/dotfiles/rustup-init.sh
+      -y
+      --no-modify-path
+      --default-toolchain {{ rustup_default_toolchain }}
+    creates: "{{ cargo_home }}/bin/rustup"
+  environment:
+    CARGO_HOME: "{{ cargo_home }}"
+    RUSTUP_HOME: "{{ rustup_home }}"
+  when:
+    - _rustup_check.rc != 0
+    - not ansible_check_mode
+
+- name: Show rustup check-mode note
+  ansible.builtin.debug:
+    msg: "rustup is missing; run without DRY_RUN=1 to install it with the official installer."
+  when:
+    - _rustup_check.rc != 0
+    - ansible_check_mode

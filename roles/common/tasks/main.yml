@@ -1,0 +1,33 @@
+---
+- name: Resolve fallback python interpreter
+  ansible.builtin.command:
+    cmd: bash -lc 'command -v python3 || command -v python'
+  register: _pip_python_which
+  check_mode: false
+  changed_when: false
+  failed_when: _pip_python_which.rc != 0
+  tags: [always]
+
+- name: Set dotfiles_pip_python fact
+  ansible.builtin.set_fact:
+    dotfiles_pip_python: "{{ _pip_python_which.stdout | trim }}"
+  tags: [always]
+
+- name: Set project Python tool facts
+  ansible.builtin.set_fact:
+    dotfiles_python_tools_python: "{{ ansible_playbook_python | default(dotfiles_pip_python) }}"
+    dotfiles_python_tools_bin: "{{ (ansible_playbook_python | default(dotfiles_pip_python)) | dirname }}"
+    dotfiles_stown_bin: "{{ ((ansible_playbook_python | default(dotfiles_pip_python)) | dirname) }}/stown"
+  tags: [always]
+
+- name: Ensure user-local layout dirs
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ ansible_facts.env.HOME }}/.local/bin"
+    - "{{ ansible_facts.env.HOME }}/.local/lib"
+    - "{{ ansible_facts.env.HOME }}/.local/opt"
+    - "{{ ansible_facts.env.HOME }}/.cache/dotfiles"
+  tags: [always]

@@ -1,0 +1,76 @@
+# Ghostty Configuration
+# Adwaita Dark theme with JetBrains Mono Medium
+# Optimized for MacBook Pro M4 Pro
+#
+# This configuration replicates the neovim adwaita theme for terminal consistency
+
+# ============================================================================
+# Font Configuration
+# ============================================================================
+# JetBrains Mono Medium with ligatures enabled
+font-family = JetBrains Mono
+font-style = Medium
+font-size = 15
+# Enable font ligatures (e.g., ->, =>, //, etc.)
+font-feature = liga
+
+# ============================================================================
+# Window & Display Settings
+# ============================================================================
+# Optimized for MacBook Pro M4 Pro display (14" or 16")
+window-height = 40
+window-width = 130
+window-padding-x = 12
+window-padding-y = 12
+window-vsync = true
+
+# Enable native macOS window decorations
+macos-titlebar-style = tabs
+macos-option-as-alt = true
+
+# ============================================================================
+# Adwaita Dark Colorscheme (from neovim adwaita.lua)
+# ============================================================================
+# Main background and foreground
+background = #1a1a1d
+foreground = #e0e0e0
+
+# ANSI color palette (0-7: normal colors, 8-15: bright colors)
+# Based on Adwaita 1.9 palette
+palette = 0=#000000
+palette = 1=#e01b24
+palette = 2=#33d17a
+palette = 3=#f6d32d
+palette = 4=#3584e4
+palette = 5=#9141ac
+palette = 6=#33d17a
+palette = 7=#deddda
+palette = 8=#77767b
+palette = 9=#f66151
+palette = 10=#8ff0a4
+palette = 11=#f9f06b
+palette = 12=#99c1f1
+palette = 13=#dc8add
+palette = 14=#8de698
+palette = 15=#ffffff
+
+# ============================================================================
+# Terminal Cursor
+# ============================================================================
+cursor-style = block
+cursor-opacity = 1.0
+cursor-color = #ffbe6f
+
+# ============================================================================
+# Scrollback Buffer
+# ============================================================================
+scrollback-limit = 100000
+
+# ============================================================================
+# Keybindings (macOS native)
+# ============================================================================
+# Keep Ghostty's default keybindings for native macOS experience
+# keybind = cmd+n=new_window
+# keybind = cmd+t=new_tab
+# keybind = cmd+w=close_surface
+# keybind = cmd+shift+n=toggle_fullscreen
