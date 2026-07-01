@@ -75,15 +75,15 @@ shell: brew venv ## Install oh-my-zsh and shell plugins
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags shell $(CHECK)
 
-dotfiles: brew venv ## Install stown if needed and apply dotfiles
+dotfiles: venv ## Install stown if needed and apply dotfiles
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools,dotfiles $(CHECK)
 
-stown: brew venv ## Apply stown-managed dotfiles and shell configuration
+stown: venv ## Apply stown-managed dotfiles and shell configuration
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools,dotfiles,shell $(CHECK)
 
-python-user-tools: brew venv
+python-user-tools: venv
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools $(CHECK)
 

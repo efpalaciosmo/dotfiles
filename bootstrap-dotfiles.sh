@@ -44,10 +44,10 @@ find_brew() {
 load_homebrew() {
   local brew_path
   brew_path="$(find_brew)" || return 1
-  eval "$("$brew_path" shellenv)"
+  eval "$(HOMEBREW_NO_AUTO_UPDATE=1 "$brew_path" shellenv)"
 
   local brew_prefix
-  brew_prefix="$("$brew_path" --prefix)"
+  brew_prefix="$(HOMEBREW_NO_AUTO_UPDATE=1 "$brew_path" --prefix)"
   for extra_path in \
     "$brew_prefix/opt/make/libexec/gnubin" \
     "$brew_prefix/opt/gnu-tar/libexec/gnubin" \
