@@ -1,0 +1,43 @@
+---
+- name: Require macOS
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.system == "Darwin"
+    fail_msg: "This dotfiles automation is macOS-only."
+    quiet: true
+  tags: [always]
+
+- name: Common setup
+  ansible.builtin.import_role:
+    name: common
+  tags: [always, common]
+
+- name: Python user tools
+  ansible.builtin.import_role:
+    name: python_user_tools
+  tags: [python-user-tools, dotfiles]
+
+- name: Node user tools
+  ansible.builtin.import_role:
+    name: node_user_tools
+  tags: [node-user-tools, dotfiles]
+
+- name: Nerd Fonts
+  ansible.builtin.import_role:
+    name: fonts
+  tags: [fonts]
+
+- name: Shell plugins
+  ansible.builtin.import_role:
+    name: shell_plugins
+  tags: [shell]
+
+- name: Rust toolchain
+  ansible.builtin.import_role:
+    name: rustup
+  tags: [rustup]
+
+- name: Apply dotfiles with stown
+  ansible.builtin.import_role:
+    name: dotfiles
+  tags: [dotfiles]

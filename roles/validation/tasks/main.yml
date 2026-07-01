@@ -1,0 +1,101 @@
+---
+- name: Context summary
+  ansible.builtin.debug:
+    msg:
+      - "=== dotfiles doctor (ansible) ==="
+      - "User={{ ansible_facts.user_id | default(ansible_facts.env.USER) }} HOME={{ ansible_facts.env.HOME }}"
+      - "Distribution={{ ansible_facts.get('distribution', '?') }} {{ ansible_facts.get('distribution_version', '') }}"
+
+- name: Homebrew prefix
+  ansible.builtin.shell: |
+    set -euo pipefail
+    command -v brew
+    brew --prefix
+  args:
+    executable: /bin/bash
+  register: doctor_brew
+  changed_when: false
+  failed_when: false
+
+- name: Show Homebrew status
+  ansible.builtin.debug:
+    msg: "{{ doctor_brew.stdout_lines if doctor_brew.rc == 0 else ['brew -> MISSING'] }}"
+
+- name: Resolve project command paths for diagnostics
+  ansible.builtin.shell: |
+    set -euo pipefail
+    printf '%s\n' "{{ ansible_playbook_python | dirname }}"
+  args:
+    executable: /bin/bash
+  register: doctor_project_path_prefix
+  changed_when: false
+  failed_when: false
+
+- name: Expected command availability
+  ansible.builtin.shell: command -v "{{ item }}"
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "{{ doctor_project_path_prefix.stdout | default('') }}:{{ cargo_home }}/bin:{{ ansible_facts.env.PATH | default('') }}"
+  loop: "{{ expected_commands }}"
+  register: doctor_commands
+  changed_when: false
+  failed_when: false
+
+- name: Show expected command paths
+  ansible.builtin.debug:
+    msg: "{{ item.item }} -> {{ item.stdout if item.rc == 0 else 'MISSING' }}"
+  loop: "{{ doctor_commands.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: stown availability
+  ansible.builtin.shell: command -v stown
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "{{ doctor_project_path_prefix.stdout | default('') }}:{{ ansible_facts.env.PATH | default('') }}"
+  register: doctor_stown
+  changed_when: false
+  failed_when: false
+
+- name: Show stown path
+  ansible.builtin.debug:
+    msg: "stown -> {{ doctor_stown.stdout if doctor_stown.rc == 0 else 'MISSING' }}"
+
+- name: PATH contains project tool bin
+  ansible.builtin.debug:
+    msg: "Project tools are resolved from {{ doctor_project_path_prefix.stdout | default('UNKNOWN') }}"
+
+- name: Dotfile symlink sample check
+  ansible.builtin.shell: |
+    set -euo pipefail
+    root="$DOTFILES_PACKAGES_ROOT"
+    found=0
+    for pkg in $DOTFILES_STOWN_PKGS; do
+      [[ -d "$root/$pkg" ]] || continue
+      prefix="${root}/${pkg}/"
+      count=0
+      while IFS= read -r -d '' f; do
+        rel="${f#$prefix}"
+        target="$HOME/$rel"
+        if [[ -L "$target" ]]; then echo "OK link $target"; found=1
+        elif [[ -e "$target" ]]; then echo "FILE $target (not symlink)"
+        else echo "MISS $target"; fi
+        count=$((count + 1))
+        if [[ $count -ge 24 ]]; then break; fi
+        if [[ $found -ge 5 ]]; then break 2; fi
+      done < <(find "$root/$pkg" -type f -print0)
+    done
+  args:
+    executable: /bin/bash
+  environment:
+    DOTFILES_PACKAGES_ROOT: "{{ dotfiles_packages_root }}"
+    DOTFILES_STOWN_PKGS: "{{ stown_packages | join(' ') }}"
+  register: doctor_links
+  changed_when: false
+  failed_when: false
+
+- name: Show dotfile link sample
+  ansible.builtin.debug:
+    var: doctor_links.stdout_lines

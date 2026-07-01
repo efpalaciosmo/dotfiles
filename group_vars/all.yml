@@ -1,0 +1,111 @@
+---
+dotfiles_repo_root: "{{ playbook_dir }}"
+dotfiles_packages_root: "{{ playbook_dir }}/packages"
+
+stown_packages:
+  - git
+  - shell-container
+  - starship
+  - nvim-vm
+  - ghostty
+
+expected_commands:
+  - brew
+  - bash
+  - zsh
+  - git
+  - gh
+  - make
+  - cmake
+  - ninja
+  - pkgconf
+  - python3
+  - node
+  - curl
+  - wget
+  - unzip
+  - xz
+  - 7zz
+  - jq
+  - tree
+  - fd
+  - rg
+  - fzf
+  - bat
+  - btop
+  - duf
+  - ncdu
+  - tmux
+  - zoxide
+  - fastfetch
+  - lazygit
+  - lazydocker
+  - yazi
+  - harlequin
+  - resvg
+  - shellcheck
+  - shfmt
+  - nvim
+  - tree-sitter
+  - lua
+  - stylua
+  - uv
+  - fnm
+  - juliaup
+  - pnpm
+  - rustup
+  - cargo
+  - rustc
+  - zig
+  - clang
+  - starship
+  - stow
+  - pdftotext
+  - magick
+  - ffmpeg
+  - pdflatex
+  - latexmk
+  - biber
+  - gawk
+  - gfind
+  - ggrep
+  - gsed
+  - gtar
+
+pnpm_home: "{{ ansible_facts.env.PNPM_HOME | default(ansible_facts.env.HOME + '/.local/share/pnpm') }}"
+node_user_tools_packages:
+  - typescript
+
+nerd_fonts_version: v3.4.0
+nerd_fonts_base_url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}"
+nerd_fonts_list:
+  - archive: IBMPlexMono.tar.xz
+    subdir: IBMPlexMono
+  - archive: JetBrainsMono.tar.xz
+    subdir: JetBrainsMono
+  - archive: Inter-4.1.zip
+    subdir: Inter
+    version: v4.1
+    url: https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip
+nerd_fonts_user_fonts_dir: "{{ ansible_facts.env.HOME }}/Library/Fonts"
+nerd_fonts_root: "{{ nerd_fonts_user_fonts_dir }}/nerd-fonts"
+nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/nerd-fonts/{{ nerd_fonts_version }}"
+homebrew_prefix: "{{ lookup('env', 'HOMEBREW_PREFIX') | default('/opt/homebrew', true) }}"
+homebrew_gnu_tar_path: "{{ homebrew_prefix }}/opt/gnu-tar/libexec/gnubin"
+
+allow_pip_break_system_packages: true
+pip_break_allowed: >-
+  {{
+    (allow_pip_break_system_packages | bool)
+    or (lookup('env', 'ALLOW_PIP_BREAK_SYSTEM_PACKAGES', default='0') == '1')
+  }}
+
+zsh_dir: "{{ ansible_facts.env.ZSH | default(ansible_facts.env.HOME + '/.oh-my-zsh') }}"
+zsh_custom: "{{ ansible_facts.env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
+
+rustup_installer_url: https://sh.rustup.rs
+rustup_default_toolchain: stable
+cargo_home: "{{ ansible_facts.env.CARGO_HOME | default(ansible_facts.env.HOME + '/.cargo') }}"
+rustup_home: "{{ ansible_facts.env.RUSTUP_HOME | default(ansible_facts.env.HOME + '/.rustup') }}"
+
+dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|.*\.md\.template|templates/.*\.(aux|fdb_latexmk|fls|synctex\.gz|pdf))$'

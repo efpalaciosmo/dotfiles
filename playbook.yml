@@ -1,0 +1,16 @@
+---
+- name: macOS dotfiles automation
+  hosts: local
+  connection: local
+  gather_facts: true
+
+  pre_tasks:
+    - name: Set backup stamp for dotfile conflicts
+      ansible.builtin.set_fact:
+        dotfiles_backup_stamp: "{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
+      tags: [always]
+
+  tasks:
+    - name: macOS workflow
+      ansible.builtin.include_tasks: tasks/profile-macos.yml
+      tags: [always]

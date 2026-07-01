@@ -1,0 +1,40 @@
+---
+- name: Check if project stown is already available
+  ansible.builtin.stat:
+    path: "{{ dotfiles_stown_bin }}"
+  register: stown_present
+  check_mode: false
+
+- name: Check if pip is available
+  ansible.builtin.command:
+    argv: ["{{ dotfiles_python_tools_python }}", "-m", "pip", "--version"]
+  register: pip_check
+  check_mode: false
+  changed_when: false
+  failed_when: pip_check.rc != 0
+  when: not stown_present.stat.exists | default(false)
+
+- name: Install stown in Ansible virtualenv
+  ansible.builtin.command:
+    argv:
+      - "{{ dotfiles_python_tools_python }}"
+      - -m
+      - pip
+      - install
+      - -U
+      - stown
+  register: stown_install
+  changed_when: "'Successfully installed' in stown_install.stdout"
+  when:
+    - not ansible_check_mode
+    - not stown_present.stat.exists | default(false)
+
+- name: Verify project stown is available
+  ansible.builtin.command:
+    argv:
+      - "{{ dotfiles_stown_bin }}"
+      - --version
+  register: stown_verify
+  when: not ansible_check_mode
+  changed_when: false
+  failed_when: stown_verify.rc != 0

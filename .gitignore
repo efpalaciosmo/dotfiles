@@ -1,0 +1,23 @@
+*.swp
+*.swo
+*.tmp
+*.log
+*.aux
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+.DS_Store
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Markers and caches written by helpers
+.dotfiles-installed-*
+node_modules/
+.venv/
+.ansible/
+inventory.ini
+
+# Backups should never be committed
+.dotfiles-backup/

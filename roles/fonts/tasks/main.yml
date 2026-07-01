@@ -1,0 +1,101 @@
+---
+- name: Ensure nerd-fonts install root
+  ansible.builtin.file:
+    path: "{{ nerd_fonts_root }}"
+    state: directory
+    mode: '0755'
+
+- name: Ensure nerd-fonts download cache
+  ansible.builtin.file:
+    path: "{{ nerd_fonts_cache_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Stat font install marker
+  ansible.builtin.stat:
+    path: "{{ nerd_fonts_root }}/{{ item.subdir }}/.dotfiles-installed-{{ item.version | default(nerd_fonts_version) }}"
+  loop: "{{ nerd_fonts_list }}"
+  register: nerd_font_markers
+
+- name: Stat cached Nerd Font archive
+  ansible.builtin.stat:
+    path: "{{ nerd_fonts_cache_dir }}/{{ item.item.archive }}"
+  loop: "{{ nerd_font_markers.results }}"
+  register: nerd_font_archives
+  loop_control:
+    label: "{{ item.item.subdir }}"
+
+- name: Download Nerd Font archive
+  ansible.builtin.get_url:
+    url: "{{ item.item.item.url | default(nerd_fonts_base_url + '/' + item.item.item.archive) }}"
+    dest: "{{ nerd_fonts_cache_dir }}/{{ item.item.item.archive }}"
+    mode: '0644'
+    force: false
+  loop: "{{ nerd_font_archives.results }}"
+  when:
+    - not ansible_check_mode
+    - not item.item.stat.exists | default(false)
+    - not item.stat.exists | default(false)
+  loop_control:
+    label: "{{ item.item.item.subdir }}"
+
+- name: Ensure font target directory
+  ansible.builtin.file:
+    path: "{{ nerd_fonts_root }}/{{ item.item.subdir }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ nerd_font_markers.results }}"
+  when: not item.stat.exists | default(false)
+  loop_control:
+    label: "{{ item.item.subdir }}"
+
+- name: Extract Nerd Font archive
+  ansible.builtin.unarchive:
+    src: "{{ nerd_fonts_cache_dir }}/{{ item.item.archive }}"
+    dest: "{{ nerd_fonts_root }}/{{ item.item.subdir }}"
+    remote_src: true
+  environment:
+    PATH: "{{ homebrew_gnu_tar_path }}:{{ ansible_facts.env.PATH | default('') }}"
+  loop: "{{ nerd_font_markers.results }}"
+  when:
+    - not ansible_check_mode
+    - not item.stat.exists | default(false)
+  loop_control:
+    label: "{{ item.item.subdir }}"
+
+- name: Touch install marker
+  ansible.builtin.file:
+    path: "{{ nerd_fonts_root }}/{{ item.item.subdir }}/.dotfiles-installed-{{ item.item.version | default(nerd_fonts_version) }}"
+    state: touch
+    mode: '0644'
+    modification_time: preserve
+    access_time: preserve
+  loop: "{{ nerd_font_markers.results }}"
+  when:
+    - not ansible_check_mode
+    - not item.stat.exists | default(false)
+  loop_control:
+    label: "{{ item.item.subdir }}"
+
+- name: Find installed font files
+  ansible.builtin.find:
+    paths: "{{ nerd_fonts_root }}"
+    recurse: true
+    file_type: file
+    patterns:
+      - "*.ttf"
+      - "*.otf"
+      - "*.ttc"
+  register: _macos_font_files
+  when: not ansible_check_mode
+
+- name: Copy font files into macOS user font folder
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "{{ nerd_fonts_user_fonts_dir }}/{{ item.path | basename }}"
+    remote_src: true
+    mode: '0644'
+  loop: "{{ _macos_font_files.files | default([]) }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  when: not ansible_check_mode
