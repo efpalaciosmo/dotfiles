@@ -1,4 +1,4 @@
-# ~/.profile - macOS dotfiles
+# ~/.profile - Fedora dotfiles
 # POSIX-compatible environment loaded by login shells and sourced from
 # .zshrc/.bashrc. Shell-specific hooks live in those rc files.
 
@@ -22,6 +22,7 @@ _setup_homebrew() {
     fi
 
     for _brew in \
+        /home/linuxbrew/.linuxbrew/bin/brew \
         /opt/homebrew/bin/brew \
         /usr/local/bin/brew; do
         if [ -x "$_brew" ]; then
@@ -45,8 +46,6 @@ _prepend_path "$HOME/.juliaup/bin"
 PNPM_HOME="$HOME/.local/share/pnpm"
 _prepend_path "$PNPM_HOME/bin"
 export PNPM_HOME
-
-_prepend_path "/Library/TeX/texbin"
 
 if command -v brew >/dev/null 2>&1; then
     _brew_prefix="$(brew --prefix 2>/dev/null || true)"

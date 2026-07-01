@@ -87,10 +87,10 @@ nerd_fonts_list:
     subdir: Inter
     version: v4.1
     url: https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip
-nerd_fonts_user_fonts_dir: "{{ ansible_facts.env.HOME }}/Library/Fonts"
+nerd_fonts_user_fonts_dir: "{{ ansible_facts.env.HOME }}/.local/share/fonts"
 nerd_fonts_root: "{{ nerd_fonts_user_fonts_dir }}/nerd-fonts"
 nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/nerd-fonts/{{ nerd_fonts_version }}"
-homebrew_prefix: "{{ lookup('env', 'HOMEBREW_PREFIX') | default('/opt/homebrew', true) }}"
+homebrew_prefix: "{{ lookup('env', 'HOMEBREW_PREFIX') | default('/home/linuxbrew/.linuxbrew', true) }}"
 homebrew_gnu_tar_path: "{{ homebrew_prefix }}/opt/gnu-tar/libexec/gnubin"
 
 allow_pip_break_system_packages: true

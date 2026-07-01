@@ -1,12 +1,12 @@
-# macOS Dotfiles
+# Fedora Silverblue Dotfiles
 
-Single macOS flow for shell, Git, Starship, and Neovim:
+Single Fedora Silverblue flow for shell, Git, Starship, and Neovim:
 
 ```sh
 make
 ```
 
-`make` installs or loads Homebrew, runs `brew bundle`, applies the macOS
+`make` installs or loads Homebrew, runs `brew bundle`, applies the Fedora
 Ansible workflow, and validates the repo. The Ansible profile is internal; no
 profile argument is needed.
 
@@ -43,8 +43,7 @@ with `--check`; it exits non-zero when Brewfile formulas are missing.
 - Daily CLI: tree, fd, ripgrep, fzf, bat, btop, duf, ncdu, tmux, zoxide,
   fastfetch, lazygit, lazydocker, yazi, and related CLI helpers.
 - Neovim tooling: Neovim, tree-sitter, Lua, Stylua, ShellCheck, and shfmt.
-- Writing/media tooling: MacTeX no-GUI, Poppler, ImageMagick Full, and FFmpeg
-  Full.
+- Writing/media tooling: TeX Live, Poppler, ImageMagick Full, and FFmpeg Full.
 - Toolchains and managers: uv, fnm, Node, pnpm, juliaup, Rust via the official
   rustup installer, Zig, LLVM, and Python for Ansible.
 - Prompt and dotfile helpers: Starship and GNU Stow. `stown` is installed by
@@ -76,11 +75,12 @@ Packages are linked from `packages/` with `stown`:
 
 Shell files use Homebrew detection for:
 
+- `/home/linuxbrew/.linuxbrew/bin/brew`
 - `/opt/homebrew/bin/brew`
 - `/usr/local/bin/brew`
 
-Font archives are kept under `~/Library/Fonts/nerd-fonts`, and the font files
-are copied into `~/Library/Fonts` for native font discovery.
+Font archives are kept under `~/.local/share/fonts/nerd-fonts`, and the font
+files are copied into `~/.local/share/fonts` for native font discovery on Linux.
 
 ## Bootstrap
 

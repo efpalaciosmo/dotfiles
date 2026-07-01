@@ -1,4 +1,4 @@
-# ~/.bashrc - macOS dotfiles
+# ~/.bashrc - Fedora dotfiles
 # Interactive bash configuration. Shared PATH and environment live in ~/.profile.
 
 [[ $- != *i* ]] && return

@@ -1,8 +1,5 @@
 # Ghostty Configuration
 # Adwaita Dark theme with JetBrains Mono Medium
-# Optimized for MacBook Pro M4 Pro
-#
-# This configuration replicates the neovim adwaita theme for terminal consistency
 
 # ============================================================================
 # Font Configuration
@@ -17,16 +14,11 @@ font-feature = liga
 # ============================================================================
 # Window & Display Settings
 # ============================================================================
-# Optimized for MacBook Pro M4 Pro display (14" or 16")
 window-height = 40
 window-width = 130
 window-padding-x = 12
 window-padding-y = 12
 window-vsync = true
-
-# Enable native macOS window decorations
-macos-titlebar-style = tabs
-macos-option-as-alt = true
 
 # ============================================================================
 # Adwaita Dark Colorscheme (from neovim adwaita.lua)
@@ -67,10 +59,9 @@ cursor-color = #ffbe6f
 scrollback-limit = 100000
 
 # ============================================================================
-# Keybindings (macOS native)
+# Keybindings
 # ============================================================================
-# Keep Ghostty's default keybindings for native macOS experience
-# keybind = cmd+n=new_window
-# keybind = cmd+t=new_tab
-# keybind = cmd+w=close_surface
-# keybind = cmd+shift+n=toggle_fullscreen
+# Ghostty defaults are sensible; uncomment to customize.
+# keybind = ctrl+shift+n=new_window
+# keybind = ctrl+shift+t=new_tab
+# keybind = ctrl+shift+w=close_surface

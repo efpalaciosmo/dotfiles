@@ -7,18 +7,18 @@ Este paquete contiene la configuración de Ghostty con el mismo esquema de color
 ✅ **Tema Adwaita Dark**: Idéntico al tema de Neovim para consistencia visual  
 ✅ **Fuente**: JetBrains Mono Medium  
 ✅ **Ligaduras**: Habilitadas (`->`, `=>`, `//`, etc.)  
-✅ **Optimizado**: Para MacBook Pro M4 Pro (14" y 16")  
 ✅ **Cursor**: Naranja (accent color de Adwaita)  
 ✅ **Scrollback**: 10,000 líneas de historial  
 
 ## Requisitos
 
-- **Ghostty**: Instalado en macOS
+- **Ghostty**: Instalado en Fedora (disponible via `brew install ghostty` o `dnf copr enable pgdev/ghostty && dnf install ghostty`)
 - **JetBrains Mono**: Debe estar instalado en tu sistema
 
   ```bash
-  # Si tienes Homebrew:
-  brew install --cask font-jetbrains-mono
+  # Las fonts se instalan automaticamente con make fonts
+  # O manualmente con Homebrew:
+  brew install font-jetbrains-mono
   ```
 
 ## Instalación
@@ -52,12 +52,11 @@ Si quieres modificar la configuración:
 2. O edita este template: `packages/ghostty/.config/ghostty/config`
 3. Vuelve a ejecutar: `make dotfiles`
 
-## Atajos de Teclado (macOS nativos)
+## Atajos de Teclado
 
-- **Cmd + N**: Nueva ventana
-- **Cmd + T**: Nueva pestaña
-- **Cmd + W**: Cerrar pestaña
-- **Cmd + Shift + N**: Pantalla completa
+- **Ctrl + Shift + N**: Nueva ventana
+- **Ctrl + Shift + T**: Nueva pestaña
+- **Ctrl + Shift + W**: Cerrar pestaña
 
 ## Referencia
 

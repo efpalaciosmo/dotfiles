@@ -1,4 +1,4 @@
-# ~/.zshrc - macOS dotfiles
+# ~/.zshrc - Fedora dotfiles
 # Shared PATH and environment live in ~/.profile.
 
 if [ -f "$HOME/.profile" ]; then
