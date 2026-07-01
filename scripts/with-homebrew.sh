@@ -24,8 +24,8 @@ if [[ "$brew_path" == *$'\n'* || ! -x "$brew_path" ]]; then
   exit 1
 fi
 
-eval "$("$brew_path" shellenv)"
-brew_prefix="$("$brew_path" --prefix)"
+eval "$(HOMEBREW_NO_AUTO_UPDATE=1 "$brew_path" shellenv)"
+brew_prefix="$(HOMEBREW_NO_AUTO_UPDATE=1 "$brew_path" --prefix)"
 
 for extra_path in \
   "$brew_prefix/opt/make/libexec/gnubin" \

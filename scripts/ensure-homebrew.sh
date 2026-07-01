@@ -79,8 +79,8 @@ if ((PRINT_PATH == 1)); then
 fi
 
 if ((PRINT_SHELLENV == 1)); then
-  "$brew_path" shellenv
-  brew_prefix="$("$brew_path" --prefix)"
+  HOMEBREW_NO_AUTO_UPDATE=1 "$brew_path" shellenv
+  brew_prefix="$(HOMEBREW_NO_AUTO_UPDATE=1 "$brew_path" --prefix)"
   for extra_path in \
     "$brew_prefix/opt/make/libexec/gnubin" \
     "$brew_prefix/opt/gnu-tar/libexec/gnubin" \
