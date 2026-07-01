@@ -10,7 +10,7 @@ BREW_BUNDLE_JOBS ?= auto
 ASK_BECOME_PASS ?= 0
 BECOME := $(if $(filter 1,$(DRY_RUN)),,$(if $(filter 1,$(ASK_BECOME_PASS)),--ask-become-pass,))
 
-.PHONY: help setup brew venv doctor check verify fonts shell dotfiles python-user-tools node-user-tools
+.PHONY: help setup brew venv doctor check verify fonts shell dotfiles stown python-user-tools node-user-tools
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -78,6 +78,10 @@ shell: brew venv ## Install oh-my-zsh and shell plugins
 dotfiles: brew venv ## Install stown if needed and apply dotfiles
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools,dotfiles $(CHECK)
+
+stown: brew venv ## Apply stown-managed dotfiles and shell configuration
+	@"$(CURDIR)/scripts/with-homebrew.sh" \
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools,dotfiles,shell $(CHECK)
 
 python-user-tools: brew venv
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
