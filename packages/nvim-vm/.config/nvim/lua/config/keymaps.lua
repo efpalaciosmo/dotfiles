@@ -50,10 +50,14 @@ map("n", "<C-l>", "<C-w>l", { desc = "Window right" })
 map("n", "<leader>sv", "<cmd>vsplit<cr>", { desc = "Split vertical" })
 map("n", "<leader>sh", "<cmd>split<cr>", { desc = "Split horizontal" })
 
-map("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Increase height" })
-map("n", "<C-Down>", "<cmd>resize -2<cr>", { desc = "Decrease height" })
-map("n", "<C-Left>", "<cmd>vertical resize -2<cr>", { desc = "Decrease width" })
-map("n", "<C-Right>", "<cmd>vertical resize +2<cr>", { desc = "Increase width" })
+map("n", "<leader>rk", "<cmd>resize +2<cr>", { desc = "Increase height" })
+map("n", "<leader>rj", "<cmd>resize -2<cr>", { desc = "Decrease height" })
+map("n", "<leader>rh", "<cmd>vertical resize -2<cr>", { desc = "Decrease width" })
+map("n", "<leader>rl", "<cmd>vertical resize +2<cr>", { desc = "Increase width" })
+
+for _, key in ipairs({ "<Up>", "<Down>", "<Left>", "<Right>" }) do
+  map({ "n", "i", "v", "c" }, key, "<Nop>", { desc = "Disable arrow navigation" })
+end
 
 -- ============================================================================
 -- Move lines / blocks
