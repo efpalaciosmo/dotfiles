@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Clone or update this dotfiles repo and run the macOS Make flow.
+# Clone or update this dotfiles repo and run the Fedora Make flow.
 #
 # Usage:
 #   DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \
@@ -18,8 +18,8 @@ HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/in
 log() { printf '[bootstrap] %s\n' "$*"; }
 die() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
 
-require_macos() {
-  [[ "$(uname -s)" == "Darwin" ]] || die "This dotfiles setup is macOS-only."
+require_linux() {
+  [[ "$(uname -s)" == "Linux" ]] || die "This dotfiles setup is Linux-only (Fedora Silverblue)."
 }
 
 find_brew() {
@@ -29,6 +29,7 @@ find_brew() {
   fi
 
   for candidate in \
+    /home/linuxbrew/.linuxbrew/bin/brew \
     /opt/homebrew/bin/brew \
     /usr/local/bin/brew; do
     if [[ -x "$candidate" ]]; then
@@ -52,8 +53,7 @@ load_homebrew() {
     "$brew_prefix/opt/gnu-tar/libexec/gnubin" \
     "$brew_prefix/opt/llvm/bin" \
     "$brew_prefix/opt/ffmpeg-full/bin" \
-    "$brew_prefix/opt/imagemagick-full/bin" \
-    /Library/TeX/texbin; do
+    "$brew_prefix/opt/imagemagick-full/bin"; do
     if [[ -d "$extra_path" ]]; then
       export PATH="$extra_path:$PATH"
     fi
@@ -137,7 +137,7 @@ run_make() {
 }
 
 main() {
-  require_macos
+  require_linux
   ensure_bootstrap_tools
   clone_or_update
   run_make

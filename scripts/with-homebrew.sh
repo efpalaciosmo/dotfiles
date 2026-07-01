@@ -32,8 +32,7 @@ for extra_path in \
   "$brew_prefix/opt/gnu-tar/libexec/gnubin" \
   "$brew_prefix/opt/llvm/bin" \
   "$brew_prefix/opt/ffmpeg-full/bin" \
-  "$brew_prefix/opt/imagemagick-full/bin" \
-  /Library/TeX/texbin; do
+  "$brew_prefix/opt/imagemagick-full/bin"; do
   if [[ -d "$extra_path" ]]; then
     export PATH="$extra_path:$PATH"
   fi

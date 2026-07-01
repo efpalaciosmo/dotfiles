@@ -1,5 +1,5 @@
 ---
-- name: macOS dotfiles automation
+- name: Fedora Silverblue dotfiles automation
   hosts: local
   connection: local
   gather_facts: true
@@ -11,6 +11,6 @@
       tags: [always]
 
   tasks:
-    - name: macOS workflow
-      ansible.builtin.include_tasks: tasks/profile-macos.yml
+    - name: Fedora workflow
+      ansible.builtin.include_tasks: tasks/profile-fedora.yml
       tags: [always]

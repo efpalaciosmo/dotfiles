@@ -19,8 +19,8 @@ done
 log() { printf '[homebrew] %s\n' "$*" >&2; }
 die() { printf '[homebrew] ERROR: %s\n' "$*" >&2; exit 1; }
 
-require_macos() {
-  [[ "$(uname -s)" == "Darwin" ]] || die "This dotfiles setup is macOS-only."
+require_linux() {
+  [[ "$(uname -s)" == "Linux" ]] || die "This dotfiles setup is Linux-only (Fedora Silverblue)."
 }
 
 find_brew() {
@@ -30,6 +30,7 @@ find_brew() {
   fi
 
   for candidate in \
+    /home/linuxbrew/.linuxbrew/bin/brew \
     /opt/homebrew/bin/brew \
     /usr/local/bin/brew; do
     if [[ -x "$candidate" ]]; then
@@ -60,7 +61,7 @@ install_homebrew() {
   die "curl or wget is required to download the Homebrew installer"
 }
 
-require_macos
+require_linux
 
 brew_path="$(find_brew || true)"
 if [[ -z "$brew_path" ]]; then
@@ -85,8 +86,7 @@ if ((PRINT_SHELLENV == 1)); then
     "$brew_prefix/opt/gnu-tar/libexec/gnubin" \
     "$brew_prefix/opt/llvm/bin" \
     "$brew_prefix/opt/ffmpeg-full/bin" \
-    "$brew_prefix/opt/imagemagick-full/bin" \
-    /Library/TeX/texbin; do
+    "$brew_prefix/opt/imagemagick-full/bin"; do
     if [[ -d "$extra_path" ]]; then
       printf 'export PATH="%s:$PATH";\n' "$extra_path"
     fi

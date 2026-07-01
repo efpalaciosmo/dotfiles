@@ -58,7 +58,7 @@ check: venv ## Ansible syntax-check (+ ansible-lint if installed)
 		command -v ansible-lint >/dev/null 2>&1 && ansible-lint -q . || true
 
 verify: check ## Check syntax and guard against distro package-manager residue
-	@old='zyp''per|open''su''se|su''se|d''nf|a''pt|pac''man|rpm-ost''ree'; \
+	@old='zyp''per|open''su''se|su''se|a''pt|pac''man|dp''kg'; \
 		files='Makefile Brewfile playbook.yml playbook-doctor.yml bootstrap-dotfiles.sh scripts tasks roles group_vars packages README.md'; \
 		! grep -R -n -I -i -E "(^|[^[:alnum:]_-])($$old)([^[:alnum:]_-]|$$)" $$files \
 		|| (echo >&2 "verify: distro package-manager residue found"; exit 1)

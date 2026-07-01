@@ -86,16 +86,16 @@
       - "*.ttf"
       - "*.otf"
       - "*.ttc"
-  register: _macos_font_files
+  register: _linux_font_files
   when: not ansible_check_mode
 
-- name: Copy font files into macOS user font folder
+- name: Copy font files into user font folder
   ansible.builtin.copy:
     src: "{{ item.path }}"
     dest: "{{ nerd_fonts_user_fonts_dir }}/{{ item.path | basename }}"
     remote_src: true
     mode: '0644'
-  loop: "{{ _macos_font_files.files | default([]) }}"
+  loop: "{{ _linux_font_files.files | default([]) }}"
   loop_control:
     label: "{{ item.path | basename }}"
   when: not ansible_check_mode

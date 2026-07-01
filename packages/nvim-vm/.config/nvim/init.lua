@@ -28,10 +28,10 @@ do
 
   local tool_paths = {
     vim.fn.expand("~/.local/bin"),
-    "/Library/TeX/texbin",
   }
 
   for _, prefix in ipairs({
+    "/home/linuxbrew/.linuxbrew",
     "/opt/homebrew",
     "/usr/local",
   }) do
@@ -60,6 +60,7 @@ do
   local candidates = {
     vim.fn.stdpath("config") .. "/parser",
     vim.fn.expand("~/.local/lib/tree-sitter"),
+    "/home/linuxbrew/.linuxbrew/lib/tree-sitter",
     "/opt/homebrew/lib/tree-sitter",
     "/usr/local/lib/tree-sitter",
   }

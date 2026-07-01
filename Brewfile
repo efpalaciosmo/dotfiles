@@ -1,4 +1,4 @@
-# macOS Brewfile.
+# Fedora Silverblue Brewfile.
 # Optimized for CLI development, Neovim, LaTeX/math writing, data work,
 # and dotfile automation.
 
@@ -28,8 +28,8 @@ brew "jq"
 # =============================================================================
 # 2. GNU compatibility
 # =============================================================================
-# macOS ships BSD variants of many tools. These GNU versions keep shell scripts
-# and Neovim helpers predictable.
+# Ensures GNU tool versions for predictable shell scripts and Neovim helpers
+# across Linux and macOS environments.
 
 brew "coreutils"
 brew "findutils"
@@ -91,8 +91,8 @@ brew "stylua"
 # =============================================================================
 # 7. LaTeX / thesis writing
 # =============================================================================
-# Full TeX Live distribution without GUI apps. Good fit for terminal/Neovim.
-cask "mactex-no-gui"
+# Full TeX Live distribution. Good fit for terminal/Neovim.
+brew "texlive"
 
 
 # =============================================================================
