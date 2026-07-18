@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir=${BASH_SOURCE[0]%/*}
+# shellcheck source=common
+. "$script_dir/common"
+
+missing_commands grim slurp wl-copy || exit 1
+
+screenshot_dir="${XDG_SCREENSHOTS_DIR:-${HOME}/Pictures/Screenshots}"
+
+next_file() {
+    mkdir -p "$screenshot_dir"
+    printf '%s/Screenshot from %s.png' "$screenshot_dir" "$(date '+%Y-%m-%d %H-%M-%S')"
+}
+
+select_area() {
+    slurp 2>/dev/null
+}
+
+copy_file() {
+    wl-copy --type image/png < "$1"
+}
+
+save_area() {
+    local geometry file
+    geometry=$(select_area) || exit 0
+    file=$(next_file)
+    grim -g "$geometry" "$file"
+    notify_user "Screenshot saved" "$file"
+}
+
+copy_area() {
+    local geometry
+    geometry=$(select_area) || exit 0
+    grim -g "$geometry" - | wl-copy --type image/png
+    notify_user "Screenshot copied"
+}
+
+annotate_area() {
+    missing_commands swappy || exit 1
+    local geometry tmp
+    geometry=$(select_area) || exit 0
+    tmp=$(mktemp --suffix=.png)
+    trap 'rm -f "$tmp"' EXIT
+    grim -g "$geometry" "$tmp"
+    swappy -f "$tmp"
+}
+
+save_screen() {
+    local file
+    file=$(next_file)
+    grim "$file"
+    notify_user "Screenshot saved" "$file"
+}
+
+copy_screen() {
+    local tmp
+    tmp=$(mktemp --suffix=.png)
+    trap 'rm -f "$tmp"' EXIT
+    grim "$tmp"
+    copy_file "$tmp"
+    notify_user "Screenshot copied"
+}
+
+choice=$(menu "Screenshot" \
+    "󰩭  Area to file" \
+    "󰆞  Area to clipboard" \
+    "󰏫  Area annotate" \
+    "󰹑  Screen to file" \
+    "󰅇  Screen to clipboard" || true)
+
+case "$choice" in
+    *"Area to file") save_area ;;
+    *"Area to clipboard") copy_area ;;
+    *"Area annotate") annotate_area ;;
+    *"Screen to file") save_screen ;;
+    *"Screen to clipboard") copy_screen ;;
+esac

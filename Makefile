@@ -62,9 +62,6 @@ verify: check ## Check syntax and guard against distro package-manager residue
 		files='Makefile Brewfile playbook.yml playbook-doctor.yml bootstrap-dotfiles.sh scripts tasks roles group_vars packages README.md'; \
 		! grep -R -n -I -i -E "(^|[^[:alnum:]_-])($$old)([^[:alnum:]_-]|$$)" $$files \
 		|| (echo >&2 "verify: distro package-manager residue found"; exit 1)
-	@for dir in ni''ri way''bar ma''ko ro''fi fo''ot; do \
-		test ! -d "packages/$$dir" || exit 1; \
-	done
 	@echo "verify: OK"
 
 fonts: brew venv ## Install user-local fonts

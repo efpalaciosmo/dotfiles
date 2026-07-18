@@ -1,0 +1,26 @@
+// ~/.config/niri/input.kdl
+// Copia este archivo como: ~/.config/niri/input.kdl
+
+input {
+    keyboard {
+        xkb {
+        }
+
+        repeat-delay 700
+        repeat-rate 22
+        numlock
+    }
+
+    touchpad {
+        tap
+        natural-scroll
+    }
+
+    mouse {
+    }
+
+    mod-key "Alt"
+    mod-key-nested "Super"
+
+    workspace-auto-back-and-forth
+}

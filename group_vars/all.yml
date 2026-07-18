@@ -8,6 +8,11 @@ stown_packages:
   - starship
   - nvim-vm
   - ghostty
+  - niri
+  - waybar
+  - mako
+  - rofi
+  - foot
 
 expected_commands:
   - brew

@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -u
+
+json_escape() {
+    local s=${1//\\/\\\\}
+    s=${s//\"/\\\"}
+    s=${s//$'\n'/\\n}
+    s=${s//$'\t'/\\t}
+    printf '%s' "$s"
+}
+
+find_battery() {
+    local bat
+    for bat in /sys/class/power_supply/BAT*; do
+        [[ -r "$bat/capacity" && -r "$bat/status" ]] || continue
+        printf '%s\n' "$bat"
+        return 0
+    done
+    return 1
+}
+
+if [[ "${1:-}" == "--available" ]]; then
+    find_battery >/dev/null
+    exit $?
+fi
+
+bat=$(find_battery || true)
+if [[ -z "$bat" ]]; then
+    printf '{"text":"","tooltip":"No battery found","class":"unavailable"}\n'
+    exit 0
+fi
+
+capacity=$(<"$bat/capacity")
+status=$(<"$bat/status")
+manufacturer=""
+model=""
+[[ -r "$bat/manufacturer" ]] && manufacturer=$(<"$bat/manufacturer")
+[[ -r "$bat/model_name" ]] && model=$(<"$bat/model_name")
+
+class="discharging"
+case "$status" in
+    Charging)
+        icon=""
+        class="charging"
+        ;;
+    Full)
+        icon=""
+        class="full"
+        ;;
+    Not\ charging)
+        icon=""
+        class="full"
+        ;;
+    *)
+        if (( capacity >= 85 )); then
+            icon=""
+        elif (( capacity >= 60 )); then
+            icon=""
+        elif (( capacity >= 35 )); then
+            icon=""
+        elif (( capacity >= 15 )); then
+            icon=""
+        else
+            icon=""
+        fi
+
+        if (( capacity <= 15 )); then
+            class="critical"
+        elif (( capacity <= 30 )); then
+            class="warning"
+        fi
+        ;;
+esac
+
+tooltip="Battery: ${capacity}%\nStatus: ${status}"
+[[ -n "$manufacturer$model" ]] && tooltip+="\nDevice: ${manufacturer} ${model}"
+
+if [[ -r "$bat/energy_now" && -r "$bat/energy_full" ]]; then
+    energy_now=$(<"$bat/energy_now")
+    energy_full=$(<"$bat/energy_full")
+    tooltip+="\nEnergy: $((energy_now / 1000)) / $((energy_full / 1000)) mWh"
+elif [[ -r "$bat/charge_now" && -r "$bat/charge_full" ]]; then
+    charge_now=$(<"$bat/charge_now")
+    charge_full=$(<"$bat/charge_full")
+    tooltip+="\nCharge: $((charge_now / 1000)) / $((charge_full / 1000)) mAh"
+fi
+
+printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \
+    "$(json_escape "${icon}  ${capacity}%")" \
+    "$(json_escape "$tooltip")" \
+    "$class"
