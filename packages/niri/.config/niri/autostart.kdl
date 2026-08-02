@@ -2,7 +2,7 @@
 // Autostart base para niri en Fedora Silverblue / Wayland
 // ======================================================
 
-// Barra superior
+// Barra inferior
 spawn-at-startup "waybar"
 
 // Fondo de pantalla
@@ -46,14 +46,6 @@ spawn-sh-at-startup "command -v wl-paste >/dev/null 2>&1 && command -v cliphist 
 spawn-sh-at-startup "command -v wl-paste >/dev/null 2>&1 && command -v cliphist >/dev/null 2>&1 && wl-paste --type image --watch cliphist store"
 
 // ------------------------------------------------------
-// Logitech / logid
-// ------------------------------------------------------
-
-// Nota: esto requiere que sudo no pida contraseña para logid,
-// o que logid esté manejado como servicio del sistema.
-spawn-sh-at-startup "command -v logid >/dev/null 2>&1 && sudo logid -c \"$HOME/.config/logid.cfg\" || true"
-
-// ------------------------------------------------------
 // Preferencias GTK / GNOME
 // ------------------------------------------------------
 
@@ -64,7 +56,7 @@ spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.g
 spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface cursor-size 24 || true"
 
 // Fuente general de apps GTK
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface font-name 'Inter Medium 14' || true"
+spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 11' || true"
 
 // Tema de ventanas GTK heredadas
 spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.wm.preferences theme Adwaita || true"

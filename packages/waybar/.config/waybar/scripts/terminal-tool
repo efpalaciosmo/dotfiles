@@ -34,14 +34,7 @@ run_terminal() {
 
 case "${1:-shell}" in
     monitor|cpu|memory)
-        if command -v btop >/dev/null 2>&1; then
-            cmd='btop'
-        elif command -v htop >/dev/null 2>&1; then
-            cmd='htop'
-        else
-            cmd='top'
-        fi
-        run_terminal "System monitor" "$cmd"
+        run_terminal "System monitor" "btop"
         ;;
     gpu)
         cmd='printf "GPU status\n\n"; ~/.config/waybar/scripts/gpu-status | jq -r ".tooltip" 2>/dev/null || ~/.config/waybar/scripts/gpu-status; printf "\n\nRaw sensors:\n"; for f in /sys/class/drm/card*/device/gpu_busy_percent /sys/class/drm/card*/device/hwmon/hwmon*/temp*_input /sys/class/drm/card*/device/mem_info_vram_*; do [[ -r "$f" ]] && printf "%s: %s\n" "$f" "$(<"$f")"; done'
@@ -66,6 +59,9 @@ case "${1:-shell}" in
     audio)
         cmd='pactl info 2>/dev/null || true; printf "\nSinks:\n"; pactl list sinks short 2>/dev/null || true; printf "\nSources:\n"; pactl list sources short 2>/dev/null || true'
         run_terminal "Audio status" "$cmd"
+        ;;
+    calendar)
+        run_terminal "Calendar" "cal -3"
         ;;
     *)
         run_terminal "Terminal" "${SHELL:-bash}"

@@ -2,7 +2,7 @@
 // Configuracion principal de rofi.
 
 configuration {
-    modi:                 "drun,run,window,ssh,filebrowser";
+    modi:                 "drun,recursivebrowser,run,window,ssh,filebrowser";
     show-icons:           true;
     icon-theme:           "Adwaita";
     display-drun:         "Apps";
@@ -10,11 +10,13 @@ configuration {
     display-window:       "Window";
     display-ssh:          "SSH";
     display-filebrowser:  "Files";
+    display-recursivebrowser: "Files";
     drun-display-format:  "{name}";
     drun-reload-desktop-cache: true;
     window-format:        "{w}  {c}  {t}";
     sidebar-mode:         false;
-    terminal:             "foot";
+    terminal:             "ghostty";
+    sort:                 true;
     sorting-method:       "fzf";
     matching:             "fuzzy";
     case-sensitive:       false;

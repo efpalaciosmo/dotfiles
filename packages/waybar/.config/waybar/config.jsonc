@@ -15,8 +15,9 @@
 
     "modules-right": [
         "tray",
+        "privacy",
         "idle_inhibitor",
-        "network",
+        "custom/network-speed",
         "pulseaudio",
         "custom/cpu",
         "memory",
@@ -36,7 +37,7 @@
 
     "niri/window": {
         "format": "{}",
-        "max-length": 58,
+        "max-length": 40,
         "separate-outputs": true
     },
 
@@ -45,7 +46,7 @@
         "exec-if": "~/.config/waybar/scripts/media-status --available",
         "return-type": "json",
         "interval": 2,
-        "max-length": 48,
+        "max-length": 32,
         "escape": true,
         "on-click": "playerctl play-pause",
         "on-click-right": "playerctl stop",
@@ -92,19 +93,12 @@
         "tooltip-format-deactivated": "Idle inhibitor is off"
     },
 
-    "network": {
-        "format": "{ifname}",
-        "format-wifi": "",
-        "format-ethernet": "",
-        "format-disconnected": "󰤮",
-        "tooltip-format": "{ifname} via {gwaddr}",
-        "tooltip-format-wifi": " {essid} ({signalStrength}%)\n{ipaddr}",
-        "tooltip-format-ethernet": " {ifname}\n{ipaddr}",
-        "tooltip-format-disconnected": "Disconnected",
-        "max-length": 50,
+    "custom/network-speed": {
+        "exec": "~/.config/waybar/scripts/network-speed",
+        "return-type": "json",
+        "interval": 1,
         "on-click": "nm-connection-editor",
-        "on-click-right": "sh -c 'exec \"$HOME/.config/waybar/scripts/terminal-tool\" network'",
-        "interval": 20
+        "on-click-right": "sh -c 'exec \"$HOME/.config/waybar/scripts/terminal-tool\" network'"
     },
 
     "custom/bluetooth": {
@@ -160,7 +154,7 @@
     "disk": {
         "interval": 30,
         "format": "  {percentage_used}%",
-        "path": "/",
+        "path": "/var/home",
         "states": {
             "critical": 80
         },

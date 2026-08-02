@@ -64,7 +64,6 @@ brew "duf"
 brew "ncdu"
 brew "fastfetch"
 brew "lazygit"
-brew "harlequin"
 brew "lazydocker"
 brew "yazi"
 brew "resvg"
@@ -110,7 +109,6 @@ brew "pnpm"
 # =============================================================================
 
 brew "zig"
-brew "juliaup"
 brew "llvm"
 
 

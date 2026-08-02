@@ -4,8 +4,8 @@ layout {
     center-focused-column "on-overflow"
     always-center-single-column
 
-    // Cada ventana nueva abre con ancho 2/5.
-    default-column-width { proportion 0.9; }
+    // Las ventanas nuevas ocupan toda el area util sin entrar en fullscreen.
+    default-column-width { proportion 1.0; }
     gaps 10
 
     // Mod+R / Mod+Shift+R: 2/5, 1/2, 3/5, 2/3, completo.
@@ -31,7 +31,7 @@ layout {
     border {
         on
         width 1
-        active-color "#ff7800"
+        active-color "#3584e4"
         inactive-color "#242428"
         urgent-color "#ed333b"
     }
@@ -55,13 +55,13 @@ layout {
         position "right"
         gaps-between-tabs 2
         corner-radius 6
-        active-color "#ff7800"
+        active-color "#3584e4"
         inactive-color "#5e5c64"
         urgent-color "#ed333b"
     }
 
     insert-hint {
         on
-        color "#ff780080"
+        color "#3584e480"
     }
 }

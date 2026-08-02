@@ -9,4 +9,8 @@ if command -v gnome-calendar >/dev/null 2>&1; then
     exec gnome-calendar
 fi
 
+if command -v cal >/dev/null 2>&1; then
+    exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" calendar
+fi
+
 exit 0

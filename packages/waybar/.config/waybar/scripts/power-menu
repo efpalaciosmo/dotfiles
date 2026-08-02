@@ -56,6 +56,11 @@ turn_displays_off() {
 }
 
 lock_session() {
+    if command -v swaylock >/dev/null 2>&1; then
+        swaylock
+        return
+    fi
+
     if command -v loginctl >/dev/null 2>&1; then
         loginctl lock-session || notify_user "Power menu" "Could not lock the session"
     fi

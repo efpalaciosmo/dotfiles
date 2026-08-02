@@ -48,3 +48,6 @@ if command -v starship >/dev/null 2>&1; then
 else
     PS1='[\u@\h \W]\$ '
 fi
+
+# opencode
+export PATH=/var/home/efpalaciosmo/.opencode/bin:$PATH

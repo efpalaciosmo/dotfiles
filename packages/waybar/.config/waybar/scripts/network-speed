@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -u
+
+route=$(ip -4 route show default 2>/dev/null || true)
+if [[ ! "$route" =~ (^|[[:space:]])dev[[:space:]]+([^[:space:]]+) ]]; then
+    printf '{"text":"󰤮","tooltip":"Disconnected","class":"disconnected"}\n'
+    exit 0
+fi
+
+iface=${BASH_REMATCH[2]}
+stats="/sys/class/net/$iface/statistics"
+if [[ ! -r "$stats/rx_bytes" || ! -r "$stats/tx_bytes" ]]; then
+    printf '{"text":"󰤮","tooltip":"No statistics for %s","class":"disconnected"}\n' "$iface"
+    exit 0
+fi
+
+state_dir="${XDG_RUNTIME_DIR:-/tmp}/waybar"
+mkdir -p "$state_dir"
+state_file="$state_dir/network-speed"
+
+rx=$(<"$stats/rx_bytes")
+tx=$(<"$stats/tx_bytes")
+now=$(date +%s%N)
+down=0.0
+up=0.0
+
+if [[ -r "$state_file" ]]; then
+    read -r previous_iface previous_rx previous_tx previous_time < "$state_file" || true
+    if [[ "${previous_iface:-}" == "$iface" && "${previous_time:-}" =~ ^[0-9]+$ && "$now" -gt "$previous_time" ]]; then
+        down=$(awk -v bytes="$((rx - previous_rx))" -v ns="$((now - previous_time))" 'BEGIN { printf "%.1f", bytes * 8000 / ns }')
+        up=$(awk -v bytes="$((tx - previous_tx))" -v ns="$((now - previous_time))" 'BEGIN { printf "%.1f", bytes * 8000 / ns }')
+    fi
+fi
+
+printf '%s %s %s %s\n' "$iface" "$rx" "$tx" "$now" > "$state_file"
+printf '{"text":"󰇚 %s Mb/s  󰕒 %s Mb/s","tooltip":"Interface: %s\\nDownload: %s Mb/s\\nUpload: %s Mb/s","class":"connected"}\n' \
+    "$down" "$up" "$iface" "$down" "$up"

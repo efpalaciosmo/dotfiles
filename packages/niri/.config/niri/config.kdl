@@ -10,9 +10,7 @@ include "input.kdl"
 include "appearance.kdl"
 include "layout.kdl"
 include "rules.kdl"
-include "debug.kdl"
 include "monitors.kdl"
 
 prefer-no-csd
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
-

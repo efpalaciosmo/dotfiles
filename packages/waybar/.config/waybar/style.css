@@ -1,9 +1,9 @@
 /* Waybar - polished Adwaita floating bar */
 
-@define-color adw_bg        #1a1a1d;
-@define-color adw_surface   #1a1a1d;
-@define-color adw_card      #1a1a1d;
-@define-color adw_card_lift #3a3a3a;
+@define-color adw_bg        #242424;
+@define-color adw_surface   #242424;
+@define-color adw_card      #303030;
+@define-color adw_card_lift #383838;
 @define-color adw_border    #4a4a4a;
 @define-color adw_fg        #f6f5f4;
 @define-color adw_strong    #ffffff;
@@ -59,7 +59,7 @@ tooltip label {
 #tray,
 #privacy,
 #idle_inhibitor,
-#network,
+#custom-network-speed,
 #custom-bluetooth,
 #pulseaudio,
 #custom-cpu,
@@ -129,7 +129,7 @@ tooltip label {
 }
 
 #custom-media {
-    min-width:    220px;
+    min-width:    180px;
     padding:      0 16px;
     color:        @adw_fg;
     background:   alpha(@adw_blue, 0.16);
@@ -156,7 +156,7 @@ tooltip label {
 #tray,
 #privacy,
 #idle_inhibitor,
-#network,
+#custom-network-speed,
 #custom-bluetooth,
 #pulseaudio,
 #custom-cpu,
@@ -172,7 +172,7 @@ tooltip label {
 #tray,
 #privacy,
 #idle_inhibitor,
-#network,
+#custom-network-speed,
 #custom-bluetooth,
 #pulseaudio,
 #custom-cpu,
@@ -193,17 +193,8 @@ tooltip label {
     padding: 0 10px;
 }
 
-#pulseaudio,
-#custom-cpu,
-#memory,
-#disk,
-#custom-battery,
-#clock {
-    font-family: "JetBrainsMono Nerd Font", "Adwaita Sans", "Inter", "Cantarell", sans-serif;
-}
-
 #idle_inhibitor,
-#network,
+#custom-network-speed,
 #custom-bluetooth,
 #pulseaudio,
 #custom-cpu,
@@ -216,7 +207,7 @@ tooltip label {
 
 #tray:hover,
 #idle_inhibitor:hover,
-#network:hover,
+#custom-network-speed:hover,
 #custom-bluetooth:hover,
 #pulseaudio:hover,
 #custom-cpu:hover,
@@ -237,11 +228,10 @@ tooltip label {
     box-shadow:   none;
 }
 
-#network.wifi {
+#custom-network-speed {
     color: @adw_blue_l;
 }
 
-#network.ethernet,
 #custom-bluetooth.connected,
 #custom-gpu,
 #custom-battery.charging,
@@ -250,7 +240,6 @@ tooltip label {
     color: @adw_teal;
 }
 
-#network.disconnected,
 #custom-bluetooth.off,
 #custom-bluetooth.unavailable,
 #custom-gpu.unavailable,

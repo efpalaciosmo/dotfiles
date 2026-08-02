@@ -89,3 +89,4 @@ claude() {
     CLAUDE_CODE_EFFORT_LEVEL="max" \
     command claude "$@"
 }
+export PATH="$HOME/.local/bin:$PATH"

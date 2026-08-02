@@ -19,8 +19,8 @@ input {
     mouse {
     }
 
-    mod-key "Alt"
-    mod-key-nested "Super"
+    mod-key "Super"
+    mod-key-nested "Alt"
 
     workspace-auto-back-and-forth
 }
