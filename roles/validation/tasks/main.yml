@@ -91,5 +91,8 @@
     that:
       - doctor_required_commands.rc == 0
       - doctor_links.rc == 0
-    fail_msg: "Dotfiles doctor found missing required commands or invalid links."
+    fail_msg: >-
+      Dotfiles doctor failed:
+      {{ (doctor_required_commands.stdout_lines + doctor_links.stdout_lines)
+         | select('match', '^MISS ') | join(', ') }}
     quiet: true

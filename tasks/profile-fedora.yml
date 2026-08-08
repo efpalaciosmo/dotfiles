@@ -4,13 +4,13 @@
     fedora_os_release: "{{ lookup('ansible.builtin.file', '/etc/os-release') }}"
   tags: [always]
 
-- name: Require Fedora Workstation 44
+- name: Require Fedora 44 Workstation or Container Image
   ansible.builtin.assert:
     that:
       - ansible_facts.distribution == "Fedora"
       - ansible_facts.distribution_major_version == "44"
-      - fedora_os_release is search('(?m)^VARIANT_ID=workstation$')
-    fail_msg: "This dotfiles automation requires Fedora Workstation 44."
+      - fedora_os_release is search('(?m)^VARIANT_ID=(workstation|container)$')
+    fail_msg: "This dotfiles automation requires Fedora 44 Workstation or Container Image."
     quiet: true
   tags: [always]
 

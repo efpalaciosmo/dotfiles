@@ -7,8 +7,6 @@ ANSIBLE_PLAYBOOK := $(VENV)/bin/ansible-playbook
 VENV_STAMP := $(VENV)/.requirements-installed
 INV := $(CURDIR)/inventory.ini
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
-ASK_BECOME_PASS ?= 1
-BECOME := $(if $(filter 1,$(DRY_RUN)),,$(if $(filter 1,$(ASK_BECOME_PASS)),--ask-become-pass,))
 
 .PHONY: help setup venv packages fonts fnm dotfiles stow doctor check verify
 
@@ -17,28 +15,30 @@ help: ## List available targets
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
 
 setup: venv ## Install Fedora packages, apply dotfiles, and validate
-	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml $(CHECK)
+	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml $(CHECK)
 	@$(MAKE) verify
 	@if [ "$(DRY_RUN)" != "1" ]; then $(MAKE) doctor; fi
 
-venv: $(VENV_STAMP) ## Create the local Ansible virtualenv
+venv: requirements-ansible.txt ## Create the local Ansible virtualenv
+	@command -v python3 >/dev/null 2>&1 \
+		|| { echo >&2 "[venv] python3 is required; run bootstrap-dotfiles.sh first."; exit 1; }
+	@set -e; \
+		if ! "$(VENV)/bin/python" --version >/dev/null 2>&1 \
+			|| ! "$(ANSIBLE_PLAYBOOK)" --version >/dev/null 2>&1; then \
+			echo "[venv] (re)creating $(VENV)"; \
+			rm -rf "$(VENV)"; \
+			python3 -m venv "$(VENV)"; \
+		fi
+	@if [ ! -f "$(VENV_STAMP)" ] || [ requirements-ansible.txt -nt "$(VENV_STAMP)" ]; then \
+		"$(PIP)" install --upgrade pip >/dev/null; \
+		"$(PIP)" install -r requirements-ansible.txt; \
+		touch "$(VENV_STAMP)"; \
+	fi
 	@mkdir -p "$(CURDIR)/.ansible/tmp"
 	@test -f "$(INV)" || cp inventory.ini.example "$(INV)"
 
-$(VENV_STAMP): requirements-ansible.txt
-	@command -v python3 >/dev/null 2>&1 \
-		|| { echo >&2 "[venv] python3 is required; run bootstrap-dotfiles.sh first."; exit 1; }
-	@if [ ! -x "$(ANSIBLE_PLAYBOOK)" ]; then \
-		echo "[venv] creating $(VENV)"; \
-		rm -rf "$(VENV)"; \
-		python3 -m venv "$(VENV)"; \
-	fi
-	@"$(PIP)" install --upgrade pip >/dev/null
-	@"$(PIP)" install -r requirements-ansible.txt
-	@touch "$(VENV_STAMP)"
-
 packages: venv ## Install packages from Fedora repositories with DNF5
-	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags packages $(CHECK)
+	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags packages $(CHECK)
 
 fonts: venv ## Install user-local fonts
 	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags fonts $(CHECK)

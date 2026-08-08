@@ -1,4 +1,4 @@
-# Fedora Workstation 44 Dotfiles
+# Fedora 44 Dotfiles
 
 Ansible installs packages from the official Fedora repositories, configures
 user-local tools, and links configuration files with GNU Stow.
@@ -20,8 +20,8 @@ make
 
 The default setup performs one DNF5 package transaction, installs fonts and
 `fnm`, applies all Stow packages, runs syntax checks, and validates required
-commands and symbolic links. Ansible asks for the sudo password by default;
-use `ASK_BECOME_PASS=0 make` when sudo is already configured appropriately.
+commands and symbolic links. Only the DNF task uses privilege escalation when
+the current user is not root; containers must provide passwordless `sudo`.
 
 For a non-mutating preview:
 
@@ -49,17 +49,21 @@ System packages come only from Fedora repositories. The main groups are:
 
 - GCC, Clang, CMake, Ninja, GDB, LLDB and Valgrind for C and C++.
 - Tree-sitter, Lua, ShellCheck and shfmt.
-- Niri, Waybar, Mako, Rofi, Foot and their Wayland integrations.
 - TeX Live, Poppler, ImageMagick and Fedora's free FFmpeg build.
 - Common shell, archive, Git and terminal utilities.
+
+Desktop, Wayland, audio, Bluetooth and network-management packages are left to
+the host and are not installed inside the container. User fonts, MIME
+associations and VS Code settings remain managed for applications installed
+from the container.
 
 The repository does not install a container engine or container tooling. It
 only manages `~/.config/containers/registries.conf` for installations managed
 separately by the user.
 
 Tools without a suitable official Fedora package are reported as optional and
-remain manually managed. This includes Neovim 0.12+, Starship, Ghostty,
-lazygit, yazi, resvg, StyLua, pnpm, opencode, Juliaup and Harlequin. Fedora
+remain manually managed. This includes Neovim 0.12+, Starship, lazygit, yazi,
+resvg, StyLua, pnpm, opencode, Juliaup and Harlequin. Fedora
 44's Neovim 0.11 package is intentionally not installed because the included
 configuration uses Neovim 0.12 APIs.
 
@@ -68,18 +72,17 @@ The only upstream downloads automated by Ansible are:
 - IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font and Inter.
 - A pinned `fnm` release and the configured Node.js LTS release.
 
-The managed MIME associations expect Zen Browser and the Claude URL handler to
-be installed separately. Until then, those associations will not resolve.
+The managed MIME associations expect Zen Browser, GNOME Papers and the Claude
+URL handler to be installed separately.
 
 ## Stow Packages
 
 Configuration is linked from `packages/` with `stow --no-folding`:
 
 - `git`, `shell-container`, `starship`, `nvim-vm`
-- `ghostty`, `niri`, `waybar`, `mako`, `rofi`, `foot`
 - `btop`, `containers`, `tmux`, `opencode`
 - `xdg` for `mimeapps.list`
-- `vscode` for portable Flatpak VS Code settings
+- `vscode` for portable VS Code settings
 
 Existing conflicting files are moved to a timestamped directory under
 `~/.dotfiles-backup/` before Stow creates links. Generated application state,
@@ -87,7 +90,7 @@ credentials, histories, caches, databases and package locks are not managed.
 
 ## Bootstrap
 
-On a fresh Fedora Workstation 44 installation:
+On a fresh Fedora 44 Workstation or Container Image installation:
 
 ```sh
 DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \

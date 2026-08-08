@@ -6,12 +6,6 @@ stow_packages:
   - shell-container
   - starship
   - nvim-vm
-  - ghostty
-  - niri
-  - waybar
-  - mako
-  - rofi
-  - foot
   - btop
   - containers
   - tmux
@@ -32,6 +26,7 @@ fedora_packages:
   - unzip
   - xz
   - 7zip
+  - neovim
   - bash
   - bash-completion
   - zsh
@@ -57,7 +52,6 @@ fedora_packages:
   - lld
   - lldb
   - gdb
-  - valgrind
   - tree
   - fd-find
   - ripgrep
@@ -73,39 +67,17 @@ fedora_packages:
   - shfmt
   - tree-sitter-cli
   - lua
-  - texlive-scheme-full
+#  - texlive-scheme-full
   - uv
   - zig
-  - poppler-utils
-  - ImageMagick
-  - ImageMagick-heic
-  - ImageMagick-djvu
-  - ffmpeg-free
+#  - poppler-utils
+#  - ImageMagick
+#  - ImageMagick-heic
+#  - ImageMagick-djvu
+#  - ffmpeg-free
   - fontconfig
-  - niri
-  - waybar
-  - mako
-  - rofi
-  - foot
-  - swaybg
-  - swaylock
-  - wl-clipboard
-  - cliphist
-  - playerctl
-  - brightnessctl
-  - pavucontrol
-  - libnotify
-  - pipewire-utils
-  - NetworkManager
-  - nm-connection-editor
-  - bluez
   - iproute
   - util-linux
-  - pulseaudio-utils
-  - wireplumber
-  - polkit-gnome
-  - xdg-desktop-portal-gnome
-  - xdg-desktop-portal-gtk
 
 expected_commands:
   - bash
@@ -134,7 +106,6 @@ expected_commands:
   - ld.lld
   - lldb
   - gdb
-  - valgrind
   - tree
   - fd
   - rg
@@ -152,31 +123,18 @@ expected_commands:
   - lua
   - uv
   - fnm
-  - zig
-  - pdftotext
-  - magick
-  - ffmpeg
-  - pdflatex
-  - latexmk
-  - biber
-  - niri
-  - waybar
-  - mako
-  - rofi
-  - foot
-  - swaybg
-  - swaylock
-  - wl-paste
-  - cliphist
-  - playerctl
-  - brightnessctl
-  - wpctl
-  - stow
+#  - zig
+#  - pdftotext
+#  - magick
+#  - ffmpeg
+#  - pdflatex
+#  - latexmk
+#  - biber
+#  - stow
 
 optional_commands:
   - nvim
   - starship
-  - ghostty
   - lazygit
   - yazi
   - resvg

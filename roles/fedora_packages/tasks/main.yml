@@ -1,6 +1,6 @@
 ---
 - name: Install packages from Fedora repositories with DNF5
-  become: true
+  become: "{{ ansible_facts.user_uid != 0 }}"
   ansible.builtin.dnf:
     name: "{{ fedora_packages }}"
     state: present
