@@ -1,8 +1,7 @@
 ---
-dotfiles_repo_root: "{{ playbook_dir }}"
 dotfiles_packages_root: "{{ playbook_dir }}/packages"
 
-stown_packages:
+stow_packages:
   - git
   - shell-container
   - starship
@@ -13,104 +12,206 @@ stown_packages:
   - mako
   - rofi
   - foot
+  - btop
+  - containers
+  - tmux
+  - opencode
+  - xdg
+  - vscode
+
+# Keep this list to packages published by Fedora. GNU Stow and tools listed in
+# optional_commands are intentionally installed by the user.
+fedora_packages:
+  - git
+  - gh
+  - curl
+  - wget
+  - make
+  - python3
+  - python3-pip
+  - unzip
+  - xz
+  - 7zip
+  - bash
+  - bash-completion
+  - zsh
+  - zsh-autosuggestions
+  - zsh-syntax-highlighting
+  - jq
+  - coreutils
+  - findutils
+  - tar
+  - sed
+  - grep
+  - gawk
+  - cmake
+  - ninja-build
+  - pkgconf-pkg-config
+  - gcc
+  - gcc-c++
+  - glibc-devel
+  - libstdc++-devel
+  - llvm
+  - clang
+  - clang-tools-extra
+  - lld
+  - lldb
+  - gdb
+  - valgrind
+  - tree
+  - fd-find
+  - ripgrep
+  - fzf
+  - bat
+  - btop
+  - tmux
+  - zoxide
+  - duf
+  - ncdu
+  - fastfetch
+  - ShellCheck
+  - shfmt
+  - tree-sitter-cli
+  - lua
+  - texlive-scheme-full
+  - uv
+  - zig
+  - poppler-utils
+  - ImageMagick
+  - ImageMagick-heic
+  - ImageMagick-djvu
+  - ffmpeg-free
+  - fontconfig
+  - niri
+  - waybar
+  - mako
+  - rofi
+  - foot
+  - swaybg
+  - swaylock
+  - wl-clipboard
+  - cliphist
+  - playerctl
+  - brightnessctl
+  - pavucontrol
+  - libnotify
+  - pipewire-utils
+  - NetworkManager
+  - nm-connection-editor
+  - bluez
+  - iproute
+  - util-linux
+  - pulseaudio-utils
+  - wireplumber
+  - polkit-gnome
+  - xdg-desktop-portal-gnome
+  - xdg-desktop-portal-gtk
 
 expected_commands:
-  - brew
   - bash
   - zsh
   - git
   - gh
   - make
-  - cmake
-  - ninja
-  - pkgconf
   - python3
-  - node
   - curl
   - wget
   - unzip
   - xz
-  - 7zz
+  - 7z
   - jq
+  - cmake
+  - ctest
+  - ninja
+  - pkg-config
+  - gcc
+  - g++
+  - clang
+  - clang++
+  - clangd
+  - clang-format
+  - clang-tidy
+  - ld.lld
+  - lldb
+  - gdb
+  - valgrind
   - tree
   - fd
   - rg
   - fzf
   - bat
   - btop
-  - duf
-  - ncdu
   - tmux
   - zoxide
+  - duf
+  - ncdu
   - fastfetch
-  - lazygit
-  - lazydocker
-  - yazi
-  - harlequin
-  - resvg
   - shellcheck
   - shfmt
-  - nvim
   - tree-sitter
   - lua
-  - stylua
   - uv
   - fnm
-  - juliaup
-  - pnpm
-  - rustup
-  - cargo
-  - rustc
   - zig
-  - clang
-  - starship
-  - stow
   - pdftotext
   - magick
   - ffmpeg
   - pdflatex
   - latexmk
   - biber
-  - gawk
-  - gfind
-  - ggrep
-  - gsed
-  - gtar
+  - niri
+  - waybar
+  - mako
+  - rofi
+  - foot
+  - swaybg
+  - swaylock
+  - wl-paste
+  - cliphist
+  - playerctl
+  - brightnessctl
+  - wpctl
+  - stow
 
-pnpm_home: "{{ ansible_facts.env.PNPM_HOME | default(ansible_facts.env.HOME + '/.local/share/pnpm') }}"
-node_user_tools_packages:
-  - typescript
+optional_commands:
+  - nvim
+  - starship
+  - ghostty
+  - lazygit
+  - yazi
+  - resvg
+  - stylua
+  - pnpm
+  - opencode
+  - juliaup
+  - harlequin
+
+fnm_version: v1.38.1
+fnm_node_version: "24"
+fnm_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/fnm/{{ fnm_version }}"
+fnm_archives:
+  x86_64: fnm-linux.zip
+  aarch64: fnm-arm64.zip
+fnm_checksums:
+  x86_64: sha256:b69e5c9a05c1e17e4a7de9a17df14ba430d049f2591af791a6f850a170296069
+  aarch64: sha256:69feda9455931c26c84be9f95f5e6f69e8b64686e68069fab7cfc34756cd2944
 
 nerd_fonts_version: v3.4.0
 nerd_fonts_base_url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}"
 nerd_fonts_list:
   - archive: IBMPlexMono.tar.xz
     subdir: IBMPlexMono
+    checksum: sha256:95e6ecaa5dfb9a96f27a6b6edc7be396fb6df30bc311a6f7e15cad56a30051c2
   - archive: JetBrainsMono.tar.xz
     subdir: JetBrainsMono
+    checksum: sha256:ef552a3e638f25125c6ad4c51176a6adcdce295ab1d2ffacf0db060caf8c1582
   - archive: Inter-4.1.zip
     subdir: Inter
     version: v4.1
     url: https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip
+    checksum: sha256:9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e
 nerd_fonts_user_fonts_dir: "{{ ansible_facts.env.HOME }}/.local/share/fonts"
-nerd_fonts_root: "{{ nerd_fonts_user_fonts_dir }}/nerd-fonts"
-nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/nerd-fonts/{{ nerd_fonts_version }}"
-homebrew_prefix: "{{ lookup('env', 'HOMEBREW_PREFIX') | default('/home/linuxbrew/.linuxbrew', true) }}"
-homebrew_gnu_tar_path: "{{ homebrew_prefix }}/opt/gnu-tar/libexec/gnubin"
+nerd_fonts_root: "{{ nerd_fonts_user_fonts_dir }}/dotfiles"
+nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_facts.env.HOME + '/.cache') }}/dotfiles/fonts/{{ nerd_fonts_version }}"
 
-allow_pip_break_system_packages: true
-pip_break_allowed: >-
-  {{
-    (allow_pip_break_system_packages | bool)
-    or (lookup('env', 'ALLOW_PIP_BREAK_SYSTEM_PACKAGES', default='0') == '1')
-  }}
-
-zsh_dir: "{{ ansible_facts.env.ZSH | default(ansible_facts.env.HOME + '/.oh-my-zsh') }}"
-zsh_custom: "{{ ansible_facts.env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
-
-rustup_installer_url: https://sh.rustup.rs
-rustup_default_toolchain: stable
-cargo_home: "{{ ansible_facts.env.CARGO_HOME | default(ansible_facts.env.HOME + '/.cargo') }}"
-rustup_home: "{{ ansible_facts.env.RUSTUP_HOME | default(ansible_facts.env.HOME + '/.rustup') }}"
-
-dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|.*\.md\.template|templates/.*\.(aux|fdb_latexmk|fls|synctex\.gz|pdf))$'
+dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|node_modules|auth\.json|.*\.db(-.*)?|.*\.sqlite(-.*)?|.*\.log|.*\.backup.*|package-lock\.json)$'

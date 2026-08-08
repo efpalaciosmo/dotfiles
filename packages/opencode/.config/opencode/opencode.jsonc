@@ -1,0 +1,128 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": true,
+  "default_agent": "plan",
+  "share": "disabled",
+  "lsp": true,
+  "formatter": true,
+
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 12000
+  },
+
+  "watcher": {
+    "ignore": [
+      ".git/**",
+      ".idea/**",
+      ".vscode/**",
+      ".gradle/**",
+      "target/**",
+      "build/**",
+      "out/**",
+      "node_modules/**",
+      "dist/**",
+      "coverage/**",
+      ".venv/**",
+      "venv/**",
+      "__pycache__/**",
+      ".pytest_cache/**",
+      ".mypy_cache/**",
+      ".ruff_cache/**",
+      "*.log",
+      "*.aux",
+      "*.bbl",
+      "*.bcf",
+      "*.blg",
+      "*.fdb_latexmk",
+      "*.fls",
+      "*.run.xml",
+      "*.synctex.gz",
+      "*.toc"
+    ]
+  },
+
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "rm -rf *": "ask",
+      "rm -r *": "ask",
+      "sudo *": "ask",
+      "su": "ask",
+      "su *": "ask",
+      "chmod -R *": "ask",
+      "chown -R *": "ask",
+      "git push": "ask",
+      "git push *": "ask",
+      "git push --force*": "deny",
+      "git push -f *": "deny",
+      "git reset --hard*": "ask",
+      "git clean -f*": "ask",
+      "git checkout -- *": "ask",
+      "git restore *": "ask",
+      "git branch -D *": "ask",
+      "npm publish*": "ask",
+      "pnpm publish*": "ask",
+      "mvn deploy*": "ask",
+      "./mvnw deploy*": "ask",
+      "curl * | sh": "deny",
+      "curl * | bash": "deny",
+      "wget * | sh": "deny",
+      "wget * | bash": "deny"
+    }
+  },
+
+  "command": {
+    "review": {
+      "description": "Revisar cambios actuales",
+      "agent": "plan",
+      "template": "Review the current git diff. Identify correctness bugs, security issues, regressions, missing edge cases, architectural violations, and missing tests. Prioritize findings by severity and cite exact files and lines. Do not modify files."
+    },
+    "implement": {
+      "description": "Implementar una tarea con verificación",
+      "agent": "build",
+      "template": "Implement the requested task. First inspect the relevant architecture and existing conventions. Make the smallest coherent change, preserve public behavior unless explicitly requested, add or update tests, run the most focused verification commands, and summarize changed files plus any remaining risks."
+    },
+    "test": {
+      "description": "Ejecutar pruebas relevantes",
+      "agent": "build",
+      "template": "Detect the project stack and run the narrowest relevant test suite, type checker, linter, or build. Diagnose failures from evidence, fix failures caused by the current changes, and report commands and results. Do not hide or bypass failing tests."
+    },
+    "security": {
+      "description": "Auditoría de seguridad",
+      "agent": "plan",
+      "template": "Perform a security-focused review of the relevant code and configuration. Check authentication, authorization, validation, injection, secret handling, dependency risks, unsafe deserialization, file access, logging of sensitive data, and insecure defaults. Do not modify files. Return prioritized, actionable findings."
+    },
+    "data-review": {
+      "description": "Revisar Python, SQL y analítica",
+      "agent": "plan",
+      "template": "Review the selected Python, SQL, or analytics code. Check correctness, data leakage, joins and grain, null handling, duplicate handling, numerical stability, vectorization, reproducibility, performance, schema assumptions, and validation. Do not modify files."
+    },
+    "frontend-review": {
+      "description": "Revisar Astro y frontend",
+      "agent": "plan",
+      "template": "Review the frontend for semantic HTML, accessibility, responsive behavior, performance, hydration cost, SEO, component boundaries, TypeScript safety, visual consistency, and conversion UX. Do not modify files."
+    },
+    "latex-review": {
+      "description": "Revisar LaTeX matemático",
+      "agent": "plan",
+      "template": "Review the LaTeX source for mathematical correctness, notation consistency, theorem environments, references, compilation risks, typography, package conflicts, and structural clarity. Preserve the existing template and do not modify files."
+    }
+  },
+
+  "server": {
+    "hostname": "127.0.0.1",
+    "port": 4096,
+    "mdns": false
+  },
+
+  "attachment": {
+    "image": {
+      "auto_resize": true,
+      "max_width": 2400,
+      "max_height": 2400,
+      "max_base64_bytes": 6291456
+    }
+  }
+}

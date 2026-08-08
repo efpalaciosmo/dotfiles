@@ -5,33 +5,9 @@ if [ -f "$HOME/.profile" ]; then
   . "$HOME/.profile"
 fi
 
-if command -v brew >/dev/null 2>&1; then
-  _brew_prefix="$(brew --prefix 2>/dev/null || true)"
-  if [ -d "$_brew_prefix/share/zsh/site-functions" ]; then
-    fpath=("$_brew_prefix/share/zsh/site-functions" $fpath)
-  fi
-  unset _brew_prefix
-fi
-
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000
 export SAVEHIST=10000
-
-export ZSH="$HOME/.oh-my-zsh"
-
-plugins=(
-  git
-)
-if [ -d "$ZSH/custom/plugins/zsh-autosuggestions" ]; then
-  plugins+=(zsh-autosuggestions)
-fi
-if [ -d "$ZSH/custom/plugins/zsh-syntax-highlighting" ]; then
-  plugins+=(zsh-syntax-highlighting)
-fi
-
-if [ -f "$ZSH/oh-my-zsh.sh" ]; then
-  source "$ZSH/oh-my-zsh.sh"
-fi
 
 if ((!$+_comps)); then
   autoload -Uz compinit
@@ -64,13 +40,12 @@ if command -v pnpm >/dev/null 2>&1; then
   alias npx="pnpm dlx"
 fi
 
-if command -v starship >/dev/null 2>&1; then
-  eval "$(starship init zsh)"
+if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
+  source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
-# Clean brew
-if command -v brew >/dev/null 2>&1; then
-  alias brewup="brew update && brew upgrade && brew cleanup"
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
 fi
 
 if command -v zoxide >/dev/null 2>&1; then
@@ -89,4 +64,8 @@ claude() {
     CLAUDE_CODE_EFFORT_LEVEL="max" \
     command claude "$@"
 }
-export PATH="$HOME/.local/bin:$PATH"
+
+# Syntax highlighting must be sourced after all widgets and aliases.
+if [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+  source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+fi

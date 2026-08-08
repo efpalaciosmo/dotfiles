@@ -1,9 +1,16 @@
 ---
-- name: Require Linux
+- name: Read Fedora edition metadata
+  ansible.builtin.set_fact:
+    fedora_os_release: "{{ lookup('ansible.builtin.file', '/etc/os-release') }}"
+  tags: [always]
+
+- name: Require Fedora Workstation 44
   ansible.builtin.assert:
     that:
-      - ansible_facts.system == "Linux"
-    fail_msg: "This dotfiles automation is Linux-only (Fedora Silverblue)."
+      - ansible_facts.distribution == "Fedora"
+      - ansible_facts.distribution_major_version == "44"
+      - fedora_os_release is search('(?m)^VARIANT_ID=workstation$')
+    fail_msg: "This dotfiles automation requires Fedora Workstation 44."
     quiet: true
   tags: [always]
 
@@ -12,32 +19,22 @@
     name: common
   tags: [always, common]
 
-- name: Python user tools
+- name: Fedora packages
   ansible.builtin.import_role:
-    name: python_user_tools
-  tags: [python-user-tools, dotfiles]
+    name: fedora_packages
+  tags: [packages]
 
-- name: Node user tools
+- name: Fast Node Manager
   ansible.builtin.import_role:
-    name: node_user_tools
-  tags: [node-user-tools, dotfiles]
+    name: fnm
+  tags: [fnm]
 
 - name: Nerd Fonts
   ansible.builtin.import_role:
     name: fonts
   tags: [fonts]
 
-- name: Shell plugins
-  ansible.builtin.import_role:
-    name: shell_plugins
-  tags: [shell]
-
-- name: Rust toolchain
-  ansible.builtin.import_role:
-    name: rustup
-  tags: [rustup]
-
-- name: Apply dotfiles with stown
+- name: Apply dotfiles with GNU Stow
   ansible.builtin.import_role:
     name: dotfiles
   tags: [dotfiles]

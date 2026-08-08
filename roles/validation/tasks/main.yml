@@ -2,100 +2,94 @@
 - name: Context summary
   ansible.builtin.debug:
     msg:
-      - "=== dotfiles doctor (ansible) ==="
+      - "=== dotfiles doctor ==="
       - "User={{ ansible_facts.user_id | default(ansible_facts.env.USER) }} HOME={{ ansible_facts.env.HOME }}"
-      - "Distribution={{ ansible_facts.get('distribution', '?') }} {{ ansible_facts.get('distribution_version', '') }}"
+      - "Distribution={{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}"
 
-- name: Homebrew prefix
+- name: Check required commands in one shell
   ansible.builtin.shell: |
-    set -euo pipefail
-    command -v brew
-    brew --prefix
-  args:
-    executable: /bin/bash
-  register: doctor_brew
-  changed_when: false
-  failed_when: false
-
-- name: Show Homebrew status
-  ansible.builtin.debug:
-    msg: "{{ doctor_brew.stdout_lines if doctor_brew.rc == 0 else ['brew -> MISSING'] }}"
-
-- name: Resolve project command paths for diagnostics
-  ansible.builtin.shell: |
-    set -euo pipefail
-    printf '%s\n' "{{ ansible_playbook_python | dirname }}"
-  args:
-    executable: /bin/bash
-  register: doctor_project_path_prefix
-  changed_when: false
-  failed_when: false
-
-- name: Expected command availability
-  ansible.builtin.shell: command -v "{{ item }}"
+    missing=0
+    for name in $DOTFILES_REQUIRED_COMMANDS; do
+      if path=$(command -v "$name" 2>/dev/null); then
+        printf 'OK   %-20s %s\n' "$name" "$path"
+      else
+        printf 'MISS %s\n' "$name"
+        missing=1
+      fi
+    done
+    exit "$missing"
   args:
     executable: /bin/bash
   environment:
-    PATH: "{{ doctor_project_path_prefix.stdout | default('') }}:{{ cargo_home }}/bin:{{ ansible_facts.env.PATH | default('') }}"
-  loop: "{{ expected_commands }}"
-  register: doctor_commands
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+    DOTFILES_REQUIRED_COMMANDS: "{{ expected_commands | join(' ') }}"
+  register: doctor_required_commands
   changed_when: false
   failed_when: false
 
-- name: Show expected command paths
+- name: Show required command status
   ansible.builtin.debug:
-    msg: "{{ item.item }} -> {{ item.stdout if item.rc == 0 else 'MISSING' }}"
-  loop: "{{ doctor_commands.results }}"
-  loop_control:
-    label: "{{ item.item }}"
+    var: doctor_required_commands.stdout_lines
 
-- name: stown availability
-  ansible.builtin.shell: command -v stown
-  args:
-    executable: /bin/bash
-  environment:
-    PATH: "{{ doctor_project_path_prefix.stdout | default('') }}:{{ ansible_facts.env.PATH | default('') }}"
-  register: doctor_stown
-  changed_when: false
-  failed_when: false
-
-- name: Show stown path
-  ansible.builtin.debug:
-    msg: "stown -> {{ doctor_stown.stdout if doctor_stown.rc == 0 else 'MISSING' }}"
-
-- name: PATH contains project tool bin
-  ansible.builtin.debug:
-    msg: "Project tools are resolved from {{ doctor_project_path_prefix.stdout | default('UNKNOWN') }}"
-
-- name: Dotfile symlink sample check
+- name: Check optional commands in one shell
   ansible.builtin.shell: |
-    set -euo pipefail
-    root="$DOTFILES_PACKAGES_ROOT"
-    found=0
-    for pkg in $DOTFILES_STOWN_PKGS; do
-      [[ -d "$root/$pkg" ]] || continue
-      prefix="${root}/${pkg}/"
-      count=0
-      while IFS= read -r -d '' f; do
-        rel="${f#$prefix}"
-        target="$HOME/$rel"
-        if [[ -L "$target" ]]; then echo "OK link $target"; found=1
-        elif [[ -e "$target" ]]; then echo "FILE $target (not symlink)"
-        else echo "MISS $target"; fi
-        count=$((count + 1))
-        if [[ $count -ge 24 ]]; then break; fi
-        if [[ $found -ge 5 ]]; then break 2; fi
-      done < <(find "$root/$pkg" -type f -print0)
+    for name in $DOTFILES_OPTIONAL_COMMANDS; do
+      if path=$(command -v "$name" 2>/dev/null); then
+        printf 'OK   %-20s %s\n' "$name" "$path"
+      else
+        printf 'INFO %-20s manually managed\n' "$name"
+      fi
     done
   args:
     executable: /bin/bash
   environment:
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+    DOTFILES_OPTIONAL_COMMANDS: "{{ optional_commands | join(' ') }}"
+  register: doctor_optional_commands
+  changed_when: false
+
+- name: Show optional command status
+  ansible.builtin.debug:
+    var: doctor_optional_commands.stdout_lines
+
+- name: Validate managed dotfile links
+  ansible.builtin.shell: |
+    set -u
+    missing=0
+    root="$DOTFILES_PACKAGES_ROOT"
+    for package in $DOTFILES_STOW_PACKAGES; do
+      prefix="$root/$package/"
+      while IFS= read -r -d '' source; do
+        relative="${source#"$prefix"}"
+        case "$relative" in
+          README|README.md|*/README|*/README.md) continue ;;
+        esac
+        target="$HOME/$relative"
+        if [[ -L "$target" && -e "$target" ]]; then
+          continue
+        fi
+        printf 'MISS %s\n' "$target"
+        missing=1
+      done < <(find "$root/$package" -type f -print0)
+    done
+    exit "$missing"
+  args:
+    executable: /bin/bash
+  environment:
     DOTFILES_PACKAGES_ROOT: "{{ dotfiles_packages_root }}"
-    DOTFILES_STOWN_PKGS: "{{ stown_packages | join(' ') }}"
+    DOTFILES_STOW_PACKAGES: "{{ stow_packages | join(' ') }}"
   register: doctor_links
   changed_when: false
   failed_when: false
 
-- name: Show dotfile link sample
+- name: Show dotfile link status
   ansible.builtin.debug:
-    var: doctor_links.stdout_lines
+    msg: "{{ doctor_links.stdout_lines if doctor_links.stdout_lines else ['All managed links are valid'] }}"
+
+- name: Require core commands and valid links
+  ansible.builtin.assert:
+    that:
+      - doctor_required_commands.rc == 0
+      - doctor_links.rc == 0
+    fail_msg: "Dotfiles doctor found missing required commands or invalid links."
+    quiet: true

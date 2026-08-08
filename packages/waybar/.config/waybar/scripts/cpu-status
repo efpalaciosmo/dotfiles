@@ -24,8 +24,8 @@ json_escape() {
 }
 
 read_cpu_totals() {
-    local user nice system idle iowait irq softirq steal guest guest_nice
-    read -r _ user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat
+    local user nice system idle iowait irq softirq steal _guest _guest_nice
+    read -r _ user nice system idle iowait irq softirq steal _guest _guest_nice < /proc/stat
     local total=$((user + nice + system + idle + iowait + irq + softirq + steal))
     local idle_all=$((idle + iowait))
     printf '%s %s\n' "$total" "$idle_all"

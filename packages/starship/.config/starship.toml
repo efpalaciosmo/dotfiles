@@ -5,7 +5,7 @@ format = """
 [╰─](fg:surface)$character"""
 
 right_format = """
-$python$nodejs$bun$deno$golang$rust$julia$c$lua$ruby$package$docker_context$aws$kubernetes"""
+$python$nodejs$bun$deno$golang$julia$c$lua$ruby$package$docker_context$aws$kubernetes"""
 
 add_newline = true
 continuation_prompt = "[∙](fg:muted) "
@@ -166,11 +166,6 @@ format = "[$symbol($version )]($style)"
 [golang]
 symbol = " "
 style = "bold fg:cyan"
-format = "[$symbol($version )]($style)"
-
-[rust]
-symbol = " "
-style = "bold fg:orange"
 format = "[$symbol($version )]($style)"
 
 [julia]

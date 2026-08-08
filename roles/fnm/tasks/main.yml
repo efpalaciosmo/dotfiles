@@ -1,0 +1,84 @@
+---
+- name: Select fnm archive for this architecture
+  ansible.builtin.set_fact:
+    fnm_archive: "{{ fnm_archives[ansible_facts.architecture] | default('') }}"
+    fnm_checksum: "{{ fnm_checksums[ansible_facts.architecture] | default('') }}"
+
+- name: Require a supported fnm architecture
+  ansible.builtin.assert:
+    that:
+      - fnm_archive | length > 0
+      - fnm_checksum | length > 0
+    fail_msg: "fnm is not configured for architecture {{ ansible_facts.architecture }}"
+    quiet: true
+
+- name: Ensure fnm cache directory
+  ansible.builtin.file:
+    path: "{{ fnm_cache_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Download pinned fnm release
+  ansible.builtin.get_url:
+    url: "https://github.com/Schniz/fnm/releases/download/{{ fnm_version }}/{{ fnm_archive }}"
+    dest: "{{ fnm_cache_dir }}/{{ fnm_archive }}"
+    mode: '0644'
+    checksum: "{{ fnm_checksum }}"
+  when: not ansible_check_mode
+
+- name: Check installed fnm release
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts.env.HOME }}/.local/bin/fnm"
+      - --version
+  register: fnm_installed_release
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install fnm in the user-local bin directory
+  ansible.builtin.unarchive:
+    src: "{{ fnm_cache_dir }}/{{ fnm_archive }}"
+    dest: "{{ ansible_facts.env.HOME }}/.local/bin"
+    remote_src: true
+  when:
+    - not ansible_check_mode
+    - fnm_installed_release.rc != 0 or (fnm_version | regex_replace('^v', '')) not in fnm_installed_release.stdout
+
+- name: Ensure fnm is executable
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.local/bin/fnm"
+    state: file
+    mode: '0755'
+  when: not ansible_check_mode
+
+- name: Check configured Node.js release
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts.env.HOME }}/.local/bin/fnm"
+      - list
+  register: fnm_node_releases
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Install configured Node.js release with fnm
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts.env.HOME }}/.local/bin/fnm"
+      - install
+      - "{{ fnm_node_version }}"
+  when:
+    - not ansible_check_mode
+    - fnm_node_releases.stdout is not search('(?m)v' ~ fnm_node_version ~ '\\.')
+
+- name: Set the configured Node.js release as default
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts.env.HOME }}/.local/bin/fnm"
+      - default
+      - "{{ fnm_node_version }}"
+  register: fnm_default_release
+  changed_when: true
+  when:
+    - not ansible_check_mode
+    - fnm_node_releases.stdout is not search('(?m)v' ~ fnm_node_version ~ '\\..*default')

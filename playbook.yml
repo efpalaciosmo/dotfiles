@@ -1,5 +1,5 @@
 ---
-- name: Fedora Silverblue dotfiles automation
+- name: Fedora Workstation 44 dotfiles automation
   hosts: local
   connection: local
   gather_facts: true

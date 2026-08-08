@@ -63,9 +63,7 @@ require("mason-tool-installer").setup({
         "ruff",
         "lua-language-server",
         "vtsls",
-        "clangd",
         "zls",
-        "rust-analyzer",
         "julia-lsp",
         "marksman",
         "bash-language-server",
@@ -77,10 +75,7 @@ require("mason-tool-installer").setup({
 
         -- Extra CLI tools.
         "prettier",
-        "stylua",
         "sqlfluff",
-        "shfmt",
-        "shellcheck",
     },
     auto_update = false,
     run_on_start = true,
@@ -312,7 +307,7 @@ require("blink.cmp").setup({
     },
 
     fuzzy = {
-        implementation = "prefer_rust_with_warning",
+        implementation = "lua",
     },
 })
 

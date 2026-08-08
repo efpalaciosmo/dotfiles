@@ -3,6 +3,7 @@
 
 if vim.fn.has("nvim-0.12") == 0 then
   vim.notify("This config requires Neovim 0.12+", vim.log.levels.ERROR)
+  return
 end
 
 vim.loader.enable()
@@ -10,8 +11,7 @@ vim.loader.enable()
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- Make Neovim see Homebrew tools even when launched from an
--- environment that did not source the shell profile.
+-- Make Neovim see user-local tools when launched outside a login shell.
 do
   local function prepend_path(dir)
     if not dir or dir == "" or not vim.uv.fs_stat(dir) then
@@ -26,24 +26,7 @@ do
     vim.env.PATH = dir .. (path ~= "" and ":" .. path or "")
   end
 
-  local tool_paths = {
-    vim.fn.expand("~/.local/bin"),
-  }
-
-  for _, prefix in ipairs({
-    "/home/linuxbrew/.linuxbrew",
-    "/opt/homebrew",
-    "/usr/local",
-  }) do
-    vim.list_extend(tool_paths, {
-      prefix .. "/bin",
-      prefix .. "/sbin",
-      prefix .. "/opt/make/libexec/gnubin",
-      prefix .. "/opt/llvm/bin",
-      prefix .. "/opt/ffmpeg-full/bin",
-      prefix .. "/opt/imagemagick-full/bin",
-    })
-  end
+  local tool_paths = { vim.fn.expand("~/.local/bin") }
 
   for i = #tool_paths, 1, -1 do
     prepend_path(tool_paths[i])
@@ -54,15 +37,14 @@ end
 -- Tree-sitter parser bootstrap.
 --
 -- Prefer parsers installed under this config, but also register parser
--- libraries from common Homebrew locations when they are present.
+-- libraries from common Fedora locations when they are present.
 -- ============================================================================
 do
   local candidates = {
     vim.fn.stdpath("config") .. "/parser",
     vim.fn.expand("~/.local/lib/tree-sitter"),
-    "/home/linuxbrew/.linuxbrew/lib/tree-sitter",
-    "/opt/homebrew/lib/tree-sitter",
-    "/usr/local/lib/tree-sitter",
+    "/usr/lib64/tree-sitter",
+    "/usr/lib/tree-sitter",
   }
   for _, dir in ipairs(candidates) do
     if vim.fn.isdirectory(dir) == 1 then

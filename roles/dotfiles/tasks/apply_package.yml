@@ -1,14 +1,14 @@
 ---
-# stown_pkg_dir = absolute path to package (e.g. .../packages/starship)
+# stow_pkg_dir = absolute path to package (e.g. .../packages/starship)
 - name: Find files under package
   ansible.builtin.find:
-    paths: "{{ stown_pkg_dir }}"
+    paths: "{{ stow_pkg_dir }}"
     recurse: true
     file_type: file
     hidden: true
   register: _dotfiles_pkg_files
 
-- name: Filter ignored paths for stown preflight
+- name: Filter ignored paths for Stow preflight
   ansible.builtin.set_fact:
     _leaves: >-
       {{
@@ -18,41 +18,9 @@
         | list
       }}
 
-# Without this, stown "tree-folds" any directory whose target does not yet
-# exist (e.g. ~/.config), creating a single symlink to the package's subdir.
-# When a later package shares the same parent, --force makes it overwrite the
-# previous symlink, so the last package effectively claims the whole tree
-# (e.g. ~/.config ends up pointing at a single package's .config/ alone).
-# Pre-creating every directory the package contributes guarantees stown only
-# folds leaf files, keeping ~/.config and friends real directories.
-- name: Find directories under package (defeat stown tree-folding)
-  ansible.builtin.find:
-    paths: "{{ stown_pkg_dir }}"
-    recurse: true
-    file_type: directory
-    hidden: true
-  register: _dotfiles_pkg_dirs
-
-- name: Pre-create matching directories under HOME
-  ansible.builtin.file:
-    path: "{{ ansible_facts.env.HOME }}/{{ item }}"
-    state: directory
-    mode: '0755'
-  loop: >-
-    {{
-      _dotfiles_pkg_dirs.files
-      | map(attribute='path')
-      | reject('search', dotfiles_ignore_regex)
-      | map('regex_replace', '^' ~ (stown_pkg_dir | regex_escape) ~ '/', '')
-      | reject('equalto', '')
-      | list
-    }}
-
-- name: Prepare backup root
-  ansible.builtin.file:
-    path: "{{ ansible_facts.env.HOME }}/.dotfiles-backup/{{ dotfiles_backup_stamp }}"
-    state: directory
-    mode: '0755'
+- name: Initialize package conflict state
+  ansible.builtin.set_fact:
+    _stow_package_has_conflicts: false
 
 - name: Check each target for conflicts
   ansible.builtin.include_tasks: backup_conflict.yml
@@ -60,15 +28,58 @@
   loop_control:
     loop_var: _leaf
 
-- name: Run stown for package
+- name: Report conflicts during check mode
+  ansible.builtin.debug:
+    msg: >-
+      {{ _stow_pkg_name }} has existing files that will be backed up before
+      GNU Stow is run. Stow simulation is skipped for this package.
+  when:
+    - ansible_check_mode
+    - _stow_package_has_conflicts | bool
+
+- name: Run GNU Stow for package
   ansible.builtin.command:
-    argv:
-      - "{{ dotfiles_stown_bin }}"
-      - --force
-      - --ignore
-      - "{{ dotfiles_ignore_regex }}"
-      - "{{ ansible_facts.env.HOME }}"
-      - "{{ stown_pkg_dir }}"
-  register: _stown_out
-  changed_when: _stown_out.rc == 0
-  failed_when: _stown_out.rc != 0
+    argv: >-
+      {{
+        [
+          'stow',
+          '--dir', dotfiles_packages_root,
+          '--target', ansible_facts.env.HOME,
+          '--restow',
+          '--no-folding',
+          '--verbose=1',
+          '--ignore', dotfiles_ignore_regex
+        ]
+        + (['--simulate'] if ansible_check_mode else [])
+        + [_stow_pkg_name]
+      }}
+  register: _stow_out
+  check_mode: false
+  when: not (ansible_check_mode and (_stow_package_has_conflicts | bool))
+  changed_when: >-
+    not ansible_check_mode
+    and (
+      (
+        (_stow_out.stdout_lines + _stow_out.stderr_lines)
+        | select('match', '^LINK:')
+        | reject('search', 'reverts previous action')
+        | list
+        | length
+      ) > 0
+      or
+      (
+        (
+          (_stow_out.stdout_lines + _stow_out.stderr_lines)
+          | select('match', '^UNLINK:')
+          | list
+          | length
+        )
+        >
+        (
+          (_stow_out.stdout_lines + _stow_out.stderr_lines)
+          | select('search', 'reverts previous action')
+          | list
+          | length
+        )
+      )
+    )

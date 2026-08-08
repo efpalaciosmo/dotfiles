@@ -1,0 +1,170 @@
+{
+    "editor.fontFamily": "'JetBrainsMono Nerd Font', 'monospace'",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 14,
+    "editor.lineHeight": 1.65,
+    "editor.letterSpacing": 0.3,
+    "editor.detectIndentation": false,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.wordWrap": "off",
+    "editor.rulers": [88],
+    "editor.scrollBeyondLastLine": false,
+    "editor.padding.top": 14,
+    "editor.padding.bottom": 14,
+    "editor.renderLineHighlight": "line",
+    "editor.cursorBlinking": "smooth",
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.smoothScrolling": true,
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs": "active",
+    "editor.minimap.enabled": false,
+    "editor.quickSuggestions": {
+        "other": "off",
+        "comments": "off",
+        "strings": "off"
+    },
+    "editor.suggestOnTriggerCharacters": false,
+    "editor.inlineSuggest.enabled": false,
+    "editor.acceptSuggestionOnEnter": "off",
+    "editor.tabCompletion": "off",
+
+    "workbench.colorTheme": "Adwaita Dark",
+    "workbench.sideBar.location": "left",
+    "workbench.statusBar.visible": false,
+    "workbench.startupEditor": "none",
+    "workbench.layoutControl.enabled": false,
+    "workbench.editor.showTabs": "multiple",
+    "window.menuBarVisibility": "toggle",
+    "breadcrumbs.enabled": false,
+    "explorer.compactFolders": false,
+    "explorer.confirmDelete": false,
+
+    "files.autoSave": "afterDelay",
+    "files.defaultLanguage": "latex",
+    "files.associations": {
+        "*.sty": "latex",
+        "*.cls": "latex"
+    },
+    "files.exclude": {
+        "**/*.4ct": true,
+        "**/*.4tc": true,
+        "**/*.fdb_latexmk": true,
+        "**/*.fls": true,
+        "**/*.idv": true,
+        "**/*.lg": true,
+        "**/*.lof": true,
+        "**/*.run.xml": true,
+        "**/*.synctex.gz": true,
+        "**/*.tmp": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/coverage": true
+    },
+
+    "git.autofetch": false,
+    "git.blame.editorDecoration.enabled": true,
+    "diffEditor.ignoreTrimWhitespace": false,
+
+    "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
+    "terminal.integrated.fontLigatures.enabled": true,
+    "terminal.integrated.fontSize": 15,
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "python.terminal.useEnvFile": true,
+
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "cSpell.enabled": false
+    },
+    "python.languageServer": "None",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.inlayHints.variableTypes": true,
+    "python.analysis.inlayHints.functionReturnTypes": true,
+    "python.analysis.typeCheckingMode": "off",
+    "basedpyright.analysis.configFilePath": "${workspaceFolder}",
+    "basedpyright.analysis.typeCheckingMode": "standard",
+
+    "[typescript]": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit",
+            "quickfix.biome": "explicit"
+        }
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+    },
+    "js/ts.tsdk.path": "node_modules/typescript/lib",
+    "js/ts.preferences.importModuleSpecifier": "project-relative",
+    "js/ts.preferences.quoteStyle": "double",
+    "js/ts.tsc.autoDetect": "off",
+    "js/ts.inlayHints.parameterNames.enabled": "literals",
+    "js/ts.inlayHints.variableTypes.enabled": true,
+    "js/ts.inlayHints.functionLikeReturnTypes.enabled": true,
+    "js/ts.preferences.preferTypeOnlyAutoImports": true,
+
+    "[sql]": {
+        "editor.formatOnSave": true
+    },
+
+    "latex-workshop.latex.autoBuild.cleanAndRetry.enabled": false,
+    "latex-workshop.latex.outDir": "%DIR%/out_dir",
+    "latex-workshop.latex.clean.subfolder.enabled": true,
+    "latex-workshop.view.pdf.viewer": "tab",
+    "latex-workshop.view.pdf.internal.synctex.keybinding": "double-click",
+    "latex-workshop.intellisense.update.aggressive.enabled": true,
+    "latex-workshop.hover.preview.enabled": false,
+
+    "notebook.formatOnSave.enabled": true,
+    "jupyter.askForKernelRestart": false,
+
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": true
+    },
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "chat.agent.enabled": true,
+    "chat.agent.maxRequests": 100,
+    "chat.viewSessions.orientation": "stacked",
+
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "security.workspace.trust.untrustedFiles": "open",
+    "workbench.editorAssociations": {
+        "*.copilotmd": "vscode.markdown.preview.editor",
+        "*.xlsx": "default"
+    },
+    "containers.containerClient": "com.microsoft.visualstudio.containers.podman",
+    "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.podmancompose"
+}

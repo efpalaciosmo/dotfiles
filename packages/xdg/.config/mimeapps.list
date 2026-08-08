@@ -1,0 +1,11 @@
+[Default Applications]
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+text/html=app.zen_browser.zen.desktop
+x-scheme-handler/http=app.zen_browser.zen.desktop
+x-scheme-handler/https=app.zen_browser.zen.desktop
+x-scheme-handler/about=app.zen_browser.zen.desktop
+x-scheme-handler/unknown=app.zen_browser.zen.desktop
+application/pdf=org.gnome.Papers.desktop
+
+[Added Associations]
+application/pdf=org.gnome.Papers.desktop;

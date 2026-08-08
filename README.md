@@ -1,90 +1,93 @@
-# Fedora Silverblue Dotfiles
+# Fedora Workstation 44 Dotfiles
 
-Single Fedora Silverblue flow for shell, Git, Starship, and Neovim:
+Ansible installs packages from the official Fedora repositories, configures
+user-local tools, and links configuration files with GNU Stow.
+
+## Prerequisite
+
+GNU Stow is intentionally not installed by this repository. Install it before
+running the setup:
+
+```sh
+sudo dnf5 install stow
+```
+
+## Setup
 
 ```sh
 make
 ```
 
-`make` installs or loads Homebrew, runs `brew bundle`, applies the Fedora
-Ansible workflow, and validates the repo. The Ansible profile is internal; no
-profile argument is needed.
+The default setup performs one DNF5 package transaction, installs fonts and
+`fnm`, applies all Stow packages, runs syntax checks, and validates required
+commands and symbolic links. Ansible asks for the sudo password by default;
+use `ASK_BECOME_PASS=0 make` when sudo is already configured appropriately.
 
-## Commands
-
-```sh
-make            # same as make setup
-make setup      # Homebrew + Brewfile + fonts + shell plugins + stown dotfiles + validation
-make brew       # install/load Homebrew and run brew bundle
-make fonts      # install user-local fonts
-make shell      # install oh-my-zsh and zsh plugins
-make dotfiles   # install stown if needed and link dotfiles
-make check      # syntax checks
-make doctor     # command and symlink diagnostics
-make verify     # syntax checks plus residue guard
-make node-user-tools # install Neovim Node tooling with pnpm
-```
-
-For a non-mutating check of the Ansible work:
+For a non-mutating preview:
 
 ```sh
 DRY_RUN=1 make
 ```
 
-In dry-run mode, the Homebrew step uses `brew bundle check` and Ansible runs
-with `--check`; it exits non-zero when Brewfile formulas are missing.
+## Commands
 
-## Homebrew
+```sh
+make setup       # full Fedora setup and validation
+make packages    # install packages from Fedora repositories
+make fonts       # install pinned user-local fonts
+make fnm         # install fnm and the configured Node.js LTS release
+make dotfiles    # apply packages with GNU Stow
+make stow        # alias for make dotfiles
+make check       # Ansible syntax checks and ansible-lint when available
+make doctor      # validate required commands and managed links
+make verify      # checks plus obsolete-tooling guard
+```
 
-`Brewfile` owns the CLI base:
+## Package Policy
 
-- Shell and dev tools: Bash, Bash completion, Zsh, Git, GitHub CLI, build
-  tools, curl/wget, archives, and JSON tools.
-- Daily CLI: tree, fd, ripgrep, fzf, bat, btop, duf, ncdu, tmux, zoxide,
-  fastfetch, lazygit, lazydocker, yazi, and related CLI helpers.
-- Neovim tooling: Neovim, tree-sitter, Lua, Stylua, ShellCheck, and shfmt.
-- Writing/media tooling: TeX Live, Poppler, ImageMagick Full, and FFmpeg Full.
-- Toolchains and managers: uv, fnm, Node, pnpm, juliaup, Rust via the official
-  rustup installer, Zig, LLVM, and Python for Ansible.
-- Prompt and dotfile helpers: Starship and GNU Stow. `stown` is installed by
-  Ansible with Python only when it is not already available.
+System packages come only from Fedora repositories. The main groups are:
 
-Neovim's Node-based LSP/formatter tools are installed globally with `pnpm`,
-not through Mason's npm backend.
+- GCC, Clang, CMake, Ninja, GDB, LLDB and Valgrind for C and C++.
+- Tree-sitter, Lua, ShellCheck and shfmt.
+- Niri, Waybar, Mako, Rofi, Foot and their Wayland integrations.
+- TeX Live, Poppler, ImageMagick and Fedora's free FFmpeg build.
+- Common shell, archive, Git and terminal utilities.
 
-`make brew` runs Homebrew Bundle with parallel jobs by default. Override with
-`BREW_BUNDLE_JOBS=1 make brew` if a formula needs sequential installation.
+The repository does not install a container engine or container tooling. It
+only manages `~/.config/containers/registries.conf` for installations managed
+separately by the user.
 
-Ansible does not ask for the sudo/become password by default. Use
-`ASK_BECOME_PASS=1 make setup` only if you add or run tasks that explicitly
-need elevated privileges.
+Tools without a suitable official Fedora package are reported as optional and
+remain manually managed. This includes Neovim 0.12+, Starship, Ghostty,
+lazygit, yazi, resvg, StyLua, pnpm, opencode, Juliaup and Harlequin. Fedora
+44's Neovim 0.11 package is intentionally not installed because the included
+configuration uses Neovim 0.12 APIs.
 
-Homebrew bootstrap has one owner: `scripts/ensure-homebrew.sh`. `make` calls it
-through `scripts/with-homebrew.sh` so commands see Homebrew's PATH. The
-standalone `bootstrap-dotfiles.sh` keeps a tiny copy of the same Homebrew
-bootstrap logic because it may run before this repo exists on a fresh machine.
+The only upstream downloads automated by Ansible are:
 
-## Dotfiles
+- IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font and Inter.
+- A pinned `fnm` release and the configured Node.js LTS release.
 
-Packages are linked from `packages/` with `stown`:
+The managed MIME associations expect Zen Browser and the Claude URL handler to
+be installed separately. Until then, those associations will not resolve.
 
-- `git`
-- `shell-container`
-- `starship`
-- `nvim-vm`
+## Stow Packages
 
-Shell files use Homebrew detection for:
+Configuration is linked from `packages/` with `stow --no-folding`:
 
-- `/home/linuxbrew/.linuxbrew/bin/brew`
-- `/opt/homebrew/bin/brew`
-- `/usr/local/bin/brew`
+- `git`, `shell-container`, `starship`, `nvim-vm`
+- `ghostty`, `niri`, `waybar`, `mako`, `rofi`, `foot`
+- `btop`, `containers`, `tmux`, `opencode`
+- `xdg` for `mimeapps.list`
+- `vscode` for portable Flatpak VS Code settings
 
-Font archives are kept under `~/.local/share/fonts/nerd-fonts`, and the font
-files are copied into `~/.local/share/fonts` for native font discovery on Linux.
+Existing conflicting files are moved to a timestamped directory under
+`~/.dotfiles-backup/` before Stow creates links. Generated application state,
+credentials, histories, caches, databases and package locks are not managed.
 
 ## Bootstrap
 
-`bootstrap-dotfiles.sh` is for a fresh machine:
+On a fresh Fedora Workstation 44 installation:
 
 ```sh
 DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \
@@ -92,5 +95,6 @@ DOTFILES_DIR="$HOME/Projects/dotfiles" \
 bash bootstrap-dotfiles.sh
 ```
 
-It installs or loads Homebrew, ensures `git`, `make`, and `python3`, clones or
-updates the repo, then runs `make`.
+The bootstrap installs only Git, Make and Python when missing, verifies that
+GNU Stow was installed manually, clones or updates the repository, and runs
+`make`.

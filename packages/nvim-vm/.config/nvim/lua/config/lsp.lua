@@ -121,30 +121,6 @@ vim.lsp.config("zls", {
     },
 })
 
-vim.lsp.config("rust_analyzer", {
-    cmd = { "rust-analyzer" },
-    filetypes = { "rust" },
-    root_markers = { "Cargo.toml", ".git", "rust-project.json" },
-    settings = {
-        ["rust-analyzer"] = {
-            cargo = { allFeatures = true },
-            check = {
-                command = "clippy",
-            },
-            inlayHints = {
-                bindingModeHints = { enable = true },
-                chainingHints = { enable = true },
-                closingBraceHints = { enable = true, minLines = 5 },
-                closureReturnTypeHints = { enable = "always" },
-                lifetimeElisionHints = { enable = "always", useParameterNames = true },
-                typeHints = { enable = true, hideNamedConstructor = false },
-            },
-            procMacro = { enable = true },
-            imports = { granularity = { group = "module" } },
-        },
-    },
-})
-
 vim.lsp.config("julials", {
     cmd = { "julia-lsp" },
     filetypes = { "julia" },
@@ -225,8 +201,6 @@ local servers = {
     "clangd",
     -- zig
     "zls",
-    -- rust
-    "rust_analyzer",
     -- julia
     "julials",
     -- shell

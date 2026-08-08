@@ -2,7 +2,7 @@
 set -euo pipefail
 
 script_dir=${BASH_SOURCE[0]%/*}
-# shellcheck source=common
+# shellcheck disable=SC1091
 . "$script_dir/common"
 
 missing_commands cliphist wl-copy || exit 1

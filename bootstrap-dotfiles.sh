@@ -13,98 +13,34 @@ set -Eeuo pipefail
 
 DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-}"
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/Projects/dotfiles}"
-HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 
 log() { printf '[bootstrap] %s\n' "$*"; }
 die() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
 
-require_linux() {
-  [[ "$(uname -s)" == "Linux" ]] || die "This dotfiles setup is Linux-only (Fedora Silverblue)."
-}
-
-find_brew() {
-  if command -v brew >/dev/null 2>&1; then
-    command -v brew
-    return 0
-  fi
-
-  for candidate in \
-    /home/linuxbrew/.linuxbrew/bin/brew \
-    /opt/homebrew/bin/brew \
-    /usr/local/bin/brew; do
-    if [[ -x "$candidate" ]]; then
-      printf '%s\n' "$candidate"
-      return 0
-    fi
-  done
-
-  return 1
-}
-
-load_homebrew() {
-  local brew_path
-  brew_path="$(find_brew)" || return 1
-  eval "$(HOMEBREW_NO_AUTO_UPDATE=1 "$brew_path" shellenv)"
-
-  local brew_prefix
-  brew_prefix="$(HOMEBREW_NO_AUTO_UPDATE=1 "$brew_path" --prefix)"
-  for extra_path in \
-    "$brew_prefix/opt/make/libexec/gnubin" \
-    "$brew_prefix/opt/gnu-tar/libexec/gnubin" \
-    "$brew_prefix/opt/llvm/bin" \
-    "$brew_prefix/opt/ffmpeg-full/bin" \
-    "$brew_prefix/opt/imagemagick-full/bin"; do
-    if [[ -d "$extra_path" ]]; then
-      export PATH="$extra_path:$PATH"
-    fi
-  done
-}
-
-install_homebrew() {
-  log "Installing Homebrew with the official installer"
-  if command -v curl >/dev/null 2>&1; then
-    /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALL_URL")"
-    return 0
-  fi
-
-  if command -v wget >/dev/null 2>&1; then
-    local tmp
-    tmp="$(mktemp)"
-    wget -qO "$tmp" "$HOMEBREW_INSTALL_URL"
-    /bin/bash "$tmp"
-    rm -f "$tmp"
-    return 0
-  fi
-
-  die "curl or wget is required to download the Homebrew installer"
-}
-
-ensure_homebrew() {
-  if load_homebrew; then
-    return 0
-  fi
-
-  install_homebrew
-  load_homebrew || die "Homebrew was installed but could not be loaded"
+require_fedora_44() {
+  [[ -r /etc/os-release ]] || die "/etc/os-release is missing"
+  # shellcheck disable=SC1091
+  source /etc/os-release
+  [[ "${ID:-}" == "fedora" && "${VERSION_ID:-}" == "44" && "${VARIANT_ID:-}" == "workstation" ]] \
+    || die "This setup requires Fedora Workstation 44."
 }
 
 ensure_bootstrap_tools() {
-  ensure_homebrew
+  local packages=()
+  command -v git >/dev/null 2>&1 || packages+=("git")
+  command -v make >/dev/null 2>&1 || packages+=("make")
+  command -v python3 >/dev/null 2>&1 || packages+=("python3" "python3-pip")
 
-  local formulas=()
-  command -v git >/dev/null 2>&1 || formulas+=("git")
-  command -v make >/dev/null 2>&1 || formulas+=("make")
-  command -v python3 >/dev/null 2>&1 || formulas+=("python")
-
-  if ((${#formulas[@]} > 0)); then
-    log "Installing bootstrap tools with Homebrew: ${formulas[*]}"
-    brew install "${formulas[@]}"
-    load_homebrew || true
+  if ((${#packages[@]} > 0)); then
+    log "Installing bootstrap packages with DNF5: ${packages[*]}"
+    sudo dnf5 install -y "${packages[@]}"
   fi
 
-  command -v git >/dev/null 2>&1 || die "git is not available after Homebrew bootstrap"
-  command -v make >/dev/null 2>&1 || die "make is not available after Homebrew bootstrap"
-  command -v python3 >/dev/null 2>&1 || die "python3 is not available after Homebrew bootstrap"
+  command -v git >/dev/null 2>&1 || die "git is unavailable after DNF5 bootstrap"
+  command -v make >/dev/null 2>&1 || die "make is unavailable after DNF5 bootstrap"
+  command -v python3 >/dev/null 2>&1 || die "python3 is unavailable after DNF5 bootstrap"
+  command -v stow >/dev/null 2>&1 \
+    || die "GNU Stow is required. Install it first with: sudo dnf5 install stow"
 }
 
 clone_or_update() {
@@ -137,7 +73,7 @@ run_make() {
 }
 
 main() {
-  require_linux
+  require_fedora_44
   ensure_bootstrap_tools
   clone_or_update
   run_make

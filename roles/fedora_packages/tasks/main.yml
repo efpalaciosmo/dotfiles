@@ -1,0 +1,7 @@
+---
+- name: Install packages from Fedora repositories with DNF5
+  become: true
+  ansible.builtin.dnf:
+    name: "{{ fedora_packages }}"
+    state: present
+    use_backend: dnf5
