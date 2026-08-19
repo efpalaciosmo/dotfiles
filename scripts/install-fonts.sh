@@ -16,7 +16,10 @@ require fc-cache
 mkdir -p "$cache_root" "$font_root"
 
 install_archive() {
-    local name=$1 url=$2 archive=$3 extract_dir="$work_dir/$name"
+    local name=$1
+    local url=$2
+    local archive=$3
+    local extract_dir="$work_dir/$name"
     mkdir -p "$extract_dir"
     if [[ ! -f "$cache_root/$archive" ]]; then
         printf 'fonts: downloading %s\n' "$name"

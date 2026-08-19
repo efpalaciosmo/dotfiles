@@ -21,11 +21,16 @@ for package in "$@"; do
     while IFS= read -r -d '' source; do
         relative=${source#"$repo_root/packages/$package/"}
         target=$HOME/$relative
-        if [[ -L "$target" && -e "$target" ]]; then :
+        if [[ -L "$target" && -e "$target" ]]; then
+            if [[ $(readlink -f -- "$target") != $(readlink -f -- "$source") ]]; then
+                printf 'WRONG  %s -> %s (expected %s)\n' \
+                    "$target" "$(readlink -- "$target")" "$source" >&2
+                failures=$((failures + 1))
+            fi
         elif [[ -L "$target" ]]; then printf 'BROKEN %s\n' "$target" >&2; failures=$((failures + 1))
         elif [[ -e "$target" ]]; then printf 'FILE   %s (expected symlink)\n' "$target" >&2; failures=$((failures + 1))
         else printf 'MISS   %s\n' "$target" >&2; failures=$((failures + 1)); fi
-    done < <(find "$repo_root/packages/$package" -type f ! -name README.md -print0)
+    done < <(find "$repo_root/packages/$package" -type f ! -iname 'README' ! -iname 'README.*' -print0)
 done
 
 if ((failures > 0)); then printf 'doctor: %d problem(s) found\n' "$failures" >&2; exit 1; fi

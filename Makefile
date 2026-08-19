@@ -11,14 +11,16 @@ SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-setup: fonts dotfiles check ## Install fonts, link dotfiles, and run static checks
+setup: ## Install fonts, link dotfiles, and run static checks
+	@$(MAKE) --no-print-directory fonts
+	@$(MAKE) --no-print-directory dotfiles
+	@$(MAKE) --no-print-directory check
 
 fonts: scripts/install-fonts.sh ## Install the configured user-local fonts
 	@./scripts/install-fonts.sh
 
 dotfiles: ## Link every dotfile package with the existing GNU Stow
-	@command -v stow >/dev/null 2>&1 || { echo >&2 "stow is required but is not installed"; exit 1; }
-	@stow --restow --no-folding --dir="$(CURDIR)/packages" --target="$(HOME)" --ignore='(^|/)(README\.md|README)$$' $(PACKAGES)
+	@./scripts/apply-dotfiles.sh $(PACKAGES)
 
 stow: dotfiles ## Alias for dotfiles
 
