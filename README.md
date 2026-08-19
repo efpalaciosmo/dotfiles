@@ -29,9 +29,10 @@ make doctor     # machine commands, app configs, and every managed symlink
 make verify     # static checks plus doctor
 ```
 
-GNU Stow deliberately stops on unmanaged conflicting files. Move or back up a
-conflicting file and run `make dotfiles` again; the repository never adopts or
-deletes existing files automatically.
+Before invoking GNU Stow, `make dotfiles` moves every unmanaged conflicting
+file or link to a sibling backup named `.bak` (or `.bak.N` when that name is
+already occupied). It never deletes existing data and reports every backup it
+creates. Files already linked to this repository are left untouched.
 
 ## Prerequisites
 

@@ -20,8 +20,7 @@ fonts: scripts/install-fonts.sh ## Install the configured user-local fonts
 	@./scripts/install-fonts.sh
 
 dotfiles: ## Link every dotfile package with the existing GNU Stow
-	@command -v stow >/dev/null 2>&1 || { echo >&2 "stow is required but is not installed"; exit 1; }
-	@stow --restow --no-folding --dir="$(CURDIR)/packages" --target="$(HOME)" --ignore='(^|/)(README\.md|README)$$' $(PACKAGES)
+	@./scripts/apply-dotfiles.sh $(PACKAGES)
 
 stow: dotfiles ## Alias for dotfiles
 
