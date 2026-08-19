@@ -14,31 +14,17 @@ run_terminal() {
     local command=$2
     local shell_command="${command}; status=\$?; ${pause}; exit \$status"
 
-    if command -v alacritty >/dev/null 2>&1; then
-        exec alacritty --title "$title" -e bash -lc "$shell_command"
-    elif command -v foot >/dev/null 2>&1; then
-        exec foot -T "$title" bash -lc "$shell_command"
-    elif command -v ghostty >/dev/null 2>&1; then
+    if command -v ghostty >/dev/null 2>&1; then
         exec ghostty --title="$title" -e bash -lc "$shell_command"
-    elif command -v kitty >/dev/null 2>&1; then
-        exec kitty --title "$title" bash -lc "$shell_command"
-    elif command -v wezterm >/dev/null 2>&1; then
-        exec wezterm start -- bash -lc "$shell_command"
-    elif command -v gnome-terminal >/dev/null 2>&1; then
-        exec gnome-terminal --title="$title" -- bash -lc "$shell_command"
     fi
 
-    notify_user "Waybar" "No supported terminal found"
+    notify_user "Waybar" "Ghostty is not installed"
     exit 1
 }
 
 case "${1:-shell}" in
     monitor|cpu|memory)
         run_terminal "System monitor" "btop"
-        ;;
-    gpu)
-        cmd='printf "GPU status\n\n"; ~/.config/waybar/scripts/gpu-status | jq -r ".tooltip" 2>/dev/null || ~/.config/waybar/scripts/gpu-status; printf "\n\nRaw sensors:\n"; for f in /sys/class/drm/card*/device/gpu_busy_percent /sys/class/drm/card*/device/hwmon/hwmon*/temp*_input /sys/class/drm/card*/device/mem_info_vram_*; do [[ -r "$f" ]] && printf "%s: %s\n" "$f" "$(<"$f")"; done'
-        run_terminal "GPU status" "$cmd"
         ;;
     disk)
         cmd='df -h /; printf "\n"; lsblk -o NAME,SIZE,FSTYPE,FSUSE%,FSAVAIL,MOUNTPOINTS 2>/dev/null || true'
@@ -48,16 +34,8 @@ case "${1:-shell}" in
         cmd='nmcli device status 2>/dev/null || true; printf "\nActive connections:\n"; nmcli connection show --active 2>/dev/null || true; printf "\nAddresses:\n"; ip -brief address 2>/dev/null || true'
         run_terminal "Network status" "$cmd"
         ;;
-    bluetooth)
-        if command -v bluetoothctl >/dev/null 2>&1; then
-            run_terminal "Bluetooth" "bluetoothctl"
-        else
-            notify_user "Waybar" "bluetoothctl is not installed"
-            exit 1
-        fi
-        ;;
     audio)
-        cmd='pactl info 2>/dev/null || true; printf "\nSinks:\n"; pactl list sinks short 2>/dev/null || true; printf "\nSources:\n"; pactl list sources short 2>/dev/null || true'
+        cmd='wpctl status'
         run_terminal "Audio status" "$cmd"
         ;;
     calendar)

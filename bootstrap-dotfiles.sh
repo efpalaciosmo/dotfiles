@@ -51,9 +51,7 @@ load_homebrew() {
   for extra_path in \
     "$brew_prefix/opt/make/libexec/gnubin" \
     "$brew_prefix/opt/gnu-tar/libexec/gnubin" \
-    "$brew_prefix/opt/llvm/bin" \
-    "$brew_prefix/opt/ffmpeg-full/bin" \
-    "$brew_prefix/opt/imagemagick-full/bin"; do
+    "$brew_prefix/opt/llvm/bin"; do
     if [[ -d "$extra_path" ]]; then
       export PATH="$extra_path:$PATH"
     fi

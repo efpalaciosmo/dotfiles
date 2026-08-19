@@ -3,11 +3,10 @@
 binds {
     Mod+Shift+Slash repeat=false { show-hotkey-overlay; }
 
-    Mod+Return repeat=false hotkey-overlay-title="Abrir terminal" { spawn-sh "ghostty || kitty"; }
+    Mod+Return repeat=false hotkey-overlay-title="Abrir terminal" { spawn "ghostty"; }
     Mod+D repeat=false hotkey-overlay-title="Lanzador de apps" {
       spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/launcher"
     }
-    Mod+T repeat=false hotkey-overlay-title="Abrir terminal" { spawn-sh "alacritty || wezterm"; }
     Mod+Shift+P repeat=false hotkey-overlay-title="Menu de energia" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/power-menu"; }
     Mod+Shift+S repeat=false hotkey-overlay-title="Captura de pantalla" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/screenshot"; }
     Mod+Shift+Y repeat=false hotkey-overlay-title="Historial del portapapeles" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/clipboard"; }
