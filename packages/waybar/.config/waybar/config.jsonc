@@ -97,16 +97,7 @@
         "exec": "~/.config/waybar/scripts/network-speed",
         "return-type": "json",
         "interval": 1,
-        "on-click": "nm-connection-editor",
         "on-click-right": "sh -c 'exec \"$HOME/.config/waybar/scripts/terminal-tool\" network'"
-    },
-
-    "custom/bluetooth": {
-        "exec": "~/.config/waybar/scripts/bluetooth-status",
-        "return-type": "json",
-        "interval": 10,
-        "on-click": "sh -c 'bluetoothctl power on || notify-send Bluetooth \"Could not power on Bluetooth\"'",
-        "on-click-right": "sh -c 'exec \"$HOME/.config/waybar/scripts/terminal-tool\" bluetooth'"
     },
 
     "pulseaudio": {
@@ -121,10 +112,10 @@
                 ""
             ]
         },
-        "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +5%",
-        "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -5%",
-        "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
-        "on-click-right": "sh -c 'if command -v pavucontrol >/dev/null 2>&1; then exec pavucontrol; else exec \"$HOME/.config/waybar/scripts/terminal-tool\" audio; fi'"
+        "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ -l 1.0",
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-",
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "on-click-right": "sh -c 'exec \"$HOME/.config/waybar/scripts/terminal-tool\" audio'"
     },
 
     "custom/cpu": {
@@ -143,18 +134,10 @@
         "tooltip-format": "{used:0.1f}GB / {total:0.1f}GB"
     },
 
-    "custom/gpu": {
-        "exec": "~/.config/waybar/scripts/gpu-status",
-        "exec-if": "~/.config/waybar/scripts/gpu-status --available",
-        "return-type": "json",
-        "interval": 5,
-        "on-click": "sh -c 'exec \"$HOME/.config/waybar/scripts/terminal-tool\" gpu'"
-    },
-
     "disk": {
         "interval": 30,
         "format": "  {percentage_used}%",
-        "path": "/var/home",
+        "path": "/",
         "states": {
             "critical": 80
         },

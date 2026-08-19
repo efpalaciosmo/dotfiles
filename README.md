@@ -1,96 +1,65 @@
-# Fedora Silverblue Dotfiles
+# Fedora Silverblue laptop dotfiles
 
-Single Fedora Silverblue flow for shell, Git, Starship, and Neovim:
+This repository does exactly three things:
+
+1. Downloads and installs the configured fonts under the user data directory.
+2. Uses the GNU Stow already installed by Fedora.
+3. Links and validates the dotfiles for Niri, Waybar, Rofi, Ghostty, Mako,
+   Neovim, Git, Starship, and the shell.
+
+It does not install system packages, graphical applications, language runtimes,
+shell plugins, or developer tools. Install all required software from Fedora
+before running the setup.
+
+## Usage
 
 ```sh
 make
 ```
 
-`make` installs or loads Homebrew, runs `brew bundle`, applies the Fedora
-Ansible workflow, and validates the repo. The Ansible profile is internal; no
-profile argument is needed.
-
-## Commands
+`make` is equivalent to `make setup`: it installs fonts, applies the dotfiles,
+and runs non-mutating checks.
 
 ```sh
-make            # same as make setup
-make setup      # Homebrew + Brewfile + fonts + shell plugins + stown dotfiles + validation
-make brew       # install/load Homebrew and run brew bundle
-make fonts      # install user-local fonts
-make shell      # install oh-my-zsh and zsh plugins
-make dotfiles   # install stown if needed and link dotfiles
-make check      # syntax checks
-make doctor     # command and symlink diagnostics
-make verify     # syntax checks plus residue guard
-make node-user-tools # install Neovim Node tooling with pnpm
+make fonts      # install/update user-local fonts
+make dotfiles   # link all packages with the existing stow command
+make stow       # alias for make dotfiles
+make check      # static Bash/JSON/residue checks
+make doctor     # machine commands, app configs, and every managed symlink
+make verify     # static checks plus doctor
 ```
 
-For a non-mutating check of the Ansible work:
+GNU Stow deliberately stops on unmanaged conflicting files. Move or back up a
+conflicting file and run `make dotfiles` again; the repository never adopts or
+deletes existing files automatically.
+
+## Prerequisites
+
+The setup itself needs `git`, `make`, `stow`, `curl`, `tar`, `unzip`, `find`,
+`install`, `python3`, and `fc-cache`. The graphical session and its helpers are installed
+separately from Fedora. `make doctor` checks the complete runtime, including
+Niri, Waybar, Rofi, Ghostty, Mako, audio, networking, clipboard, brightness,
+locking, and D-Bus helpers.
+
+Static checks cannot prove hardware or graphical integration. After applying
+the dotfiles, log into Niri on the laptop and run:
 
 ```sh
-DRY_RUN=1 make
+make doctor
 ```
 
-In dry-run mode, the Homebrew step uses `brew bundle check` and Ansible runs
-with `--check`; it exits non-zero when Brewfile formulas are missing.
+## Fonts
 
-## Homebrew
-
-`Brewfile` owns the CLI base:
-
-- Shell and dev tools: Bash, Bash completion, Zsh, Git, GitHub CLI, build
-  tools, curl/wget, archives, and JSON tools.
-- Daily CLI: tree, fd, ripgrep, fzf, bat, btop, duf, ncdu, tmux, zoxide,
-  fastfetch, lazygit, lazydocker, yazi, and related CLI helpers.
-- Neovim tooling: Neovim, tree-sitter, Lua, Stylua, ShellCheck, and shfmt.
-- Writing/media tooling: TeX Live, Poppler, ImageMagick Full, and FFmpeg Full.
-- Toolchains and managers: uv, fnm, Node, pnpm, juliaup, Rust via the official
-  rustup installer, Zig, LLVM, and Python for Ansible.
-- Prompt and dotfile helpers: Starship and GNU Stow. `stown` is installed by
-  Ansible with Python only when it is not already available.
-
-Neovim's Node-based LSP/formatter tools are installed globally with `pnpm`,
-not through Mason's npm backend.
-
-`make brew` runs Homebrew Bundle with parallel jobs by default. Override with
-`BREW_BUNDLE_JOBS=1 make brew` if a formula needs sequential installation.
-
-Ansible does not ask for the sudo/become password by default. Use
-`ASK_BECOME_PASS=1 make setup` only if you add or run tasks that explicitly
-need elevated privileges.
-
-Homebrew bootstrap has one owner: `scripts/ensure-homebrew.sh`. `make` calls it
-through `scripts/with-homebrew.sh` so commands see Homebrew's PATH. The
-standalone `bootstrap-dotfiles.sh` keeps a tiny copy of the same Homebrew
-bootstrap logic because it may run before this repo exists on a fresh machine.
-
-## Dotfiles
-
-Packages are linked from `packages/` with `stown`:
-
-- `git`
-- `shell-container`
-- `starship`
-- `nvim-vm`
-
-Shell files use Homebrew detection for:
-
-- `/home/linuxbrew/.linuxbrew/bin/brew`
-- `/opt/homebrew/bin/brew`
-- `/usr/local/bin/brew`
-
-Font archives are kept under `~/.local/share/fonts/nerd-fonts`, and the font
-files are copied into `~/.local/share/fonts` for native font discovery on Linux.
+`make fonts` installs IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font, and
+Inter into `${XDG_DATA_HOME:-$HOME/.local/share}/fonts`. Archives are cached in
+`${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/fonts` and `fc-cache` is refreshed.
 
 ## Bootstrap
 
-`bootstrap-dotfiles.sh` is for a fresh machine:
+The bootstrap script installs no dependencies. On a prepared Fedora system:
 
 ```sh
 DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \
 DOTFILES_DIR="$HOME/Projects/dotfiles" \
 bash bootstrap-dotfiles.sh
 ```
-
-It installs or loads Homebrew, ensures `git`, `make`, and `python3`, clones or
-updates the repo, then runs `make`.

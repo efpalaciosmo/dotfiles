@@ -60,11 +60,9 @@ tooltip label {
 #privacy,
 #idle_inhibitor,
 #custom-network-speed,
-#custom-bluetooth,
 #pulseaudio,
 #custom-cpu,
 #memory,
-#custom-gpu,
 #disk,
 #custom-battery,
 #clock,
@@ -157,11 +155,9 @@ tooltip label {
 #privacy,
 #idle_inhibitor,
 #custom-network-speed,
-#custom-bluetooth,
 #pulseaudio,
 #custom-cpu,
 #memory,
-#custom-gpu,
 #disk,
 #custom-battery,
 #clock,
@@ -173,11 +169,9 @@ tooltip label {
 #privacy,
 #idle_inhibitor,
 #custom-network-speed,
-#custom-bluetooth,
 #pulseaudio,
 #custom-cpu,
 #memory,
-#custom-gpu,
 #disk,
 #custom-battery,
 #clock,
@@ -195,11 +189,9 @@ tooltip label {
 
 #idle_inhibitor,
 #custom-network-speed,
-#custom-bluetooth,
 #pulseaudio,
 #custom-cpu,
 #memory,
-#custom-gpu,
 #disk,
 #custom-battery {
     color: @adw_muted;
@@ -208,11 +200,9 @@ tooltip label {
 #tray:hover,
 #idle_inhibitor:hover,
 #custom-network-speed:hover,
-#custom-bluetooth:hover,
 #pulseaudio:hover,
 #custom-cpu:hover,
 #memory:hover,
-#custom-gpu:hover,
 #disk:hover,
 #custom-battery:hover,
 #clock:hover {
@@ -232,29 +222,14 @@ tooltip label {
     color: @adw_blue_l;
 }
 
-#custom-bluetooth.connected,
-#custom-gpu,
 #custom-battery.charging,
 #custom-battery.full,
 #custom-battery.discharging {
     color: @adw_teal;
 }
 
-#custom-bluetooth.off,
-#custom-bluetooth.unavailable,
-#custom-gpu.unavailable,
 #pulseaudio.muted {
     color: @adw_dim;
-}
-
-#custom-bluetooth {
-    color: @adw_blue_l;
-}
-
-#custom-bluetooth.unavailable {
-    margin:  0;
-    padding: 0;
-    border:  none;
 }
 
 #pulseaudio {
@@ -286,7 +261,6 @@ tooltip label {
 }
 
 #custom-cpu.warning,
-#custom-gpu.warning,
 #custom-battery.warning {
     color:        @adw_bg;
     background:   @adw_yellow;
@@ -296,7 +270,6 @@ tooltip label {
 
 #custom-battery.critical,
 #custom-cpu.critical,
-#custom-gpu.critical,
 #memory.critical,
 #disk.critical {
     color:        @adw_strong;

@@ -1,72 +1,13 @@
-// ======================================================
-// Autostart base para niri en Fedora Silverblue / Wayland
-// ======================================================
-
-// Barra inferior
+// Minimal laptop session startup. Package installation is outside this repo;
+// niri only starts long-running session processes.
 spawn-at-startup "waybar"
-
-// Fondo de pantalla
+spawn-at-startup "mako"
 spawn-sh-at-startup "swaybg -i \"${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/bluesky.png\" -m fill"
 
-// ------------------------------------------------------
-// Variables de entorno necesarias para Wayland / DBus
-// ------------------------------------------------------
-
-// Importar variables importantes al entorno de systemd --user
+// Make the compositor environment available to D-Bus and systemd user units.
 spawn-sh-at-startup "systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_DATA_DIRS PATH"
-
-// Actualizar entorno de DBus para apps gráficas, portales, flatpak, polkit, etc.
 spawn-sh-at-startup "dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_DATA_DIRS PATH"
 
-// ------------------------------------------------------
-// Portales XDG para apps Wayland / Flatpak / screen share
-// ------------------------------------------------------
-
-// Reiniciar portales de usuario para evitar sesiones rotas
-spawn-sh-at-startup "systemctl --user restart xdg-desktop-portal.service xdg-desktop-portal-gnome.service xdg-desktop-portal-gtk.service 2>/dev/null || true"
-
-// ------------------------------------------------------
-// Polkit agent: necesario para virt-manager, libvirt, discos, etc.
-// ------------------------------------------------------
-
-// Opción principal: polkit-gnome
-spawn-sh-at-startup "if [ -x /usr/libexec/polkit-gnome-authentication-agent-1 ]; then /usr/libexec/polkit-gnome-authentication-agent-1; elif command -v lxqt-policykit-agent >/dev/null 2>&1; then lxqt-policykit-agent; elif command -v polkit-gnome-authentication-agent-1 >/dev/null 2>&1; then polkit-gnome-authentication-agent-1; fi"
-
-// ------------------------------------------------------
-// Notificaciones
-// ------------------------------------------------------
-
-spawn-at-startup "mako"
-
-// ------------------------------------------------------
-// Clipboard history
-// ------------------------------------------------------
-
-spawn-sh-at-startup "command -v wl-paste >/dev/null 2>&1 && command -v cliphist >/dev/null 2>&1 && wl-paste --type text --watch cliphist store"
-spawn-sh-at-startup "command -v wl-paste >/dev/null 2>&1 && command -v cliphist >/dev/null 2>&1 && wl-paste --type image --watch cliphist store"
-
-// ------------------------------------------------------
-// Preferencias GTK / GNOME
-// ------------------------------------------------------
-
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark || true"
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface color-scheme prefer-dark || true"
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface icon-theme Adwaita || true"
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface cursor-theme Adwaita || true"
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface cursor-size 24 || true"
-
-// Fuente general de apps GTK
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 11' || true"
-
-// Tema de ventanas GTK heredadas
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.wm.preferences theme Adwaita || true"
-
-// File chooser
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gtk.Settings.FileChooser startup-mode cwd || true"
-
-// Sonido
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.sound theme-name __custom || true"
-
-// Escalado
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface scaling-factor 1 || true"
-spawn-sh-at-startup "command -v gsettings >/dev/null 2>&1 && gsettings set org.gnome.desktop.interface text-scaling-factor 1.0 || true"
+// One text watcher and one image watcher provide clipboard history.
+spawn-sh-at-startup "wl-paste --type text --watch cliphist store"
+spawn-sh-at-startup "wl-paste --type image --watch cliphist store"
