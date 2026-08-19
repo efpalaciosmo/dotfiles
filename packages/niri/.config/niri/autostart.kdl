@@ -1,4 +1,4 @@
-// Minimal laptop session startup. Package installation belongs to Homebrew;
+// Minimal laptop session startup. Package installation is outside this repo;
 // niri only starts long-running session processes.
 spawn-at-startup "waybar"
 spawn-at-startup "mako"

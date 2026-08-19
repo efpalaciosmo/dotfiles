@@ -1,95 +1,35 @@
-SHELL := /bin/sh
+SHELL := /bin/bash
 .DEFAULT_GOAL := setup
 
-VENV := $(CURDIR)/.venv
-PIP := $(VENV)/bin/pip
-ANSIBLE_PLAYBOOK := $(VENV)/bin/ansible-playbook
-INV := $(CURDIR)/inventory.ini
-CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
-BREW_BUNDLE_JOBS ?= auto
-ASK_BECOME_PASS ?= 0
-BECOME := $(if $(filter 1,$(DRY_RUN)),,$(if $(filter 1,$(ASK_BECOME_PASS)),--ask-become-pass,))
+PACKAGES := git shell-container starship nvim-vm ghostty niri waybar mako rofi
+SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
+	$(wildcard packages/rofi/.config/rofi/scripts/*) \
+	$(wildcard packages/waybar/.config/waybar/scripts/*)
 
-.PHONY: help setup brew venv doctor check verify fonts shell dotfiles stow node-user-tools
+.PHONY: help setup fonts dotfiles stow check doctor verify
 
 help: ## List available targets
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
-		| awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
+	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-setup: brew venv ## Bootstrap Homebrew, apply dotfiles, and validate
-	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml $(CHECK)
-	@$(MAKE) verify
+setup: fonts dotfiles check ## Install fonts, link dotfiles, and run static checks
 
-brew: Brewfile scripts/ensure-homebrew.sh scripts/with-homebrew.sh ## Install Homebrew if needed and run brew bundle
-	@if [ "$(DRY_RUN)" = "1" ]; then \
-		"$(CURDIR)/scripts/with-homebrew.sh" --no-install env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file="$(CURDIR)/Brewfile"; \
-	else \
-		"$(CURDIR)/scripts/with-homebrew.sh" brew bundle install --jobs="$(BREW_BUNDLE_JOBS)" --file="$(CURDIR)/Brewfile"; \
-	fi
+fonts: scripts/install-fonts.sh ## Install the configured user-local fonts
+	@./scripts/install-fonts.sh
 
-venv: requirements-ansible.txt ## Create the local Ansible virtualenv
-	@brew_env=$$("$(CURDIR)/scripts/ensure-homebrew.sh" --no-install --shellenv 2>/dev/null || true); \
-		eval "$$brew_env"; \
-		command -v python3 >/dev/null 2>&1 \
-			|| { echo >&2 "[venv] python3 not found. Run 'make brew' first or install Python with Homebrew."; exit 1; }; \
-		if [ ! -x "$(ANSIBLE_PLAYBOOK)" ] \
-			|| ! "$(ANSIBLE_PLAYBOOK)" --version >/dev/null 2>&1; then \
-			echo "[venv] (re)creating $(VENV)"; \
-			rm -rf "$(VENV)"; \
-			python3 -m venv "$(VENV)" \
-				|| { echo >&2 "[venv] python3 venv support is missing or broken."; exit 1; }; \
-			"$(PIP)" install --upgrade pip >/dev/null; \
-			"$(PIP)" install -r requirements-ansible.txt; \
-		fi
-	@mkdir -p "$(CURDIR)/.ansible/tmp"
-	@test -f "$(INV)" || cp inventory.ini.example "$(INV)"
+dotfiles: ## Link every dotfile package with the existing GNU Stow
+	@command -v stow >/dev/null 2>&1 || { echo >&2 "stow is required but is not installed"; exit 1; }
+	@stow --restow --no-folding --dir="$(CURDIR)/packages" --target="$(HOME)" --ignore='(^|/)(README\.md|README)$$' $(PACKAGES)
 
-doctor: venv ## Show Homebrew, command, and dotfile diagnostics
-	@brew_env=$$("$(CURDIR)/scripts/ensure-homebrew.sh" --no-install --shellenv 2>/dev/null || true); \
-		eval "$$brew_env"; \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook-doctor.yml
+stow: dotfiles ## Alias for dotfiles
 
-check: venv ## Ansible syntax-check (+ ansible-lint if installed)
-	@brew_env=$$("$(CURDIR)/scripts/ensure-homebrew.sh" --no-install --shellenv 2>/dev/null || true); \
-		eval "$$brew_env"; \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --syntax-check; \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook-doctor.yml --syntax-check; \
-		command -v ansible-lint >/dev/null 2>&1 && ansible-lint -q . || true
-	@{ git ls-files '*.sh'; \
-		git ls-files 'packages/*/.config/*/scripts/*'; \
-		printf '%s\n' packages/shell-container/.bashrc packages/shell-container/.profile; \
-	} | sort -u | while IFS= read -r file; do \
-		test ! -e "$$file" || bash -n "$$file" || exit; \
-	done
+check: ## Run non-mutating repository syntax checks
+	@for file in $(SCRIPT_FILES) packages/shell-container/.bashrc packages/shell-container/.profile; do bash -n "$$file"; done
+	@if command -v zsh >/dev/null 2>&1; then zsh -n packages/shell-container/.zshrc; fi
 	@python3 -m json.tool packages/waybar/.config/waybar/config.jsonc >/dev/null
-	@if command -v shellcheck >/dev/null 2>&1; then \
-		shellcheck bootstrap-dotfiles.sh scripts/*.sh packages/rofi/.config/rofi/scripts/* packages/waybar/.config/waybar/scripts/*; \
-	fi
+	@if command -v shellcheck >/dev/null 2>&1; then shellcheck $(SCRIPT_FILES); fi
+	@echo "check: OK"
 
-verify: check ## Check syntax and guard against distro package-manager residue
-	@old='flat''pak|r''pm-ostree|d''nf|zyp''per|open''su''se|su''se|a''pt|pac''man|dp''kg'; \
-		files='Makefile Brewfile playbook.yml playbook-doctor.yml bootstrap-dotfiles.sh scripts tasks roles group_vars packages README.md'; \
-		! rg -n -i "(^|[^[:alnum:]_-])($$old)([^[:alnum:]_-]|$$)" $$files \
-		|| (echo >&2 "verify: distro package-manager residue found"; exit 1)
-	@echo "verify: OK"
+doctor: ## Validate required commands, configs, and managed links on this machine
+	@./scripts/doctor.sh $(PACKAGES)
 
-fonts: brew venv ## Install user-local fonts
-	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags fonts $(CHECK)
-
-shell: brew venv ## Install oh-my-zsh and shell plugins
-	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags shell $(CHECK)
-
-dotfiles: brew venv ## Apply dotfiles with GNU Stow
-	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags dotfiles $(CHECK)
-
-stow: brew venv ## Apply Stow-managed dotfiles and shell configuration
-	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags dotfiles,shell $(CHECK)
-
-node-user-tools: brew venv ## Install pnpm global Node tools
-	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags node-user-tools $(CHECK)
+verify: check doctor ## Run static and machine-specific validation

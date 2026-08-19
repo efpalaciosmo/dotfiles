@@ -49,7 +49,6 @@ require("mason").setup({
         },
     },
     -- Keep Python package installs isolated under stdpath('data')/mason.
-    -- Node tooling is installed by Ansible with pnpm instead of Mason's npm backend.
     pip = { upgrade_pip = false },
     max_concurrent_installers = 6,
 })

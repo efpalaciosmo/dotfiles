@@ -5,14 +5,6 @@ if [ -f "$HOME/.profile" ]; then
   . "$HOME/.profile"
 fi
 
-if command -v brew >/dev/null 2>&1; then
-  _brew_prefix="$(brew --prefix 2>/dev/null || true)"
-  if [ -d "$_brew_prefix/share/zsh/site-functions" ]; then
-    fpath=("$_brew_prefix/share/zsh/site-functions" $fpath)
-  fi
-  unset _brew_prefix
-fi
-
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000
 export SAVEHIST=10000
@@ -55,7 +47,6 @@ if command -v uv >/dev/null 2>&1; then
   eval "$(uv generate-shell-completion zsh)"
 fi
 
-
 if command -v pnpm >/dev/null 2>&1; then
   alias npm="pnpm"
   alias npx="pnpm dlx"
@@ -63,11 +54,6 @@ fi
 
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
-fi
-
-# Clean brew
-if command -v brew >/dev/null 2>&1; then
-  alias brewup="brew update && brew upgrade && brew cleanup"
 fi
 
 if command -v zoxide >/dev/null 2>&1; then
@@ -86,4 +72,3 @@ claude() {
     CLAUDE_CODE_EFFORT_LEVEL="max" \
     command claude "$@"
 }
-export PATH="$HOME/.local/bin:$PATH"

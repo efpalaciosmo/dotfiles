@@ -12,13 +12,12 @@ Este paquete contiene la configuración de Ghostty con el mismo esquema de color
 
 ## Requisitos
 
-- **Ghostty**: instalado manualmente desde Fedora; el `Brewfile` no lo administra.
+- **Ghostty**: instalado manualmente desde Fedora.
 - **JetBrains Mono**: Debe estar instalado en tu sistema
 
   ```bash
   # Las fonts se instalan automaticamente con make fonts
-  # O manualmente con Homebrew:
-  brew install font-jetbrains-mono
+  make fonts
   ```
 
 ## Instalación

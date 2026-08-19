@@ -15,9 +15,6 @@ __pycache__/
 # Markers and caches written by helpers
 .dotfiles-installed-*
 node_modules/
-.venv/
-.ansible/
-inventory.ini
 
 # Backups should never be committed
 .dotfiles-backup/
