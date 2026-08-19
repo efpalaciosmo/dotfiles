@@ -8,7 +8,7 @@ DOTFILES_DIR=${DOTFILES_DIR:-$HOME/Projects/dotfiles}
 log() { printf '[bootstrap] %s\n' "$*"; }
 die() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
 
-for command in git make stow curl tar unzip fc-cache; do
+for command in git make stow curl tar unzip find install mktemp python3 fc-cache; do
     command -v "$command" >/dev/null 2>&1 || die "$command is required; install it from Fedora first"
 done
 
