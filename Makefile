@@ -11,7 +11,10 @@ SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-setup: fonts dotfiles check ## Install fonts, link dotfiles, and run static checks
+setup: ## Install fonts, link dotfiles, and run static checks
+	@$(MAKE) --no-print-directory fonts
+	@$(MAKE) --no-print-directory dotfiles
+	@$(MAKE) --no-print-directory check
 
 fonts: scripts/install-fonts.sh ## Install the configured user-local fonts
 	@./scripts/install-fonts.sh

@@ -17,8 +17,8 @@ before running the setup.
 make
 ```
 
-`make` is equivalent to `make setup`: it installs fonts, applies the dotfiles,
-and runs non-mutating checks.
+`make` is equivalent to `make setup` and invokes, in order, only `make fonts`,
+`make dotfiles`, and `make check`.
 
 ```sh
 make fonts      # install/update user-local fonts
@@ -36,10 +36,11 @@ deletes existing files automatically.
 ## Prerequisites
 
 The setup itself needs `git`, `make`, `stow`, `curl`, `tar`, `unzip`, `find`,
-`install`, `python3`, and `fc-cache`. The graphical session and its helpers are installed
-separately from Fedora. `make doctor` checks the complete runtime, including
-Niri, Waybar, Rofi, Ghostty, Mako, audio, networking, clipboard, brightness,
-locking, and D-Bus helpers.
+`install`, `mktemp`, `python3`, and `fc-cache`. Install Niri, Waybar, Rofi,
+Ghostty, Mako, Neovim, Starship and every graphical-session helper beforehand
+from Fedora; this repository only configures and validates them. `make doctor`
+checks the complete runtime, including audio, networking, clipboard,
+brightness, locking, and D-Bus helpers.
 
 Static checks cannot prove hardware or graphical integration. After applying
 the dotfiles, log into Niri on the laptop and run:
