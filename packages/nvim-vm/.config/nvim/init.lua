@@ -26,7 +26,10 @@ do
     vim.env.PATH = dir .. (path ~= "" and ":" .. path or "")
   end
 
-  local tool_paths = { vim.fn.expand("~/.local/bin") }
+  local tool_paths = {
+    vim.fn.expand("~/.local/bin"),
+    vim.env.CARGO_HOME and (vim.env.CARGO_HOME .. "/bin") or vim.fn.expand("~/.cargo/bin"),
+  }
 
   for i = #tool_paths, 1, -1 do
     prepend_path(tool_paths[i])
@@ -41,19 +44,27 @@ end
 -- ============================================================================
 do
   local candidates = {
-    vim.fn.stdpath("config") .. "/parser",
-    vim.fn.expand("~/.local/lib/tree-sitter"),
-    "/usr/lib64/tree-sitter",
-    "/usr/lib/tree-sitter",
+    { dir = vim.fn.stdpath("config") .. "/parser" },
+    { dir = vim.fn.expand("~/.local/lib/tree-sitter") },
+    { dir = "/usr/lib64/tree-sitter" },
+    { dir = "/usr/lib/tree-sitter" },
+    { dir = "/usr/lib64", system = true },
+    { dir = "/usr/lib", system = true },
   }
-  for _, dir in ipairs(candidates) do
+  for _, candidate in ipairs(candidates) do
+    local dir = candidate.dir
     if vim.fn.isdirectory(dir) == 1 then
       local handle = vim.uv.fs_scandir(dir)
       while handle do
         local name, t = vim.uv.fs_scandir_next(handle)
         if not name then break end
         if t == "file" then
-          local lang = name:match("^(.+)%.so$")
+          local lang
+          if candidate.system then
+            lang = name:match("^libtree%-sitter%-(.+)%.so[%d%.]*$")
+          else
+            lang = name:match("^(.+)%.so$")
+          end
           if lang then
             lang = lang:gsub("^libtree%-sitter%-", "")
             local stripped = lang:gsub("^tree%-sitter%-", "")

@@ -21,7 +21,7 @@
   args:
     executable: /bin/bash
   environment:
-    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+    PATH: "{{ cargo_home }}/bin:{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
     DOTFILES_REQUIRED_COMMANDS: "{{ expected_commands | join(' ') }}"
   register: doctor_required_commands
   changed_when: false
@@ -43,7 +43,7 @@
   args:
     executable: /bin/bash
   environment:
-    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+    PATH: "{{ cargo_home }}/bin:{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
     DOTFILES_OPTIONAL_COMMANDS: "{{ optional_commands | join(' ') }}"
   register: doctor_optional_commands
   changed_when: false

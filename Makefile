@@ -8,7 +8,7 @@ VENV_STAMP := $(VENV)/.requirements-installed
 INV := $(CURDIR)/inventory.ini
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
 
-.PHONY: help setup venv packages fonts fnm dotfiles stow doctor check verify
+.PHONY: help setup venv packages fonts fnm rustup dotfiles stow doctor check verify
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -46,6 +46,9 @@ fonts: venv ## Install user-local fonts
 fnm: venv ## Install fnm and the configured Node.js LTS release
 	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags fnm $(CHECK)
 
+rustup: venv ## Install the stable Rust toolchain and development components
+	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags rustup $(CHECK)
+
 dotfiles: venv ## Apply dotfiles with the preinstalled GNU Stow
 	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags dotfiles $(CHECK)
 
@@ -61,7 +64,7 @@ check: venv ## Ansible syntax-check (+ ansible-lint if installed)
 		if command -v ansible-lint >/dev/null 2>&1; then ansible-lint -q .; fi
 
 verify: check ## Check syntax and guard against obsolete tooling
-	@old='br''ew|st''own|ru''st|ca''rgo'; \
+	@old='br''ew|st''own'; \
 		files='Makefile playbook.yml playbook-doctor.yml bootstrap-dotfiles.sh tasks roles group_vars packages README.md'; \
 		! grep -R -n -I -i -E "(^|[^[:alnum:]_-])($$old)([^[:alnum:]_-]|$$)" $$files \
 		|| (echo >&2 "verify: obsolete tooling reference found"; exit 1)

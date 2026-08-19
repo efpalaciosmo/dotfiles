@@ -9,6 +9,7 @@ stow_packages:
   - btop
   - containers
   - tmux
+  - ghostty
   - opencode
   - xdg
   - vscode
@@ -66,6 +67,7 @@ fedora_packages:
   - ShellCheck
   - shfmt
   - tree-sitter-cli
+  - libtree-sitter-rust
   - lua
 #  - texlive-scheme-full
   - uv
@@ -123,6 +125,12 @@ expected_commands:
   - lua
   - uv
   - fnm
+  - rustup
+  - rustc
+  - cargo
+  - rustfmt
+  - cargo-clippy
+  - rust-analyzer
 #  - zig
 #  - pdftotext
 #  - magick
@@ -153,6 +161,22 @@ fnm_archives:
 fnm_checksums:
   x86_64: sha256:b69e5c9a05c1e17e4a7de9a17df14ba430d049f2591af791a6f850a170296069
   aarch64: sha256:69feda9455931c26c84be9f95f5e6f69e8b64686e68069fab7cfc34756cd2944
+
+rustup_version: 1.29.0
+rustup_default_toolchain: stable
+rustup_components:
+  - rustfmt
+  - clippy
+  - rust-analyzer
+cargo_home: "{{ ansible_facts.env.CARGO_HOME | default(ansible_facts.env.HOME + '/.cargo') }}"
+rustup_home: "{{ ansible_facts.env.RUSTUP_HOME | default(ansible_facts.env.HOME + '/.rustup') }}"
+rustup_installer_path: "{{ ansible_facts.env.HOME }}/.cache/dotfiles/rustup-init-{{ rustup_version }}"
+rustup_targets:
+  x86_64: x86_64-unknown-linux-gnu
+  aarch64: aarch64-unknown-linux-gnu
+rustup_checksums:
+  x86_64: sha256:4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10
+  aarch64: sha256:9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792
 
 nerd_fonts_version: v3.4.0
 nerd_fonts_base_url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}"

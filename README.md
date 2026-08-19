@@ -18,10 +18,11 @@ sudo dnf5 install stow
 make
 ```
 
-The default setup performs one DNF5 package transaction, installs fonts and
-`fnm`, applies all Stow packages, runs syntax checks, and validates required
-commands and symbolic links. Only the DNF task uses privilege escalation when
-the current user is not root; containers must provide passwordless `sudo`.
+The default setup performs one DNF5 package transaction, installs fonts, `fnm`
+and the stable Rust toolchain, applies all Stow packages, runs syntax checks,
+and validates required commands and symbolic links. Only the DNF task uses
+privilege escalation when the current user is not root; containers must provide
+passwordless `sudo`.
 
 For a non-mutating preview:
 
@@ -36,6 +37,7 @@ make setup       # full Fedora setup and validation
 make packages    # install packages from Fedora repositories
 make fonts       # install pinned user-local fonts
 make fnm         # install fnm and the configured Node.js LTS release
+make rustup      # install stable Rust, rustfmt, Clippy and rust-analyzer
 make dotfiles    # apply packages with GNU Stow
 make stow        # alias for make dotfiles
 make check       # Ansible syntax checks and ansible-lint when available
@@ -48,7 +50,8 @@ make verify      # checks plus obsolete-tooling guard
 System packages come only from Fedora repositories. The main groups are:
 
 - GCC, Clang, CMake, Ninja, GDB, LLDB and Valgrind for C and C++.
-- Tree-sitter, Lua, ShellCheck and shfmt.
+- Tree-sitter grammars, Lua, ShellCheck and shfmt.
+- Rust is managed with rustup; Fedora provides its Tree-sitter grammar.
 - TeX Live, Poppler, ImageMagick and Fedora's free FFmpeg build.
 - Common shell, archive, Git and terminal utilities.
 
@@ -71,6 +74,18 @@ The only upstream downloads automated by Ansible are:
 
 - IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font and Inter.
 - A pinned `fnm` release and the configured Node.js LTS release.
+- The pinned official rustup installer and the stable Rust toolchain.
+
+## Rust And Neovim
+
+The Rust setup uses the stable rustup toolchain with `rustfmt`, Clippy and
+`rust-analyzer`. Neovim enables completion, diagnostics, code actions, inlay
+hints, procedural macros and all Cargo features. Rust files are formatted with
+`rustfmt` before saving, and rust-analyzer runs Clippy for project checks.
+
+Rust tooling lives under `~/.cargo` and `~/.rustup`. The shared shell profile
+adds `~/.cargo/bin` to `PATH`; Neovim also adds it when launched outside a login
+shell. Mason does not install a second copy of rust-analyzer.
 
 The managed MIME associations expect Zen Browser, GNOME Papers and the Claude
 URL handler to be installed separately.
@@ -80,7 +95,7 @@ URL handler to be installed separately.
 Configuration is linked from `packages/` with `stow --no-folding`:
 
 - `git`, `shell-container`, `starship`, `nvim-vm`
-- `btop`, `containers`, `tmux`, `opencode`
+- `btop`, `containers`, `tmux`, `ghostty`, `opencode`
 - `xdg` for `mimeapps.list`
 - `vscode` for portable VS Code settings
 

@@ -1,6 +1,11 @@
 # ~/.zshrc - Fedora dotfiles
 # Shared PATH and environment live in ~/.profile.
 
+if ((!$ + _comps)); then
+  autoload -Uz compinit
+  compinit -i -d "${ZSH_COMPDUMP:-$HOME/.zcompdump}"
+fi
+
 if [ -f "$HOME/.profile" ]; then
   . "$HOME/.profile"
 fi
@@ -8,11 +13,6 @@ fi
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000
 export SAVEHIST=10000
-
-if ((!$+_comps)); then
-  autoload -Uz compinit
-  compinit -i -d "${ZSH_COMPDUMP:-$HOME/.zcompdump}"
-fi
 
 setopt MENU_COMPLETE
 setopt AUTO_LIST
@@ -69,3 +69,30 @@ claude() {
 if [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
+
+unalias ccg 2>/dev/null
+ccg() {
+  if (($# != 1)); then
+    print -u2 "Uso: ccg <archivo.c>"
+    return 2
+  fi
+
+  clang -std=gnu99 -Wall -Werror -fsanitize=address -o ./a.out -- "$1" && ./a.out
+}
+
+alias cs="codecrafters submit"
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/bin/conda' 'shell.zsh' 'hook' 2>/dev/null)"
+if [ $? -eq 0 ]; then
+  eval "$__conda_setup"
+else
+  if [ -f "/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/etc/profile.d/conda.sh" ]; then
+    . "/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/etc/profile.d/conda.sh"
+  else
+    export PATH="/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/bin:$PATH"
+  fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<

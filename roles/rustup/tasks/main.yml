@@ -1,0 +1,127 @@
+---
+- name: Require a supported rustup architecture
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.architecture in rustup_targets
+    fail_msg: "rustup is not configured for {{ ansible_facts.architecture }}."
+    quiet: true
+
+- name: Check rustup installation
+  ansible.builtin.command:
+    argv:
+      - "{{ cargo_home }}/bin/rustup"
+      - --version
+  register: rustup_check
+  check_mode: false
+  changed_when: false
+  failed_when: false
+
+- name: Download pinned rustup installer
+  ansible.builtin.get_url:
+    url: "https://static.rust-lang.org/rustup/archive/{{ rustup_version }}/{{ rustup_targets[ansible_facts.architecture] }}/rustup-init"
+    dest: "{{ rustup_installer_path }}"
+    checksum: "{{ rustup_checksums[ansible_facts.architecture] }}"
+    mode: '0755'
+  when:
+    - rustup_check.rc != 0
+    - not ansible_check_mode
+
+- name: Install rustup without changing shell files
+  ansible.builtin.command:
+    argv:
+      - "{{ rustup_installer_path }}"
+      - -y
+      - --no-modify-path
+      - --default-toolchain
+      - none
+    creates: "{{ cargo_home }}/bin/rustup"
+  environment:
+    CARGO_HOME: "{{ cargo_home }}"
+    RUSTUP_HOME: "{{ rustup_home }}"
+  when:
+    - rustup_check.rc != 0
+    - not ansible_check_mode
+
+- name: Show rustup check-mode note
+  ansible.builtin.debug:
+    msg: "rustup is missing; run without DRY_RUN=1 to install it."
+  when:
+    - rustup_check.rc != 0
+    - ansible_check_mode
+
+- name: Read installed Rust toolchains
+  ansible.builtin.command:
+    argv:
+      - "{{ cargo_home }}/bin/rustup"
+      - toolchain
+      - list
+  environment:
+    CARGO_HOME: "{{ cargo_home }}"
+    RUSTUP_HOME: "{{ rustup_home }}"
+  register: rustup_toolchains
+  check_mode: false
+  changed_when: false
+  when: rustup_check.rc == 0 or not ansible_check_mode
+
+- name: Install the Rust toolchain
+  ansible.builtin.command:
+    argv:
+      - "{{ cargo_home }}/bin/rustup"
+      - toolchain
+      - install
+      - "{{ rustup_default_toolchain }}"
+      - --profile
+      - default
+  environment:
+    CARGO_HOME: "{{ cargo_home }}"
+    RUSTUP_HOME: "{{ rustup_home }}"
+  when:
+    - not ansible_check_mode
+    - rustup_toolchains.stdout is not search('(?m)^' ~ rustup_default_toolchain ~ '[- ]')
+
+- name: Make the Rust toolchain the default
+  ansible.builtin.command:
+    argv:
+      - "{{ cargo_home }}/bin/rustup"
+      - default
+      - "{{ rustup_default_toolchain }}"
+  environment:
+    CARGO_HOME: "{{ cargo_home }}"
+    RUSTUP_HOME: "{{ rustup_home }}"
+  when:
+    - not ansible_check_mode
+    - rustup_toolchains.stdout is not search('(?m)^' ~ rustup_default_toolchain ~ '[^\n]*default')
+
+- name: Read installed Rust components
+  ansible.builtin.command:
+    argv:
+      - "{{ cargo_home }}/bin/rustup"
+      - component
+      - list
+      - --toolchain
+      - "{{ rustup_default_toolchain }}"
+      - --installed
+  environment:
+    CARGO_HOME: "{{ cargo_home }}"
+    RUSTUP_HOME: "{{ rustup_home }}"
+  register: rustup_installed_components
+  check_mode: false
+  changed_when: false
+  when: rustup_check.rc == 0 or not ansible_check_mode
+
+- name: Install Rust development components
+  ansible.builtin.command:
+    argv:
+      - "{{ cargo_home }}/bin/rustup"
+      - component
+      - add
+      - "{{ item }}"
+      - --toolchain
+      - "{{ rustup_default_toolchain }}"
+  environment:
+    CARGO_HOME: "{{ cargo_home }}"
+    RUSTUP_HOME: "{{ rustup_home }}"
+  loop: "{{ rustup_components }}"
+  when:
+    - not ansible_check_mode
+    - rustup_installed_components.stdout is not search('(?m)^' ~ item ~ '-')

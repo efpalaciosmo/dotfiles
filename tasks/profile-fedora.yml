@@ -29,6 +29,11 @@
     name: fnm
   tags: [fnm]
 
+- name: Rust toolchain
+  ansible.builtin.import_role:
+    name: rustup
+  tags: [rustup]
+
 - name: Nerd Fonts
   ansible.builtin.import_role:
     name: fonts
