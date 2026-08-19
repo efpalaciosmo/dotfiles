@@ -12,11 +12,6 @@
     name: common
   tags: [always, common]
 
-- name: Python user tools
-  ansible.builtin.import_role:
-    name: python_user_tools
-  tags: [python-user-tools, dotfiles]
-
 - name: Node user tools
   ansible.builtin.import_role:
     name: node_user_tools
@@ -31,11 +26,6 @@
   ansible.builtin.import_role:
     name: shell_plugins
   tags: [shell]
-
-- name: Rust toolchain
-  ansible.builtin.import_role:
-    name: rustup
-  tags: [rustup]
 
 - name: Apply dotfiles with stown
   ansible.builtin.import_role:

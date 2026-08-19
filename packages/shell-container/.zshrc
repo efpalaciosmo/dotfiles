@@ -55,9 +55,6 @@ if command -v uv >/dev/null 2>&1; then
   eval "$(uv generate-shell-completion zsh)"
 fi
 
-if command -v fnm >/dev/null 2>&1; then
-  eval "$(fnm env --use-on-cd --shell zsh)"
-fi
 
 if command -v pnpm >/dev/null 2>&1; then
   alias npm="pnpm"

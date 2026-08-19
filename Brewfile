@@ -24,7 +24,6 @@ brew "zsh"
 brew "starship"
 brew "jq"
 
-
 # =============================================================================
 # 2. GNU compatibility
 # =============================================================================
@@ -99,7 +98,6 @@ brew "texlive"
 # =============================================================================
 
 brew "uv"
-brew "fnm"
 brew "node"
 brew "pnpm"
 
@@ -110,15 +108,14 @@ brew "pnpm"
 
 brew "zig"
 brew "llvm"
+brew "rust"
 
 
 # =============================================================================
 # 10. Data, documents, PDFs, images and media
 # =============================================================================
 # poppler: PDF tools, pdftotext, pdfinfo, etc.
-# imagemagick-full: broader image format support than imagemagick.
-# ffmpeg-full: broader codec/library support than ffmpeg.
 
 brew "poppler"
-brew "imagemagick-full"
-brew "ffmpeg-full"
+brew "imagemagick"
+brew "ffmpeg"

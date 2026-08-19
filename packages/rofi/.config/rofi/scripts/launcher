@@ -15,11 +15,7 @@ if command -v rofi >/dev/null 2>&1; then
         -drun-reload-desktop-cache \
         -recursivebrowser-directory "$HOME" \
         -kb-mode-next "question,Control+Tab"
-elif command -v fuzzel >/dev/null 2>&1; then
-    exec fuzzel
-elif command -v wofi >/dev/null 2>&1; then
-    exec wofi --show drun
 fi
 
-printf 'No launcher found. Install rofi, fuzzel, or wofi.\n' >&2
+printf 'Rofi is not installed.\n' >&2
 exit 1

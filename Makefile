@@ -10,7 +10,7 @@ BREW_BUNDLE_JOBS ?= auto
 ASK_BECOME_PASS ?= 0
 BECOME := $(if $(filter 1,$(DRY_RUN)),,$(if $(filter 1,$(ASK_BECOME_PASS)),--ask-become-pass,))
 
-.PHONY: help setup brew venv doctor check verify fonts shell dotfiles stown python-user-tools node-user-tools
+.PHONY: help setup brew venv doctor check verify fonts shell dotfiles stow node-user-tools
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -56,11 +56,21 @@ check: venv ## Ansible syntax-check (+ ansible-lint if installed)
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --syntax-check; \
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook-doctor.yml --syntax-check; \
 		command -v ansible-lint >/dev/null 2>&1 && ansible-lint -q . || true
+	@{ git ls-files '*.sh'; \
+		git ls-files 'packages/*/.config/*/scripts/*'; \
+		printf '%s\n' packages/shell-container/.bashrc packages/shell-container/.profile; \
+	} | sort -u | while IFS= read -r file; do \
+		test ! -e "$$file" || bash -n "$$file" || exit; \
+	done
+	@python3 -m json.tool packages/waybar/.config/waybar/config.jsonc >/dev/null
+	@if command -v shellcheck >/dev/null 2>&1; then \
+		shellcheck bootstrap-dotfiles.sh scripts/*.sh packages/rofi/.config/rofi/scripts/* packages/waybar/.config/waybar/scripts/*; \
+	fi
 
 verify: check ## Check syntax and guard against distro package-manager residue
-	@old='zyp''per|open''su''se|su''se|a''pt|pac''man|dp''kg'; \
+	@old='flat''pak|r''pm-ostree|d''nf|zyp''per|open''su''se|su''se|a''pt|pac''man|dp''kg'; \
 		files='Makefile Brewfile playbook.yml playbook-doctor.yml bootstrap-dotfiles.sh scripts tasks roles group_vars packages README.md'; \
-		! grep -R -n -I -i -E "(^|[^[:alnum:]_-])($$old)([^[:alnum:]_-]|$$)" $$files \
+		! rg -n -i "(^|[^[:alnum:]_-])($$old)([^[:alnum:]_-]|$$)" $$files \
 		|| (echo >&2 "verify: distro package-manager residue found"; exit 1)
 	@echo "verify: OK"
 
@@ -72,17 +82,13 @@ shell: brew venv ## Install oh-my-zsh and shell plugins
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
 		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags shell $(CHECK)
 
-dotfiles: venv ## Install stown if needed and apply dotfiles
+dotfiles: brew venv ## Apply dotfiles with GNU Stow
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools,dotfiles $(CHECK)
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags dotfiles $(CHECK)
 
-stown: venv ## Apply stown-managed dotfiles and shell configuration
+stow: brew venv ## Apply Stow-managed dotfiles and shell configuration
 	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools,dotfiles,shell $(CHECK)
-
-python-user-tools: venv
-	@"$(CURDIR)/scripts/with-homebrew.sh" \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags python-user-tools $(CHECK)
+		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" $(BECOME) playbook.yml --tags dotfiles,shell $(CHECK)
 
 node-user-tools: brew venv ## Install pnpm global Node tools
 	@"$(CURDIR)/scripts/with-homebrew.sh" \

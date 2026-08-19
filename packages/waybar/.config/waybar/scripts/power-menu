@@ -13,10 +13,6 @@ launcher() {
     if command -v rofi >/dev/null 2>&1; then
         printf '%s\n' "$@" | rofi -dmenu -i -p "$prompt" \
             -theme-str 'window { width: 320px; } listview { lines: 6; } element { padding: 12px 14px; }'
-    elif command -v wofi >/dev/null 2>&1; then
-        printf '%s\n' "$@" | wofi --dmenu --prompt "$prompt"
-    elif command -v fuzzel >/dev/null 2>&1; then
-        printf '%s\n' "$@" | fuzzel --dmenu --prompt "$prompt"
     else
         return 1
     fi

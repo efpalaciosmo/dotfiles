@@ -40,8 +40,6 @@ do
       prefix .. "/sbin",
       prefix .. "/opt/make/libexec/gnubin",
       prefix .. "/opt/llvm/bin",
-      prefix .. "/opt/ffmpeg-full/bin",
-      prefix .. "/opt/imagemagick-full/bin",
     })
   end
 

@@ -1,5 +1,4 @@
 ---
-dotfiles_repo_root: "{{ playbook_dir }}"
 dotfiles_packages_root: "{{ playbook_dir }}/packages"
 
 stown_packages:
@@ -12,9 +11,8 @@ stown_packages:
   - waybar
   - mako
   - rofi
-  - foot
 
-expected_commands:
+homebrew_commands:
   - brew
   - bash
   - zsh
@@ -46,7 +44,6 @@ expected_commands:
   - lazygit
   - lazydocker
   - yazi
-  - harlequin
   - resvg
   - shellcheck
   - shfmt
@@ -55,10 +52,7 @@ expected_commands:
   - lua
   - stylua
   - uv
-  - fnm
-  - juliaup
   - pnpm
-  - rustup
   - cargo
   - rustc
   - zig
@@ -76,6 +70,31 @@ expected_commands:
   - ggrep
   - gsed
   - gtar
+
+# Session components are installed manually from Fedora. They are deliberately
+# absent from Brewfile, but doctor still verifies the complete desktop runtime.
+fedora_session_commands:
+  - niri
+  - waybar
+  - rofi
+  - ghostty
+  - mako
+  - swaybg
+  - swaylock
+  - wl-copy
+  - wl-paste
+  - cliphist
+  - playerctl
+  - brightnessctl
+  - notify-send
+  - wpctl
+  - nmcli
+  - ip
+  - cal
+  - lsblk
+  - systemctl
+  - loginctl
+  - dbus-update-activation-environment
 
 pnpm_home: "{{ ansible_facts.env.PNPM_HOME | default(ansible_facts.env.HOME + '/.local/share/pnpm') }}"
 node_user_tools_packages:
@@ -98,19 +117,9 @@ nerd_fonts_cache_dir: "{{ ansible_facts.env.XDG_CACHE_HOME | default(ansible_fac
 homebrew_prefix: "{{ lookup('env', 'HOMEBREW_PREFIX') | default('/home/linuxbrew/.linuxbrew', true) }}"
 homebrew_gnu_tar_path: "{{ homebrew_prefix }}/opt/gnu-tar/libexec/gnubin"
 
-allow_pip_break_system_packages: true
-pip_break_allowed: >-
-  {{
-    (allow_pip_break_system_packages | bool)
-    or (lookup('env', 'ALLOW_PIP_BREAK_SYSTEM_PACKAGES', default='0') == '1')
-  }}
-
 zsh_dir: "{{ ansible_facts.env.ZSH | default(ansible_facts.env.HOME + '/.oh-my-zsh') }}"
 zsh_custom: "{{ ansible_facts.env.ZSH_CUSTOM | default(zsh_dir + '/custom') }}"
 
-rustup_installer_url: https://sh.rustup.rs
-rustup_default_toolchain: stable
 cargo_home: "{{ ansible_facts.env.CARGO_HOME | default(ansible_facts.env.HOME + '/.cargo') }}"
-rustup_home: "{{ ansible_facts.env.RUSTUP_HOME | default(ansible_facts.env.HOME + '/.rustup') }}"
 
 dotfiles_ignore_regex: '(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|.*\.md\.template|templates/.*\.(aux|fdb_latexmk|fls|synctex\.gz|pdf))$'

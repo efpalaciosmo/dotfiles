@@ -1,7 +1,6 @@
 environment {
     EDITOR "nvim"
     VISUAL "nvim"
-    XDG_DATA_DIRS "/var/home/efpalaciosmo/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/" // required for junction and Flatpak app launchers
     XDG_SESSION_TYPE "wayland"
     CLUTTER_BACKEND "wayland"
     SDL_VIDEODRIVER "wayland"
