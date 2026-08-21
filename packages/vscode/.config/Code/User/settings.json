@@ -20,14 +20,14 @@
     "editor.guides.bracketPairs": "active",
     "editor.minimap.enabled": false,
     "editor.quickSuggestions": {
-        "other": "off",
+        "other": "on",
         "comments": "off",
-        "strings": "off"
+        "strings": "on"
     },
-    "editor.suggestOnTriggerCharacters": false,
-    "editor.inlineSuggest.enabled": false,
-    "editor.acceptSuggestionOnEnter": "off",
-    "editor.tabCompletion": "off",
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.inlineSuggest.enabled": true,
+    "editor.acceptSuggestionOnEnter": "on",
+    "editor.tabCompletion": "on",
 
     "workbench.colorTheme": "Adwaita Dark",
     "workbench.sideBar.location": "left",
@@ -71,25 +71,38 @@
     "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
     "terminal.integrated.fontLigatures.enabled": true,
     "terminal.integrated.fontSize": 15,
-    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.linux": "zsh",
     "python.terminal.useEnvFile": true,
 
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.fixAll": "explicit",
-            "source.organizeImports": "explicit"
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
         },
         "cSpell.enabled": false
     },
     "python.languageServer": "None",
-    "python.analysis.autoImportCompletions": true,
-    "python.analysis.inlayHints.variableTypes": true,
-    "python.analysis.inlayHints.functionReturnTypes": true,
-    "python.analysis.typeCheckingMode": "off",
-    "basedpyright.analysis.configFilePath": "${workspaceFolder}",
+    "basedpyright.analysis.autoImportCompletions": true,
+    "basedpyright.analysis.inlayHints.variableTypes": true,
+    "basedpyright.analysis.inlayHints.functionReturnTypes": true,
     "basedpyright.analysis.typeCheckingMode": "standard",
+    "basedpyright.disableOrganizeImports": true,
+    "ruff.lint.enable": true,
+    "flake8.enabled": false,
+    "pylint.enabled": false,
+
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+        "editor.formatOnSave": true
+    },
+    "rust-analyzer.check.command": "clippy",
+    "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.procMacro.enable": true,
+    "rust-analyzer.inlayHints.typeHints.enable": true,
+    "rust-analyzer.inlayHints.parameterHints.enable": true,
+    "rust-analyzer.inlayHints.chainingHints.enable": true,
 
     "[typescript]": {
         "editor.defaultFormatter": "biomejs.biome",
