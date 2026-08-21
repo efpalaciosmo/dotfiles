@@ -70,7 +70,10 @@ fedora_packages:
   - tree-sitter-cli
   - libtree-sitter-rust
   - lua
-#  - texlive-scheme-full
+  - texlive-scheme-medium
+  - texlive-collection-latexextra
+  - texlive-collection-bibtexextra
+  - latexmk
   - uv
   - zig
 #  - poppler-utils
@@ -138,9 +141,12 @@ expected_commands:
 #  - pdftotext
 #  - magick
 #  - ffmpeg
-#  - pdflatex
-#  - latexmk
-#  - biber
+  - pdflatex
+  - xelatex
+  - lualatex
+  - latexmk
+  - bibtex
+  - biber
 #  - stow
 
 optional_commands:
