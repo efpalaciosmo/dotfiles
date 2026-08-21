@@ -1,8 +1,8 @@
 # Ghostty configuration for Fedora
 # Adwaita Dark theme with JetBrainsMono Nerd Font Medium
 
-# Use an entry available in system and Conda ncurses databases.
-term = xterm-256color
+# Preserve Ghostty capabilities through sudo and remote SSH sessions.
+shell-integration-features = sudo,ssh-env,ssh-terminfo
 
 # Font
 font-family = JetBrainsMono Nerd Font

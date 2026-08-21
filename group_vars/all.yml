@@ -64,6 +64,7 @@ fedora_packages:
   - duf
   - ncdu
   - fastfetch
+  - ncurses-term
   - ShellCheck
   - shfmt
   - tree-sitter-cli
@@ -119,6 +120,8 @@ expected_commands:
   - duf
   - ncdu
   - fastfetch
+  - infocmp
+  - tic
   - shellcheck
   - shfmt
   - tree-sitter

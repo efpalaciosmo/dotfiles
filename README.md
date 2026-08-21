@@ -55,6 +55,13 @@ System packages come only from Fedora repositories. The main groups are:
 - TeX Live, Poppler, ImageMagick and Fedora's free FFmpeg build.
 - Common shell, archive, Git and terminal utilities.
 
+Ghostty uses `TERM=xterm-ghostty`. On Fedora container images, the common role
+copies the host's official terminfo entry from `/run/host` into the user
+database so ncurses applications such as `clear`, `less`, `tmux` and Neovim
+work without downgrading to `xterm-256color`. Ghostty shell integration also
+preserves terminfo through `sudo` and installs it automatically for compatible
+SSH sessions.
+
 Desktop, Wayland, audio, Bluetooth and network-management packages are left to
 the host and are not installed inside the container. User fonts, MIME
 associations and VS Code settings remain managed for applications installed

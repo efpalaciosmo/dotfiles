@@ -9,3 +9,26 @@
     - "{{ ansible_facts.env.HOME }}/.local/opt"
     - "{{ ansible_facts.env.HOME }}/.cache/dotfiles"
   tags: [always]
+
+- name: Check for Ghostty terminfo exported by a container host
+  ansible.builtin.stat:
+    path: /run/host/usr/share/terminfo/x/xterm-ghostty
+  register: ghostty_host_terminfo
+  tags: [always]
+
+- name: Ensure user terminfo directory for Ghostty
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.terminfo/x"
+    state: directory
+    mode: '0755'
+  when: ghostty_host_terminfo.stat.exists
+  tags: [always]
+
+- name: Install Ghostty terminfo from the container host
+  ansible.builtin.copy:
+    src: /run/host/usr/share/terminfo/x/xterm-ghostty
+    dest: "{{ ansible_facts.env.HOME }}/.terminfo/x/xterm-ghostty"
+    remote_src: true
+    mode: '0644'
+  when: ghostty_host_terminfo.stat.exists
+  tags: [always]
