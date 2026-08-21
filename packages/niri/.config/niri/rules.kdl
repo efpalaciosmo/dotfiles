@@ -3,3 +3,10 @@ window-rule {
     geometry-corner-radius 8
     clip-to-geometry true
 }
+
+window-rule {
+    match app-id="^$" title="^$"
+    open-floating true
+    open-focused false
+    default-floating-position x=4 y=4 relative-to="bottom-right"
+}

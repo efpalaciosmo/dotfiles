@@ -5,7 +5,6 @@ input {
     keyboard {
         xkb {
         }
-
         repeat-delay 700
         repeat-rate 22
         numlock

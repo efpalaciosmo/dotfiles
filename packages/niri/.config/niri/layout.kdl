@@ -6,21 +6,22 @@ layout {
 
     // Las ventanas nuevas ocupan toda el area util sin entrar en fullscreen.
     default-column-width { proportion 1.0; }
-    gaps 10
+    gaps 5
 
     // Mod+R / Mod+Shift+R: 2/5, 1/2, 3/5, 2/3, completo.
     preset-column-widths {
+        proportion 0.3
         proportion 0.4
-        proportion 0.5
         proportion 0.6
-        proportion 0.66667
+        proportion 0.8
         proportion 1.0
     }
 
     preset-window-heights {
-        proportion 0.33333
-        proportion 0.5
-        proportion 0.66667
+        proportion 0.2
+        proportion 0.4
+        proportion 0.6
+        proportion 0.8
         proportion 1.0
     }
 
