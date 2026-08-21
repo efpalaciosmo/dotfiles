@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Papers
+Comment=Read documents
+Exec=flatpak run org.gnome.Papers %U
+Icon=org.gnome.Papers
+Terminal=false
+NoDisplay=true
+Categories=GNOME;GTK;Office;Viewer;
+MimeType=application/pdf;

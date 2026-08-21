@@ -1,7 +1,7 @@
 # ~/.zshrc - Fedora dotfiles
 # Shared PATH and environment live in ~/.profile.
 
-if ((!$ + _comps)); then
+if (( ! $+_comps )); then
   autoload -Uz compinit
   compinit -i -d "${ZSH_COMPDUMP:-$HOME/.zcompdump}"
 fi
@@ -40,7 +40,7 @@ if command -v pnpm >/dev/null 2>&1; then
   alias npx="pnpm dlx"
 fi
 
-if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
+if [ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
   source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
@@ -65,11 +65,6 @@ claude() {
     command claude "$@"
 }
 
-# Syntax highlighting must be sourced after all widgets and aliases.
-if [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
-  source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-fi
-
 unalias ccg 2>/dev/null
 ccg() {
   if (($# != 1)); then
@@ -82,17 +77,7 @@ ccg() {
 
 alias cs="codecrafters submit"
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/bin/conda' 'shell.zsh' 'hook' 2>/dev/null)"
-if [ $? -eq 0 ]; then
-  eval "$__conda_setup"
-else
-  if [ -f "/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/etc/profile.d/conda.sh" ]; then
-    . "/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/etc/profile.d/conda.sh"
-  else
-    export PATH="/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/bin:$PATH"
-  fi
+# Syntax highlighting must be sourced after all widgets and aliases.
+if [ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+  source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
-unset __conda_setup
-# <<< conda initialize <<<
