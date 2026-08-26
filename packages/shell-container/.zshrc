@@ -72,3 +72,5 @@ claude() {
     CLAUDE_CODE_EFFORT_LEVEL="max" \
     command claude "$@"
 }
+
+alias fedora="distrobox enter fedora -- zsh"
