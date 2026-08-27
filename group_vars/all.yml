@@ -9,7 +9,7 @@ stow_packages:
   - btop
   - containers
   - tmux
-  - ghostty
+  - alacritty
   - opencode
   - xdg
   - vscode

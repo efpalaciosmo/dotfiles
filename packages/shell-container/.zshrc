@@ -81,3 +81,6 @@ alias cs="codecrafters submit"
 if [ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
+
+# opencode
+export PATH=/var/home/efpalaciosmo/Projects/.opencode/bin:$PATH

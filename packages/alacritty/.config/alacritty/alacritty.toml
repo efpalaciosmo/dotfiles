@@ -1,0 +1,49 @@
+# Alacritty configuration for Fedora
+# Adwaita Dark colors with JetBrainsMono Nerd Font Medium
+
+[window]
+dimensions = { columns = 130, lines = 40 }
+padding = { x = 12, y = 12 }
+decorations_theme_variant = "Dark"
+
+[font]
+size = 15.0
+
+[font.normal]
+family = "JetBrainsMono Nerd Font"
+style = "Medium"
+
+[colors.primary]
+background = "#1a1a1d"
+foreground = "#e0e0e0"
+
+[colors.normal]
+black = "#000000"
+red = "#e01b24"
+green = "#33d17a"
+yellow = "#f6d32d"
+blue = "#3584e4"
+magenta = "#9141ac"
+cyan = "#33d17a"
+white = "#deddda"
+
+[colors.bright]
+black = "#77767b"
+red = "#f66151"
+green = "#8ff0a4"
+yellow = "#f9f06b"
+blue = "#99c1f1"
+magenta = "#dc8add"
+cyan = "#8de698"
+white = "#ffffff"
+
+[colors.cursor]
+text = "CellBackground"
+cursor = "#ffbe6f"
+
+[scrolling]
+history = 100000
+
+[cursor]
+style = { shape = "Block", blinking = "Off" }
+unfocused_hollow = false

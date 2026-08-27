@@ -55,12 +55,10 @@ System packages come only from Fedora repositories. The main groups are:
 - TeX Live, Poppler, ImageMagick and Fedora's free FFmpeg build.
 - Common shell, archive, Git and terminal utilities.
 
-Ghostty uses `TERM=xterm-ghostty`. On Fedora container images, the common role
-copies the host's official terminfo entry from `/run/host` into the user
-database so ncurses applications such as `clear`, `less`, `tmux` and Neovim
-work without downgrading to `xterm-256color`. Ghostty shell integration also
-preserves terminfo through `sudo` and installs it automatically for compatible
-SSH sessions.
+Alacritty uses `TERM=alacritty`. Fedora's `ncurses-term` package provides its
+terminfo entry in both Workstation and Container Image installations, so
+ncurses applications such as `clear`, `less`, `tmux` and Neovim work without
+downgrading to `xterm-256color`.
 
 Desktop, Wayland, audio, Bluetooth and network-management packages are left to
 the host and are not installed inside the container. User fonts, MIME
@@ -102,7 +100,7 @@ URL handler to be installed separately.
 Configuration is linked from `packages/` with `stow --no-folding`:
 
 - `git`, `shell-container`, `starship`, `nvim-vm`
-- `btop`, `containers`, `tmux`, `ghostty`, `opencode`
+- `btop`, `containers`, `tmux`, `alacritty`, `opencode`
 - `xdg` for `mimeapps.list`
 - `vscode` for portable VS Code settings
 
