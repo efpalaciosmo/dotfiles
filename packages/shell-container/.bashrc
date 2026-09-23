@@ -1,5 +1,5 @@
 # ~/.bashrc - Fedora dotfiles
-# Interactive bash configuration. Shared PATH and environment live in ~/.profile.
+# Interactive Bash configuration. Shared PATH and environment live in ~/.profile.
 
 [[ $- != *i* ]] && return
 
@@ -20,38 +20,73 @@ if command -v uv >/dev/null 2>&1; then
     eval "$(uv generate-shell-completion bash)"
 fi
 
-if command -v fnm >/dev/null 2>&1; then
-    eval "$(fnm env --use-on-cd --shell bash)"
-fi
-
 if command -v pnpm >/dev/null 2>&1; then
     alias npm="pnpm"
     alias npx="pnpm dlx"
 fi
 
-if command -v starship >/dev/null 2>&1; then
-    eval "$(starship init bash)"
-else
-    PS1='[\u@\h \W]\$ '
+# Native developer prompt: location, Git state, virtual environment and errors.
+__prompt_command() {
+    local exit_code=$?
+    local reset='\[\e[0m\]'
+    local dim='\[\e[2m\]'
+    local blue='\[\e[38;5;75m\]'
+    local cyan='\[\e[38;5;80m\]'
+    local green='\[\e[38;5;114m\]'
+    local yellow='\[\e[38;5;221m\]'
+    local red='\[\e[38;5;203m\]'
+    local git_info='' venv_info='' status_info=''
+    local branch
+
+    if branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null) ||
+        branch=$(git rev-parse --short HEAD 2>/dev/null); then
+        local dirty=''
+        [[ -n $(git status --porcelain --ignore-submodules=dirty 2>/dev/null) ]] && dirty='*'
+        git_info=" ${yellow}git:${branch}${dirty}${reset}"
+    fi
+
+    if [[ -n ${VIRTUAL_ENV:-} ]]; then
+        venv_info=" ${green}(${VIRTUAL_ENV##*/})${reset}"
+    fi
+
+    if ((exit_code != 0)); then
+        status_info=" ${red}[${exit_code}]${reset}"
+    fi
+
+    PS1="${dim}┌─${reset}${cyan}\u@\h${reset} ${blue}\w${reset}${git_info}${venv_info}${status_info}\n${dim}└─${reset}${green}\\\$${reset} "
+}
+
+if [[ ${PROMPT_COMMAND[*]:-} != *'__prompt_command'* ]]; then
+    PROMPT_COMMAND=(__prompt_command "${PROMPT_COMMAND[@]}")
 fi
+
+# Aliases and other settings
+alias ls='ls --color=auto'
+alias ll='ls -lh'
+alias la='ls -A'
+alias l='ls -CF'
+alias getaudio='read -p "Enter YouTube URL: " url; yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "$HOME/Music/%(title)s.%(ext)s" "$url"'
+
+# Fedora's programmable completion definitions for Git, systemd, dnf, etc.
+if [[ -z ${BASH_COMPLETION_VERSINFO:-} && -r /usr/share/bash-completion/bash_completion ]]; then
+    . /usr/share/bash-completion/bash_completion
+fi
+
+# Friendlier completion and command-line editing.
+bind 'set completion-ignore-case on'
+bind 'set show-all-if-ambiguous on'
+bind 'set colored-stats on'
+bind 'set colored-completion-prefix on'
+bind 'set menu-complete-display-prefix on'
+bind 'TAB:menu-complete'
+bind '"\e[Z":menu-complete-backward'
+
+shopt -s checkwinsize globstar histappend
+HISTCONTROL=ignoreboth:erasedups
+HISTSIZE=10000
+HISTFILESIZE=20000
 
 # opencode
-export PATH=/home/efpalaciosmo/Projects/fedora/.opencode/bin:$PATH
+export PATH=/var/home/efpalaciosmo/.opencode/bin:$PATH
 
-# Pi
-export PATH="/home/efpalaciosmo/Projects/fedora/.local/share/fnm/node-versions/v24.19.0/installation/bin:$PATH"
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/home/efpalaciosmo/Projects/fedora/home/efpalaciosmo/Projects/fedora/miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
+alias fedora='distrobox enter fedora'

@@ -165,7 +165,6 @@
     "github.copilot.nextEditSuggestions.enabled": true,
     "chat.agent.enabled": true,
     "chat.agent.maxRequests": 100,
-    "chat.viewSessions.orientation": "stacked",
 
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
@@ -174,12 +173,11 @@
         "editor.defaultFormatter": "vscode.json-language-features"
     },
     "security.workspace.trust.untrustedFiles": "open",
+    "@azure.argTenant": "",
     "workbench.editorAssociations": {
         "*.copilotmd": "vscode.markdown.preview.editor",
         "*.xlsx": "default"
     },
-    "containers.containerClient": "com.microsoft.visualstudio.containers.podman",
-    "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.podmancompose",
     "json.schemaDownload.trustedDomains": {
         "https://schemastore.azurewebsites.net/": true,
         "https://raw.githubusercontent.com/microsoft/vscode/": true,
@@ -189,5 +187,8 @@
         "https://json-schema.org/": true,
         "https://developer.microsoft.com/json-schemas/": true,
         "https://biomejs.dev": true
-    }
+    },
+    "chat.viewSessions.orientation": "stacked",
+    "hediet.vscode-drawio.resizeImages": null,
+    "makefile.configureOnOpen": false
 }

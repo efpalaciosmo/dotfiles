@@ -5,28 +5,28 @@ format = """
 [╰─](fg:surface)$character"""
 
 right_format = """
-$python$nodejs$bun$deno$golang$julia$c$lua$ruby$package$docker_context$aws$kubernetes"""
+$python$nodejs$bun$deno$golang$rust$julia$c$lua$ruby$package$docker_context$aws$kubernetes"""
 
 add_newline = true
 continuation_prompt = "[∙](fg:muted) "
 command_timeout = 1000
 scan_timeout = 30
-palette = "aurora"
+palette = "adwaita"
 
-[palettes.aurora]
-base = "#1e1e2e"
-surface = "#45475a"
-muted = "#6c7086"
-text = "#cdd6f4"
-blue = "#89b4fa"
-cyan = "#89dceb"
-green = "#a6e3a1"
-yellow = "#f9e2af"
-orange = "#fab387"
-red = "#f38ba8"
-purple = "#cba6f7"
-pink = "#f5c2e7"
-teal = "#94e2d5"
+[palettes.adwaita]
+base = "#1a1a1d"
+surface = "#77767b"
+muted = "#9a9996"
+text = "#deddda"
+blue = "#81d0ff"
+cyan = "#7bdff4"
+green = "#8de698"
+yellow = "#ffc057"
+orange = "#ff9c5b"
+red = "#ff888c"
+purple = "#fba7ff"
+pink = "#ffa0d8"
+teal = "#7bdff4"
 
 [os]
 disabled = false
@@ -166,6 +166,11 @@ format = "[$symbol($version )]($style)"
 [golang]
 symbol = " "
 style = "bold fg:cyan"
+format = "[$symbol($version )]($style)"
+
+[rust]
+symbol = " "
+style = "bold fg:orange"
 format = "[$symbol($version )]($style)"
 
 [julia]

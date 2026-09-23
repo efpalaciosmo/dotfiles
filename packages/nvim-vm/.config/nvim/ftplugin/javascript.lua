@@ -3,7 +3,7 @@ local ft = require("config.ft")
 ft.indent(2)
 
 local o = vim.opt_local
-o.colorcolumn = "100"
+o.colorcolumn = "80"
 o.commentstring = "// %s"
 
 if vim.fn.executable("prettier") == 1 then

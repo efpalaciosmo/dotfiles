@@ -112,7 +112,7 @@ vim.api.nvim_create_autocmd("TermOpen", {
 vim.api.nvim_create_autocmd("TermClose", {
   group = augroup,
   callback = function(ev)
-    if vim.v.event.status == 0 then
+    if vim.v.event.status == 0 and not vim.b[ev.buf].keep_terminal_open then
       pcall(vim.api.nvim_buf_delete, ev.buf, {})
     end
   end,

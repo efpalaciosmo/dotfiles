@@ -1,11 +1,6 @@
 # ~/.zshrc - Fedora dotfiles
 # Shared PATH and environment live in ~/.profile.
 
-if (( ! $+_comps )); then
-  autoload -Uz compinit
-  compinit -i -d "${ZSH_COMPDUMP:-$HOME/.zcompdump}"
-fi
-
 if [ -f "$HOME/.profile" ]; then
   . "$HOME/.profile"
 fi
@@ -13,6 +8,31 @@ fi
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000
 export SAVEHIST=10000
+
+export ZSH="$HOME/.oh-my-zsh"
+
+plugins=(
+  git
+)
+if [ -d "$ZSH/custom/plugins/zsh-autosuggestions" ]; then
+  plugins+=(zsh-autosuggestions)
+fi
+if [ -d "$ZSH/custom/plugins/zsh-syntax-highlighting" ]; then
+  plugins+=(zsh-syntax-highlighting)
+fi
+
+if [ -f "$ZSH/oh-my-zsh.sh" ]; then
+  source "$ZSH/oh-my-zsh.sh"
+fi
+
+if ((!$+functions[_zsh_autosuggest_start])) && [ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
+  source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
+
+if ((!$+_comps)); then
+  autoload -Uz compinit
+  compinit -i -d "${ZSH_COMPDUMP:-$HOME/.zcompdump}"
+fi
 
 setopt MENU_COMPLETE
 setopt AUTO_LIST
@@ -31,17 +51,9 @@ if command -v uv >/dev/null 2>&1; then
   eval "$(uv generate-shell-completion zsh)"
 fi
 
-if command -v fnm >/dev/null 2>&1; then
-  eval "$(fnm env --use-on-cd --shell zsh)"
-fi
-
 if command -v pnpm >/dev/null 2>&1; then
   alias npm="pnpm"
   alias npx="pnpm dlx"
-fi
-
-if [ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
-  source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
 if command -v starship >/dev/null 2>&1; then
@@ -65,22 +77,9 @@ claude() {
     command claude "$@"
 }
 
-unalias ccg 2>/dev/null
-ccg() {
-  if (($# != 1)); then
-    print -u2 "Uso: ccg <archivo.c>"
-    return 2
-  fi
+alias fedora="distrobox enter fedora -- zsh"
 
-  clang -std=gnu99 -Wall -Werror -fsanitize=address -o ./a.out -- "$1" && ./a.out
-}
-
-alias cs="codecrafters submit"
-
-# Syntax highlighting must be sourced after all widgets and aliases.
-if [ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+# Syntax highlighting must be loaded after widgets and aliases.
+if ((!$+functions[_zsh_highlight])) && [ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
-
-# opencode
-export PATH=/var/home/efpalaciosmo/Projects/.opencode/bin:$PATH

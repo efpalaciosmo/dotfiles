@@ -195,6 +195,60 @@ map("n", "<leader>tf", function()
   vim.cmd("startinsert")
 end, { desc = "Floating terminal" })
 
+local function run_current_file()
+  local file = vim.api.nvim_buf_get_name(0)
+  if file == "" then
+    vim.notify("Save the file before running it", vim.log.levels.WARN)
+    return
+  end
+
+  local filetype = vim.bo.filetype
+  local executable
+  local command
+
+  if filetype == "c" or filetype == "cpp" then
+    executable = filetype == "c" and "gcc" or "g++"
+    local output = vim.fn.tempname()
+    local script = [[output=$1; shift; trap 'rm -f "$output"' EXIT; "$@" -o "$output" && "$output"]]
+    command = { "sh", "-c", script, "nvim-run", output, executable, file }
+    if filetype == "c" then
+      table.insert(command, "-lm")
+    end
+  elseif filetype == "python" then
+    executable = "python3"
+    command = { executable, file }
+  elseif filetype == "javascript" then
+    executable = "node"
+    command = { executable, file }
+  elseif filetype == "typescript" then
+    executable = "node"
+    command = { executable, file }
+  else
+    vim.notify("No runner configured for filetype: " .. filetype, vim.log.levels.WARN)
+    return
+  end
+
+  if vim.fn.executable(executable) == 0 then
+    vim.notify("Executable not found: " .. executable, vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd.update()
+  vim.cmd("botright 12new")
+  vim.b.keep_terminal_open = true
+
+  local job = vim.fn.jobstart(command, { term = true })
+  if job <= 0 then
+    vim.cmd("bdelete!")
+    vim.notify("Failed to start: " .. executable, vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd("startinsert")
+end
+
+map("n", "<leader>tr", run_current_file, { desc = "Run current file" })
+
 -- ============================================================================
 -- LaTeX
 -- ============================================================================

@@ -1,11 +1,12 @@
 local ft = require("config.ft")
 
-ft.indent(4)
+-- Match clang-format's LLVM fallback when a project has no .clang-format.
+ft.indent(2)
 
 local o = vim.opt_local
-o.colorcolumn = "100"
+o.colorcolumn = "80"
 o.commentstring = "// %s"
-o.cinoptions = "g0,N-s,(0,m1,+0"
+o.cinoptions = "g0,N-s,(0,m1,+2s"
 
 if vim.fn.executable("clang-format") == 1 then
   vim.opt_local.formatprg = "clang-format --assume-filename="

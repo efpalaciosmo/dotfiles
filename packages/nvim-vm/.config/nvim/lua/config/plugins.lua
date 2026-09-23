@@ -75,6 +75,7 @@ require("mason-tool-installer").setup({
 
         -- Extra CLI tools.
         "prettier",
+        "stylua",
         "sqlfluff",
     },
     auto_update = false,
