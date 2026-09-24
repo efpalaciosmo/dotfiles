@@ -3,12 +3,24 @@
 
 [[ $- != *i* ]] && return
 
+# Distrobox may launch Bash even when the container user's login shell is zsh.
+# Keep non-interactive commands and Bash inside tmux untouched.
+if [[ ${CONTAINER_ID:-} == fedora && -z ${TMUX:-} && -z ${BASH_EXECUTION_STRING:-} && -t 0 && -t 1 ]] \
+    && command -v zsh >/dev/null 2>&1; then
+    exec zsh -l
+fi
+
 if [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
 
 if [ -f "$HOME/.profile" ]; then
     . "$HOME/.profile"
+fi
+
+if command -v fnm >/dev/null 2>&1; then
+    eval "$(fnm env --use-on-cd --shell bash)"
+    fnm use >/dev/null 2>&1
 fi
 
 if command -v nvim >/dev/null 2>&1; then
@@ -85,8 +97,5 @@ shopt -s checkwinsize globstar histappend
 HISTCONTROL=ignoreboth:erasedups
 HISTSIZE=10000
 HISTFILESIZE=20000
-
-# opencode
-export PATH=/var/home/efpalaciosmo/.opencode/bin:$PATH
 
 alias fedora='distrobox enter fedora'

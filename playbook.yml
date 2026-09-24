@@ -1,5 +1,5 @@
 ---
-- name: Fedora 44 dotfiles automation
+- name: Fedora Distrobox dotfiles automation
   hosts: local
   connection: local
   gather_facts: true

@@ -82,3 +82,30 @@
   when:
     - not ansible_check_mode
     - fnm_node_releases.stdout is not search('(?m)v' ~ fnm_node_version ~ '\\..*default')
+
+- name: Check pnpm in the configured Node.js release
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts.env.HOME }}/.local/bin/fnm"
+      - exec
+      - "--using={{ fnm_node_version }}"
+      - pnpm
+      - --version
+  register: fnm_pnpm_release
+  changed_when: false
+  failed_when: false
+  when: not ansible_check_mode
+
+- name: Install pnpm for the configured Node.js release
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts.env.HOME }}/.local/bin/fnm"
+      - exec
+      - "--using={{ fnm_node_version }}"
+      - npm
+      - install
+      - --global
+      - "pnpm@{{ pnpm_version }}"
+  when:
+    - not ansible_check_mode
+    - fnm_pnpm_release.rc != 0 or fnm_pnpm_release.stdout is not match('^' ~ pnpm_version ~ '\\.')

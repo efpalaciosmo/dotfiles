@@ -76,8 +76,6 @@ vim.api.nvim_create_autocmd("FileType", {
     o.colorcolumn = "100"
     o.commentstring = "# %s"
 
-    ft.formatprg("shfmt", "shfmt -filename " .. vim.fn.shellescape(vim.fn.expand("%:p")) .. " -i 2 -ci -")
-    ft.format_on_save({ lsp = false })
     ft.suffixes({ ".sh", ".bash", ".zsh" })
   end,
 })

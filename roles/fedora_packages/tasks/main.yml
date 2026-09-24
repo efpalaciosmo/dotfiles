@@ -1,7 +1,25 @@
 ---
-- name: Install packages from Fedora repositories with DNF5
+- name: Check which Fedora packages are already installed
+  ansible.builtin.command:
+    argv: [rpm, -q, --whatprovides, --quiet, "{{ item }}"]
+  loop: "{{ fedora_packages }}"
+  register: fedora_package_checks
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Preview missing Fedora packages
+  ansible.builtin.debug:
+    msg: "Would install: {{ fedora_package_checks.results | selectattr('rc', 'ne', 0) | map(attribute='item') | join(', ') }}"
+  when:
+    - ansible_check_mode
+    - fedora_package_checks.results | selectattr('rc', 'ne', 0) | list | length > 0
+  changed_when: true
+
+- name: Install missing packages from Fedora repositories with DNF5
   become: "{{ ansible_facts.user_uid != 0 }}"
-  ansible.builtin.dnf:
-    name: "{{ fedora_packages }}"
-    state: present
-    use_backend: dnf5
+  ansible.builtin.command:
+    argv: "{{ ['dnf5', 'install', '-y', '--setopt=install_weak_deps=False'] + (fedora_package_checks.results | selectattr('rc', 'ne', 0) | map(attribute='item') | list) }}"
+  when:
+    - not ansible_check_mode
+    - fedora_package_checks.results | selectattr('rc', 'ne', 0) | list | length > 0

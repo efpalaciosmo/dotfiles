@@ -41,11 +41,6 @@
     "explorer.confirmDelete": false,
 
     "files.autoSave": "afterDelay",
-    "files.defaultLanguage": "latex",
-    "files.associations": {
-        "*.sty": "latex",
-        "*.cls": "latex"
-    },
     "files.exclude": {
         "**/*.4ct": true,
         "**/*.4tc": true,
@@ -93,17 +88,6 @@
     "flake8.enabled": false,
     "pylint.enabled": false,
 
-    "[rust]": {
-        "editor.defaultFormatter": "rust-lang.rust-analyzer",
-        "editor.formatOnSave": true
-    },
-    "rust-analyzer.check.command": "clippy",
-    "rust-analyzer.cargo.features": "all",
-    "rust-analyzer.procMacro.enable": true,
-    "rust-analyzer.inlayHints.typeHints.enable": true,
-    "rust-analyzer.inlayHints.parameterHints.enable": true,
-    "rust-analyzer.inlayHints.chainingHints.enable": true,
-
     "[typescript]": {
         "editor.defaultFormatter": "biomejs.biome",
         "editor.formatOnSave": true,
@@ -140,10 +124,6 @@
     "js/ts.inlayHints.variableTypes.enabled": true,
     "js/ts.inlayHints.functionLikeReturnTypes.enabled": true,
     "js/ts.preferences.preferTypeOnlyAutoImports": true,
-
-    "[sql]": {
-        "editor.formatOnSave": true
-    },
 
     "latex-workshop.latex.autoBuild.cleanAndRetry.enabled": false,
     "latex-workshop.latex.outDir": "%DIR%/out_dir",

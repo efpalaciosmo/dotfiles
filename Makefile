@@ -2,13 +2,14 @@ SHELL := /bin/sh
 .DEFAULT_GOAL := setup
 
 VENV := $(CURDIR)/.venv
+PYTHON := python3.14
 PIP := $(VENV)/bin/pip
 ANSIBLE_PLAYBOOK := $(VENV)/bin/ansible-playbook
 VENV_STAMP := $(VENV)/.requirements-installed
 INV := $(CURDIR)/inventory.ini
 CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
 
-.PHONY: help setup venv packages fonts fnm rustup dotfiles stow doctor check verify
+.PHONY: help setup venv packages fonts fnm dotfiles stow doctor check verify
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
@@ -20,14 +21,15 @@ setup: venv ## Install Fedora packages, apply dotfiles, and validate
 	@if [ "$(DRY_RUN)" != "1" ]; then $(MAKE) doctor; fi
 
 venv: requirements-ansible.txt ## Create the local Ansible virtualenv
-	@command -v python3 >/dev/null 2>&1 \
-		|| { echo >&2 "[venv] python3 is required; run bootstrap-dotfiles.sh first."; exit 1; }
+	@command -v $(PYTHON) >/dev/null 2>&1 \
+		|| { echo >&2 "[venv] $(PYTHON) is required; run bootstrap-dotfiles.sh first."; exit 1; }
 	@set -e; \
 		if ! "$(VENV)/bin/python" --version >/dev/null 2>&1 \
+			|| [ "$$("$(VENV)/bin/python" -c 'import sys; print(sys.version_info[:2])')" != "$$($(PYTHON) -c 'import sys; print(sys.version_info[:2])')" ] \
 			|| ! "$(ANSIBLE_PLAYBOOK)" --version >/dev/null 2>&1; then \
 			echo "[venv] (re)creating $(VENV)"; \
 			rm -rf "$(VENV)"; \
-			python3 -m venv "$(VENV)"; \
+			$(PYTHON) -m venv "$(VENV)"; \
 		fi
 	@if [ ! -f "$(VENV_STAMP)" ] || [ requirements-ansible.txt -nt "$(VENV_STAMP)" ]; then \
 		"$(PIP)" install --upgrade pip >/dev/null; \
@@ -45,9 +47,6 @@ fonts: venv ## Install user-local fonts
 
 fnm: venv ## Install fnm and the configured Node.js LTS release
 	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags fnm $(CHECK)
-
-rustup: venv ## Install the stable Rust toolchain and development components
-	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags rustup $(CHECK)
 
 dotfiles: venv ## Apply dotfiles with the preinstalled GNU Stow
 	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags dotfiles $(CHECK)

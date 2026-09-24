@@ -2,4 +2,4 @@
 # Default local automation uses inventory.ini with localhost.
 
 [local]
-localhost ansible_connection=local ansible_python_interpreter=auto_silent
+localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3.14

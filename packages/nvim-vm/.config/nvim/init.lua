@@ -28,7 +28,6 @@ do
 
   local tool_paths = {
     vim.fn.expand("~/.local/bin"),
-    vim.env.CARGO_HOME and (vim.env.CARGO_HOME .. "/bin") or vim.fn.expand("~/.cargo/bin"),
   }
 
   for i = #tool_paths, 1, -1 do

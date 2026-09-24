@@ -9,6 +9,10 @@
 - name: Check required commands in one shell
   ansible.builtin.shell: |
     missing=0
+    if command -v fnm >/dev/null 2>&1; then
+      eval "$(fnm env --shell bash)"
+      fnm use {{ fnm_node_version | quote }} >/dev/null 2>&1 || true
+    fi
     for name in $DOTFILES_REQUIRED_COMMANDS; do
       if path=$(command -v "$name" 2>/dev/null); then
         printf 'OK   %-20s %s\n' "$name" "$path"
@@ -21,7 +25,7 @@
   args:
     executable: /bin/bash
   environment:
-    PATH: "{{ cargo_home }}/bin:{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
     DOTFILES_REQUIRED_COMMANDS: "{{ expected_commands | join(' ') }}"
   register: doctor_required_commands
   changed_when: false
@@ -30,6 +34,13 @@
 - name: Show required command status
   ansible.builtin.debug:
     var: doctor_required_commands.stdout_lines
+
+- name: Check Beamer class is available to TeX
+  ansible.builtin.command:
+    argv: [kpsewhich, beamer.cls]
+  register: doctor_beamer_class
+  changed_when: false
+  failed_when: false
 
 - name: Check optional commands in one shell
   ansible.builtin.shell: |
@@ -43,7 +54,7 @@
   args:
     executable: /bin/bash
   environment:
-    PATH: "{{ cargo_home }}/bin:{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
+    PATH: "{{ ansible_facts.env.HOME }}/.local/bin:{{ ansible_facts.env.PATH | default('') }}"
     DOTFILES_OPTIONAL_COMMANDS: "{{ optional_commands | join(' ') }}"
   register: doctor_optional_commands
   changed_when: false
@@ -90,9 +101,11 @@
   ansible.builtin.assert:
     that:
       - doctor_required_commands.rc == 0
+      - doctor_beamer_class.rc == 0
       - doctor_links.rc == 0
     fail_msg: >-
       Dotfiles doctor failed:
-      {{ (doctor_required_commands.stdout_lines + doctor_links.stdout_lines)
-         | select('match', '^MISS ') | join(', ') }}
+       {{ ((doctor_required_commands.stdout_lines + doctor_links.stdout_lines)
+           | select('match', '^MISS ') | join(', '))
+          ~ (', Beamer class missing' if doctor_beamer_class.rc != 0 else '') }}
     quiet: true

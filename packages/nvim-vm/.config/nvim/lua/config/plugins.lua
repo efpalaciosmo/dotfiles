@@ -49,7 +49,7 @@ require("mason").setup({
         },
     },
     -- Keep Python package installs isolated under stdpath('data')/mason.
-    -- Node tooling is installed by Ansible with pnpm instead of Mason's npm backend.
+    -- fnm provides Node.js for Mason's JavaScript language servers.
     pip = { upgrade_pip = false },
     max_concurrent_installers = 6,
 })
@@ -61,10 +61,7 @@ require("mason-tool-installer").setup({
         -- LSP servers (names are Mason package names, not lspconfig names).
         "basedpyright",
         "ruff",
-        "lua-language-server",
         "vtsls",
-        "zls",
-        "julia-lsp",
         "marksman",
         "bash-language-server",
         "json-lsp",
@@ -75,8 +72,6 @@ require("mason-tool-installer").setup({
 
         -- Extra CLI tools.
         "prettier",
-        "stylua",
-        "sqlfluff",
     },
     auto_update = false,
     run_on_start = true,
@@ -452,7 +447,7 @@ require("nvim-web-devicons").setup({ default = true })
 -- lualine — minimal but beautiful statusline.
 --
 -- Visual idea (Adwaita pill, powerline transition):
---   [   N ][   main ][ src/foo.lua  ●          ][  E1 ][ lua-language-server ][ 42:7  20% ]
+--   [   N ][   main ][ src/main.c  ●          ][  E1 ][ clangd ][ 42:7  20% ]
 --
 -- - mode is rendered as a single letter inside an orange/green/purple pill
 -- - separators are powerline triangles for the colored chunks; nothing in c

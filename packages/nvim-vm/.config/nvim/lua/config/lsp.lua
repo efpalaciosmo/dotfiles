@@ -33,27 +33,6 @@ vim.lsp.config("*", {
 -- on $PATH are actually enabled below.
 -- ============================================================================
 
-vim.lsp.config("lua_ls", {
-    cmd = { "lua-language-server" },
-    filetypes = { "lua" },
-    root_markers = { ".luarc.json", ".luarc.jsonc", ".stylua.toml", "stylua.toml", ".git" },
-    settings = {
-        Lua = {
-            runtime = { version = "LuaJIT" },
-            workspace = {
-                checkThirdParty = false,
-                library = {
-                    vim.env.VIMRUNTIME,
-                    "${3rd}/luv/library",
-                },
-            },
-            diagnostics = { globals = { "vim" } },
-            telemetry = { enable = false },
-            hint = { enable = true },
-        },
-    },
-})
-
 vim.lsp.config("basedpyright", {
     cmd = { "basedpyright-langserver", "--stdio" },
     filetypes = { "python" },
@@ -96,57 +75,14 @@ vim.lsp.config("vtsls", {
         "javascriptreact",
         "typescript",
         "typescriptreact",
-        "vue",
     },
     root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
 })
 
 vim.lsp.config("clangd", {
     cmd = { "clangd", "--background-index", "--clang-tidy", "--header-insertion=iwyu" },
-    filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+    filetypes = { "c" },
     root_markers = { ".clangd", "compile_commands.json", "compile_flags.txt", "Makefile", ".git" },
-})
-
-vim.lsp.config("zls", {
-    cmd = { "zls" },
-    filetypes = { "zig", "zir" },
-    root_markers = { "zls.json", "build.zig", ".git" },
-    settings = {
-        zls = {
-            enable_inlay_hints = true,
-            inlay_hints_show_variable_type_hints = true,
-            inlay_hints_show_parameter_name = true,
-            warn_style = true,
-        },
-    },
-})
-
-vim.lsp.config("rust_analyzer", {
-    cmd = { "rust-analyzer" },
-    filetypes = { "rust" },
-    root_markers = { "Cargo.toml", "rust-project.json", ".git" },
-    settings = {
-        ["rust-analyzer"] = {
-            cargo = { allFeatures = true },
-            check = { command = "clippy" },
-            imports = { granularity = { group = "module" } },
-            inlayHints = {
-                bindingModeHints = { enable = true },
-                chainingHints = { enable = true },
-                closingBraceHints = { enable = true, minLines = 5 },
-                closureReturnTypeHints = { enable = "always" },
-                lifetimeElisionHints = { enable = "always", useParameterNames = true },
-                typeHints = { enable = true, hideNamedConstructor = false },
-            },
-            procMacro = { enable = true },
-        },
-    },
-})
-
-vim.lsp.config("julials", {
-    cmd = { "julia-lsp" },
-    filetypes = { "julia" },
-    root_markers = { "Project.toml", "JuliaProject.toml", ".git" },
 })
 
 vim.lsp.config("bashls", {
@@ -195,9 +131,6 @@ vim.lsp.config("tailwindcss", {
         "javascriptreact",
         "typescript",
         "typescriptreact",
-        "vue",
-        "svelte",
-        "astro",
     },
     root_markers = {
         "tailwind.config.js",
@@ -213,7 +146,6 @@ vim.lsp.config("tailwindcss", {
 -- ============================================================================
 
 local servers = {
-    "lua_ls",
     -- python
     "basedpyright",
     "ruff",
@@ -221,12 +153,6 @@ local servers = {
     "vtsls",
     -- c
     "clangd",
-    -- zig
-    "zls",
-    -- rust
-    "rust_analyzer",
-    -- julia
-    "julials",
     -- shell
     "bashls",
     -- markdown

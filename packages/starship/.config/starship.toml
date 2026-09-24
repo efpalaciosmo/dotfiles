@@ -5,7 +5,7 @@ format = """
 [╰─](fg:surface)$character"""
 
 right_format = """
-$python$nodejs$bun$deno$golang$rust$julia$c$lua$ruby$package$docker_context$aws$kubernetes"""
+$python$nodejs$c$package"""
 
 add_newline = true
 continuation_prompt = "[∙](fg:muted) "
@@ -153,68 +153,13 @@ symbol = " "
 style = "bold fg:green"
 format = "[$symbol($version )]($style)"
 
-[bun]
-symbol = " "
-style = "bold fg:orange"
-format = "[$symbol($version )]($style)"
-
-[deno]
-symbol = " "
-style = "bold fg:green"
-format = "[$symbol($version )]($style)"
-
-[golang]
-symbol = " "
-style = "bold fg:cyan"
-format = "[$symbol($version )]($style)"
-
-[rust]
-symbol = " "
-style = "bold fg:orange"
-format = "[$symbol($version )]($style)"
-
-[julia]
-symbol = " "
-style = "bold fg:purple"
-format = "[$symbol($version )]($style)"
-
 [c]
 symbol = " "
 style = "bold fg:blue"
 format = "[$symbol($version(-$name) )]($style)"
-
-[lua]
-symbol = " "
-style = "bold fg:blue"
-format = "[$symbol($version )]($style)"
-
-[ruby]
-symbol = " "
-style = "bold fg:red"
-format = "[$symbol($version )]($style)"
 
 [package]
 symbol = "󰏗 "
 style = "bold fg:pink"
 format = "[$symbol$version]($style) "
 display_private = false
-
-[docker_context]
-symbol = " "
-style = "bold fg:cyan"
-format = "[$symbol$context]($style) "
-only_with_files = true
-detect_files = ["docker-compose.yml", "docker-compose.yaml", "Dockerfile", "Containerfile"]
-
-[aws]
-symbol = " "
-style = "bold fg:orange"
-format = "[$symbol$profile( $region)]($style) "
-
-[kubernetes]
-symbol = "󱃾 "
-style = "bold fg:blue"
-format = '[$symbol$context( \($namespace\))]($style) '
-disabled = false
-detect_files = ["k8s.yaml", "kubernetes.yaml", "Chart.yaml", "skaffold.yaml"]
-detect_folders = ["k8s", "kubernetes"]

@@ -206,17 +206,15 @@ local function run_current_file()
   local executable
   local command
 
-  if filetype == "c" or filetype == "cpp" then
-    executable = filetype == "c" and "gcc" or "g++"
+  if filetype == "c" then
+    executable = "gcc"
     local output = vim.fn.tempname()
     local script = [[output=$1; shift; trap 'rm -f "$output"' EXIT; "$@" -o "$output" && "$output"]]
     command = { "sh", "-c", script, "nvim-run", output, executable, file }
-    if filetype == "c" then
-      table.insert(command, "-lm")
-    end
+    table.insert(command, "-lm")
   elseif filetype == "python" then
-    executable = "python3"
-    command = { executable, file }
+    executable = "uv"
+    command = { executable, "run", file }
   elseif filetype == "javascript" then
     executable = "node"
     command = { executable, file }

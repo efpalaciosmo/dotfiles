@@ -5,6 +5,11 @@ if [ -f "$HOME/.profile" ]; then
   . "$HOME/.profile"
 fi
 
+if command -v fnm >/dev/null 2>&1; then
+  eval "$(fnm env --use-on-cd --shell zsh)"
+  fnm use >/dev/null 2>&1
+fi
+
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000
 export SAVEHIST=10000
@@ -82,4 +87,10 @@ alias fedora="distrobox enter fedora -- zsh"
 # Syntax highlighting must be loaded after widgets and aliases.
 if ((!$+functions[_zsh_highlight])) && [ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+fi
+
+# Attach one session per container; panes already inside tmux do not reattach.
+if [[ ${CONTAINER_ID:-} == fedora && -z ${TMUX:-} && -z ${ZSH_EXECUTION_STRING:-} && -o interactive && -t 0 && -t 1 ]] \
+    && command -v tmux >/dev/null 2>&1; then
+  tmux new-session -A -s fedora
 fi

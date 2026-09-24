@@ -14,10 +14,6 @@ _prepend_path "$HOME/bin"
 _prepend_path "$HOME/.local/bin"
 _prepend_path "$HOME/.opencode/bin"
 
-CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
-_prepend_path "$CARGO_HOME/bin"
-export CARGO_HOME
-
 PNPM_HOME="$HOME/.local/share/pnpm"
 _prepend_path "$PNPM_HOME/bin"
 export PNPM_HOME
