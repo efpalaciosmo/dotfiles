@@ -3,8 +3,9 @@ SHELL := /bin/bash
 
 PACKAGES := git shell-container starship nvim-vm ghostty niri waybar mako rofi
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
-	$(wildcard packages/rofi/.config/rofi/scripts/*) \
+	$(filter-out packages/rofi/.config/rofi/scripts/clipboard-history,$(wildcard packages/rofi/.config/rofi/scripts/*)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
+PYTHON_FILES := packages/rofi/.config/rofi/scripts/clipboard-history
 
 .PHONY: help setup fonts dotfiles stow check doctor verify
 
@@ -25,9 +26,10 @@ dotfiles: ## Link every dotfile package with the existing GNU Stow
 stow: dotfiles ## Alias for dotfiles
 
 check: ## Run non-mutating repository syntax checks
-	@for file in $(SCRIPT_FILES) packages/shell-container/.bashrc packages/shell-container/.profile; do bash -n "$$file"; done
+	@for file in $(SCRIPT_FILES) packages/shell-container/.bashrc packages/shell-container/.profile; do bash -n "$$file" || exit 1; done
 	@if command -v zsh >/dev/null 2>&1; then zsh -n packages/shell-container/.zshrc; fi
 	@python3 -m json.tool packages/waybar/.config/waybar/config.jsonc >/dev/null
+	@python3 -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text()) for p in "$(PYTHON_FILES)".split()]'
 	@if command -v shellcheck >/dev/null 2>&1; then shellcheck $(SCRIPT_FILES); fi
 	@echo "check: OK"
 

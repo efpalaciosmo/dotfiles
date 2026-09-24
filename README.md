@@ -50,6 +50,28 @@ the dotfiles, log into Niri on the laptop and run:
 make doctor
 ```
 
+## Desktop controls
+
+The night-sky wallpaper drives the violet/blue palette across Niri, Waybar,
+Rofi, Mako and Ghostty. Niri opens windows at half width so two fit on the
+1920×1200 laptop screen; `Super+F` maximizes a column. The slim bar sits at the
+bottom and keeps playback, connection, audio, load, battery and clock visible. Hover
+for details; click the network indicator for connection settings, the clock for
+a calendar, and CPU or memory for a system monitor (`btop` if installed, `top`
+otherwise).
+
+`Super+D` opens applications; `Super+Shift+D` opens quick actions for windows,
+clipboard, screenshots, connections, system monitoring, disk usage and power.
+`Super+Shift+Y` opens clipboard history, `Super+Shift+S` screenshots,
+`Super+Shift+P` power and `Super+Alt+L`
+locks the session. In Rofi, `?` switches from applications to recursive file
+search under your home directory; `Control+Tab` cycles through the available
+modes. Clipboard history uses `wl-paste`, `wl-copy` and the
+system Python/SQLite; it keeps at most 60 text or PNG entries (4 MiB each) in
+`~/.local/share/dotfiles/clipboard/history.sqlite3`. Clear it in the menu or
+with `~/.config/rofi/scripts/clipboard --clear`. Start a new Niri session after
+linking the dotfiles to activate its clipboard watchers.
+
 ## Fonts
 
 `make fonts` installs IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font, and

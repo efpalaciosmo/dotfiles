@@ -24,7 +24,11 @@ run_terminal() {
 
 case "${1:-shell}" in
     monitor|cpu|memory)
-        run_terminal "System monitor" "btop"
+        if command -v btop >/dev/null 2>&1; then
+            run_terminal "System monitor" "btop"
+        else
+            run_terminal "System monitor" "top"
+        fi
         ;;
     disk)
         cmd='df -h /; printf "\n"; lsblk -o NAME,SIZE,FSTYPE,FSUSE%,FSAVAIL,MOUNTPOINTS 2>/dev/null || true'

@@ -2,15 +2,15 @@
 // Configuracion principal de rofi.
 
 configuration {
-    modi:                 "drun,recursivebrowser,run,window,ssh,filebrowser";
+    modes:                "drun,recursivebrowser,window,run,filebrowser";
     show-icons:           true;
     icon-theme:           "Adwaita";
-    display-drun:         "Apps";
-    display-run:          "Run";
-    display-window:       "Window";
-    display-ssh:          "SSH";
-    display-filebrowser:  "Files";
-    display-recursivebrowser: "Files";
+    display-drun:         "Aplicaciones";
+    display-run:          "Comandos";
+    display-window:       "Ventanas";
+    display-filebrowser:  "Archivos";
+    display-recursivebrowser: "Buscar archivos";
+    kb-mode-next:         "question,Control+Tab";
     drun-display-format:  "{name}";
     drun-reload-desktop-cache: true;
     window-format:        "{w}  {c}  {t}";
@@ -21,9 +21,9 @@ configuration {
     matching:             "fuzzy";
     case-sensitive:       false;
     cycle:                true;
-    hover-select:         true;
+    hover-select:         false;
     me-select-entry:      "";
     me-accept-entry:      "MousePrimary";
 }
 
-@theme "~/.config/rofi/themes/adwaita-dark.rasi"
+@theme "~/.config/rofi/themes/night-sky.rasi"

@@ -5,32 +5,28 @@ script_dir=${BASH_SOURCE[0]%/*}
 # shellcheck source=common
 . "$script_dir/common"
 
-missing_commands cliphist wl-copy || exit 1
-clear_label="󰆴  Clear history"
+missing_commands rofi wl-copy python3 || exit 1
+history="$script_dir/clipboard-history"
+clear_label="󰆴  Borrar historial"
 
-selector() {
-    if command -v rofi >/dev/null 2>&1; then
-        rofi -dmenu -i -p "Clipboard" -matching fuzzy \
-            -theme-str 'window { width: 760px; } listview { lines: 12; }'
-    else
-        return 1
-    fi
-}
-
-if [[ "${1:-}" == "--clear" ]]; then
-    cliphist wipe
-    notify_user "Clipboard history cleared"
+if [[ "${1:-}" == --clear ]]; then
+    "$history" clear
+    notify_user "Portapapeles" "Historial borrado"
     exit 0
 fi
 
-choice=$({ printf '%s\n' "$clear_label"; cliphist list; } | selector || true)
+choice=$({ printf '%s\n' "$clear_label"; "$history" list; } |
+    rofi -dmenu -i -no-custom -p "Portapapeles" -matching fuzzy \
+        -theme-str 'window { width: 760px; } listview { lines: 12; }' || true)
 [[ -n "$choice" ]] || exit 0
 
 if [[ "$choice" == "$clear_label" ]]; then
-    confirm_choice=$(menu "Clear clipboard history?" "No" "Yes" || true)
-    [[ "$confirm_choice" == "Yes" ]] || exit 0
-    cliphist wipe
-    notify_user "Clipboard history cleared"
-else
-    printf '%s' "$choice" | cliphist decode | wl-copy
+    confirm_choice=$(menu "¿Borrar historial?" "Cancelar" "Borrar" || true)
+    [[ "$confirm_choice" == Borrar ]] || exit 0
+    "$history" clear
+    notify_user "Portapapeles" "Historial borrado"
+elif [[ "$choice" =~ ^([0-9]+)[[:space:]] ]]; then
+    id=${BASH_REMATCH[1]}
+    mime=$("$history" mime "$id")
+    "$history" get "$id" | wl-copy --type "$mime"
 fi

@@ -1,5 +1,5 @@
 # Ghostty Configuration
-# Adwaita Dark theme with JetBrains Mono Medium
+# Night-sky palette shared with Niri, Waybar and Rofi.
 
 # ============================================================================
 # Font Configuration
@@ -21,11 +21,11 @@ window-padding-y = 12
 window-vsync = true
 
 # ============================================================================
-# Adwaita Dark Colorscheme (from neovim adwaita.lua)
+# Terminal colors: night-sky surfaces with familiar Adwaita ANSI accents
 # ============================================================================
 # Main background and foreground
-background = #1a1a1d
-foreground = #e0e0e0
+background = #141526
+foreground = #efebf8
 
 # ANSI color palette (0-7: normal colors, 8-15: bright colors)
 # Based on Adwaita 1.9 palette
@@ -51,7 +51,7 @@ palette = 15=#ffffff
 # ============================================================================
 cursor-style = block
 cursor-opacity = 1.0
-cursor-color = #ffbe6f
+cursor-color = #b8a0ed
 
 # ============================================================================
 # Scrollback Buffer

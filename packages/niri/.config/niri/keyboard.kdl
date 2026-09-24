@@ -7,9 +7,13 @@ binds {
     Mod+D repeat=false hotkey-overlay-title="Lanzador de apps" {
       spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/launcher"
     }
+    Mod+Shift+D repeat=false hotkey-overlay-title="Acciones rapidas" {
+      spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/launcher actions"
+    }
     Mod+Shift+P repeat=false hotkey-overlay-title="Menu de energia" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/power-menu"; }
     Mod+Shift+S repeat=false hotkey-overlay-title="Captura de pantalla" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/screenshot"; }
     Mod+Shift+Y repeat=false hotkey-overlay-title="Historial del portapapeles" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/clipboard"; }
+    Mod+Alt+L repeat=false hotkey-overlay-title="Bloquear pantalla" { spawn "swaylock" "-f" "-c" "141526"; }
 
     Mod+O repeat=false { toggle-overview; }
     Mod+Q repeat=false { close-window; }
@@ -89,6 +93,10 @@ binds {
     Mod+Ctrl+3 { move-column-to-workspace 3; }
     Mod+Ctrl+4 { move-column-to-workspace 4; }
     Mod+Ctrl+5 { move-column-to-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
     Mod+Ctrl+6 { move-column-to-workspace 6; }
     Mod+Ctrl+7 { move-column-to-workspace 7; }
     Mod+Ctrl+8 { move-column-to-workspace 8; }
@@ -120,7 +128,6 @@ binds {
     Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
-    Alt+Shift+p { screenshot-window; }
 
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ -l 1.0"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-"; }

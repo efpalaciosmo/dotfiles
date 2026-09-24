@@ -38,18 +38,22 @@ model=""
 [[ -r "$bat/model_name" ]] && model=$(<"$bat/model_name")
 
 class="discharging"
+status_text="En uso"
 case "$status" in
     Charging)
         icon=""
         class="charging"
+        status_text="Cargando"
         ;;
     Full)
         icon=""
         class="full"
+        status_text="Completa"
         ;;
     Not\ charging)
         icon=""
         class="full"
+        status_text="Conectada"
         ;;
     *)
         if (( capacity >= 85 )); then
@@ -72,17 +76,17 @@ case "$status" in
         ;;
 esac
 
-tooltip="Battery: ${capacity}%\nStatus: ${status}"
-[[ -n "$manufacturer$model" ]] && tooltip+="\nDevice: ${manufacturer} ${model}"
+tooltip="Batería: ${capacity}%"$'\n'"Estado: ${status_text}"
+[[ -n "$manufacturer$model" ]] && tooltip+=$'\n'"Equipo: ${manufacturer} ${model}"
 
 if [[ -r "$bat/energy_now" && -r "$bat/energy_full" ]]; then
     energy_now=$(<"$bat/energy_now")
     energy_full=$(<"$bat/energy_full")
-    tooltip+="\nEnergy: $((energy_now / 1000)) / $((energy_full / 1000)) mWh"
+    tooltip+=$'\n'"Energía: $((energy_now / 1000)) / $((energy_full / 1000)) mWh"
 elif [[ -r "$bat/charge_now" && -r "$bat/charge_full" ]]; then
     charge_now=$(<"$bat/charge_now")
     charge_full=$(<"$bat/charge_full")
-    tooltip+="\nCharge: $((charge_now / 1000)) / $((charge_full / 1000)) mAh"
+    tooltip+=$'\n'"Carga: $((charge_now / 1000)) / $((charge_full / 1000)) mAh"
 fi
 
 printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \

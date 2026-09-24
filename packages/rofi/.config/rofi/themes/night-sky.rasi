@@ -1,0 +1,81 @@
+/* Night sky: the wallpaper's violet twilight and pale blue stars. */
+* {
+    font: "Inter 11";
+    surface: #1c1c32;
+    raised: #282641;
+    outline: #48415f;
+    accent: #b8a0ed;
+    accent-soft: #39334f;
+    foreground: #efebf8;
+    muted: #b4abc9;
+    background-color: transparent;
+    text-color: var(foreground);
+}
+
+window {
+    width: 620px;
+    location: center;
+    anchor: center;
+    background-color: var(surface);
+    border: 2px;
+    border-color: var(outline);
+    border-radius: 16px;
+    padding: 18px;
+}
+
+mainbox { spacing: 12px; }
+
+inputbar {
+    children: [ prompt, entry ];
+    background-color: var(raised);
+    border-radius: 10px;
+    padding: 12px 16px;
+    spacing: 12px;
+}
+
+prompt { text-color: var(accent); }
+entry {
+    placeholder: "Buscar…";
+    placeholder-color: var(muted);
+    text-color: var(foreground);
+}
+
+listview {
+    lines: 8;
+    columns: 1;
+    fixed-height: false;
+    dynamic: true;
+    scrollbar: false;
+    spacing: 4px;
+}
+
+element {
+    padding: 10px 12px;
+    spacing: 12px;
+    border-radius: 9px;
+    background-color: transparent;
+}
+
+element alternate.normal { background-color: var(raised); }
+element selected.normal,
+element selected.active,
+element selected.urgent {
+    background-color: var(accent-soft);
+    text-color: var(foreground);
+}
+element normal.active { text-color: var(accent); }
+element normal.urgent { text-color: #f38ba8; }
+element-icon { size: 20px; }
+element-text { text-color: inherit; highlight: bold #b8a0ed; }
+
+mode-switcher { spacing: 6px; }
+button {
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-color: var(muted);
+    background-color: var(raised);
+}
+button selected {
+    text-color: var(surface);
+    background-color: var(accent);
+}

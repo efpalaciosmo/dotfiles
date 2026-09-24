@@ -1,10 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+script_dir=${BASH_SOURCE[0]%/*}
 mode=${1:-drun}
 
+if [[ "$mode" == actions ]]; then
+    # shellcheck source=common
+    . "$script_dir/common"
+    choice=$(menu "Acciones" \
+        "󰀻  Aplicaciones" \
+        "󰖲  Ventanas" \
+        "󰅌  Portapapeles" \
+        "󰹑  Capturas" \
+        "󰤨  Conexiones" \
+        "󰍛  Monitor del sistema" \
+        "󰋊  Espacio en disco" \
+        "  Energía" || true)
+    case "$choice" in
+        "󰀻  Aplicaciones") mode=drun ;;
+        "󰖲  Ventanas") mode=window ;;
+        "󰅌  Portapapeles") exec "$script_dir/clipboard" ;;
+        "󰹑  Capturas") exec "$script_dir/screenshot" ;;
+        "󰤨  Conexiones") missing_commands nm-connection-editor || exit 1; exec nm-connection-editor ;;
+        "󰍛  Monitor del sistema") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" monitor ;;
+        "󰋊  Espacio en disco") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" disk ;;
+        "  Energía") exec "$script_dir/power-menu" ;;
+        *) exit 0 ;;
+    esac
+fi
+
 case "$mode" in
-    drun|recursivebrowser|run|window|ssh|filebrowser) ;;
+    drun|recursivebrowser|run|window|filebrowser) ;;
     *) mode=drun ;;
 esac
 
@@ -13,8 +39,7 @@ if command -v rofi >/dev/null 2>&1; then
         -show-icons \
         -drun-use-desktop-cache \
         -drun-reload-desktop-cache \
-        -recursivebrowser-directory "$HOME" \
-        -kb-mode-next "question,Control+Tab"
+        -recursivebrowser-directory "$HOME"
 fi
 
 printf 'Rofi is not installed.\n' >&2

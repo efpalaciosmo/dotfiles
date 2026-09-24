@@ -1,6 +1,6 @@
 font=Inter 12
-width=460
-height=320
+width=380
+height=200
 margin=16
 padding=16,18
 border-size=1
@@ -11,31 +11,31 @@ markup=1
 actions=1
 default-timeout=8000
 ignore-timeout=0
-max-visible=6
+max-visible=4
 sort=-time
 anchor=top-right
 
-background-color=#1d1d20
-text-color=#deddda
-border-color=#ff7800
-progress-color=#ff7800
+background-color=#1c1c32
+text-color=#efebf8
+border-color=#b8a0ed
+progress-color=#b8a0ed
 
 [urgency=low]
 text-color=#c0bfbc
-border-color=#36363a
-progress-color=#9a9996
+border-color=#403957
+progress-color=#958bad
 default-timeout=5000
 
 [urgency=high]
 text-color=#ffffff
-border-color=#ed333b
-progress-color=#ff7800
+border-color=#f38ba8
+progress-color=#f38ba8
 default-timeout=0
 
 [app-name=volume]
-border-color=#2ec27e
-progress-color=#2ec27e
+border-color=#90bfff
+progress-color=#90bfff
 
 [app-name=Spotify]
-border-color=#2ec27e
-progress-color=#2ec27e
+border-color=#90bfff
+progress-color=#90bfff

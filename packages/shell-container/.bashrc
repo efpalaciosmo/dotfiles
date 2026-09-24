@@ -88,3 +88,5 @@ HISTFILESIZE=20000
 
 # opencode
 export PATH=/var/home/efpalaciosmo/.opencode/bin:$PATH
+
+alias dev='distrobox enter fedora'

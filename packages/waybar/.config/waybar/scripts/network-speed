@@ -1,37 +1,56 @@
 #!/usr/bin/env bash
 set -u
 
-route=$(ip -4 route show default 2>/dev/null || true)
+json_escape() {
+    local s=${1//\\/\\\\}
+    s=${s//\"/\\\"}
+    s=${s//$'\n'/\\n}
+    printf '%s' "$s"
+}
+
+route=$(ip -4 route show default 2>/dev/null | head -n 1)
 if [[ ! "$route" =~ (^|[[:space:]])dev[[:space:]]+([^[:space:]]+) ]]; then
-    printf '{"text":"󰤮","tooltip":"Disconnected","class":"disconnected"}\n'
+    printf '{"text":"󰤮  sin red","tooltip":"Sin ruta de red · clic para configurar conexiones","class":"disconnected"}\n'
     exit 0
 fi
 
 iface=${BASH_REMATCH[2]}
 stats="/sys/class/net/$iface/statistics"
 if [[ ! -r "$stats/rx_bytes" || ! -r "$stats/tx_bytes" ]]; then
-    printf '{"text":"󰤮","tooltip":"No statistics for %s","class":"disconnected"}\n' "$iface"
+    printf '{"text":"󰤮  sin red","tooltip":"Interfaz sin estadísticas","class":"disconnected"}\n'
     exit 0
 fi
 
-state_dir="${XDG_RUNTIME_DIR:-/tmp}/waybar"
-mkdir -p "$state_dir"
-state_file="$state_dir/network-speed"
+connection=$(nmcli -g GENERAL.CONNECTION device show "$iface" 2>/dev/null | head -n 1)
+[[ -n "$connection" && "$connection" != -- ]] || connection=$iface
+icon="󰈀"
+signal=""
+if [[ -d "/sys/class/net/$iface/wireless" ]]; then
+    icon="󰤨"
+    signal=$(nmcli -g IN-USE,SIGNAL device wifi list ifname "$iface" 2>/dev/null | awk -F: '$1 == "*" { print $2; exit }')
+fi
 
 rx=$(<"$stats/rx_bytes")
 tx=$(<"$stats/tx_bytes")
 now=$(date +%s%N)
-down=0.0
-up=0.0
-
-if [[ -r "$state_file" ]]; then
-    read -r previous_iface previous_rx previous_tx previous_time < "$state_file" || true
-    if [[ "${previous_iface:-}" == "$iface" && "${previous_time:-}" =~ ^[0-9]+$ && "$now" -gt "$previous_time" ]]; then
-        down=$(awk -v bytes="$((rx - previous_rx))" -v ns="$((now - previous_time))" 'BEGIN { printf "%.1f", bytes * 8000 / ns }')
-        up=$(awk -v bytes="$((tx - previous_tx))" -v ns="$((now - previous_time))" 'BEGIN { printf "%.1f", bytes * 8000 / ns }')
+down="—"
+up="—"
+# Runtime state belongs to this login; a fresh session starts with no sample.
+if [[ -n "${XDG_RUNTIME_DIR:-}" && -d "$XDG_RUNTIME_DIR" ]]; then
+    state_file="$XDG_RUNTIME_DIR/waybar-network-speed"
+    if [[ -r "$state_file" ]]; then
+        read -r previous_iface previous_rx previous_tx previous_time < "$state_file" || true
+        if [[ "$previous_iface" == "$iface" && "$previous_rx" =~ ^[0-9]+$ && "$previous_tx" =~ ^[0-9]+$ && "$previous_time" =~ ^[0-9]+$ ]] &&
+            (( now > previous_time && rx >= previous_rx && tx >= previous_tx )); then
+            down=$(awk -v bytes="$((rx - previous_rx))" -v ns="$((now - previous_time))" 'BEGIN { printf "%.1f", bytes * 8000 / ns }')
+            up=$(awk -v bytes="$((tx - previous_tx))" -v ns="$((now - previous_time))" 'BEGIN { printf "%.1f", bytes * 8000 / ns }')
+        fi
     fi
+    printf '%s %s %s %s\n' "$iface" "$rx" "$tx" "$now" > "$state_file" 2>/dev/null || true
 fi
 
-printf '%s %s %s %s\n' "$iface" "$rx" "$tx" "$now" > "$state_file"
-printf '{"text":"󰇚 %s Mb/s  󰕒 %s Mb/s","tooltip":"Interface: %s\\nDownload: %s Mb/s\\nUpload: %s Mb/s","class":"connected"}\n' \
-    "$down" "$up" "$iface" "$down" "$up"
+tooltip="${connection} (${iface})"
+[[ -n "$signal" ]] && tooltip+=$'\n'"Señal: ${signal}%"
+tooltip+=$'\n'"↓ ${down} Mb/s · ↑ ${up} Mb/s"$'\n'"Clic: conexiones · clic derecho: diagnóstico"
+printf '{"text":"%s","tooltip":"%s","class":"connected"}\n' \
+    "$(json_escape "$icon  $connection")" "$(json_escape "$tooltip")"
