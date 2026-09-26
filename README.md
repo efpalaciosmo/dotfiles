@@ -62,8 +62,9 @@ restrained blue-slate surfaces (`#272a40`, `#343751`) in Rofi, Waybar and Mako,
 while Kitty keeps Adwaita's neutral view background (`#1d1d20`). Waybar stays
 transparent, with translucent cards and semantic GNOME colors for each
 module (network teal, brightness yellow, audio blue, CPU orange, memory purple,
-battery green, media purple and power red). Waybar and Rofi use orange only on
-their borders; `Super+Return`, Rofi and Waybar actions open Kitty.
+battery green, media purple and power red). Waybar uses the same solid blue
+border as inactive niri windows; Rofi keeps orange borders. `Super+Return`,
+Rofi and Waybar actions open Kitty.
 Selected items use GNOME blue 4 (`#1c71d8`) so white labels have enough
 contrast at small sizes. Bash keeps a compact, colored prompt; vi inherits the
 editing essentials (relative numbers, four-space indentation, search and a

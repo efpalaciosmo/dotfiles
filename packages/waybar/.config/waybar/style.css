@@ -3,7 +3,7 @@
 @define-color window #272a40;
 @define-color view #202337;
 @define-color raised #343751;
-@define-color outline #ffa348;
+@define-color outline #62a0ea;
 @define-color text #ffffff;
 @define-color muted #c0bfbc;
 @define-color blue #81d0ff;
@@ -35,7 +35,7 @@ tooltip label { padding: 8px; color: @text; }
 
 #workspaces, #window, #custom-media, .modules-right {
     background: alpha(@window, 0.88);
-    border: 1px solid alpha(@outline, 0.78);
+    border: 1px solid @outline;
     border-radius: 12px;
 }
 #workspaces { padding: 2px 4px; }
