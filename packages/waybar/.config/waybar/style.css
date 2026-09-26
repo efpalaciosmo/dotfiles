@@ -53,7 +53,7 @@ tooltip label { padding: 8px; color: @text; }
 
 .modules-right { padding: 2px 4px; }
 #tray, #privacy, #idle_inhibitor, #custom-network-speed,
-#pulseaudio, #custom-cpu, #memory, #custom-battery, #clock, #custom-power {
+#backlight, #pulseaudio, #custom-cpu, #memory, #custom-battery, #clock, #custom-power {
     padding: 0 7px;
     border-radius: 8px;
 }
@@ -63,6 +63,7 @@ tooltip label { padding: 8px; color: @text; }
 #idle_inhibitor.activated { color: @surface; background: @amber; }
 #custom-network-speed { color: @blue; }
 #custom-network-speed.disconnected { color: @red; }
+#backlight { color: @amber; }
 #pulseaudio.muted { color: @muted; }
 #custom-cpu, #memory { color: @muted; }
 #custom-cpu.warning, #custom-battery.warning { color: @amber; }
@@ -73,6 +74,6 @@ tooltip label { padding: 8px; color: @text; }
 #custom-battery.charging, #custom-battery.full { color: @blue; }
 #clock { color: @text; background: @raised; }
 #custom-power { color: @red; }
-#idle_inhibitor:hover, #custom-network-speed:hover, #pulseaudio:hover,
+#idle_inhibitor:hover, #custom-network-speed:hover, #backlight:hover, #pulseaudio:hover,
 #custom-cpu:hover, #memory:hover, #custom-battery:hover, #clock:hover,
 #custom-power:hover { background: @raised; }

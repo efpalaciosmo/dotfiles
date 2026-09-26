@@ -55,10 +55,10 @@ make doctor
 The night-sky wallpaper drives the violet/blue palette across Niri, Waybar,
 Rofi, Mako and Ghostty. Niri opens windows at half width so two fit on the
 1920×1200 laptop screen; `Super+F` maximizes a column. The slim bar sits at the
-bottom and keeps playback, connection, audio, load, battery and clock visible. Hover
+bottom and keeps playback, connection, brightness, audio, load, battery and clock visible. Hover
 for details; click the network indicator for connection settings, the clock for
 a calendar, and CPU or memory for a system monitor (`btop` if installed, `top`
-otherwise).
+otherwise). Scroll over the brightness indicator to adjust the screen in 5% steps.
 
 `Super+D` opens applications; `Super+Shift+D` opens quick actions for windows,
 clipboard, screenshots, connections, system monitoring, disk usage and power.

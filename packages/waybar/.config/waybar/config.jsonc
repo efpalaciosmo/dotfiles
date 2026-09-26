@@ -8,7 +8,7 @@
     "margin-right": 10,
     "modules-left": ["niri/workspaces", "niri/window"],
     "modules-center": ["custom/media"],
-    "modules-right": ["tray", "privacy", "idle_inhibitor", "custom/network-speed", "pulseaudio", "custom/cpu", "memory", "custom/battery", "clock", "custom/power"],
+    "modules-right": ["tray", "privacy", "idle_inhibitor", "custom/network-speed", "backlight", "pulseaudio", "custom/cpu", "memory", "custom/battery", "clock", "custom/power"],
 
     "niri/workspaces": {
         "format": "{index}",
@@ -54,6 +54,13 @@
         "max-length": 19,
         "on-click": "nm-connection-editor",
         "on-click-right": "~/.config/waybar/scripts/terminal-tool network"
+    },
+    "backlight": {
+        "format": "{icon}  {percent}%",
+        "format-icons": ["󰃞", "󰃟", "󰃠"],
+        "tooltip-format": "Brillo: {percent}%",
+        "on-scroll-up": "brightnessctl --class=backlight set +5%",
+        "on-scroll-down": "brightnessctl --class=backlight set 5%-"
     },
     "pulseaudio": {
         "format": "{icon}  {volume}%",
