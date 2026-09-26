@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := setup
 
-PACKAGES := git shell-container starship nvim-vm ghostty niri waybar mako rofi
+PACKAGES := git shell-container vi kitty niri waybar mako rofi
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(filter-out packages/rofi/.config/rofi/scripts/clipboard-history,$(wildcard packages/rofi/.config/rofi/scripts/*)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
@@ -27,9 +27,16 @@ stow: dotfiles ## Alias for dotfiles
 
 check: ## Run non-mutating repository syntax checks
 	@for file in $(SCRIPT_FILES) packages/shell-container/.bashrc packages/shell-container/.profile; do bash -n "$$file" || exit 1; done
-	@if command -v zsh >/dev/null 2>&1; then zsh -n packages/shell-container/.zshrc; fi
 	@python3 -m json.tool packages/waybar/.config/waybar/config.jsonc >/dev/null
 	@python3 -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text()) for p in "$(PYTHON_FILES)".split()]'
+	@if command -v vi >/dev/null 2>&1; then \
+		output=$$(mktemp); \
+		vi --not-a-term -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \
+		grep -Eq '^[[:space:]]*number[[:space:]]*$$' "$$output" && \
+		grep -Eq '^[[:space:]]*relativenumber[[:space:]]*$$' "$$output" && \
+		grep -q 'shiftwidth=4' "$$output"; result=$$?; \
+		rm -f -- "$$output"; exit $$result; \
+	fi
 	@if command -v shellcheck >/dev/null 2>&1; then shellcheck $(SCRIPT_FILES); fi
 	@echo "check: OK"
 

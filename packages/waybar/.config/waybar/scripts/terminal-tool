@@ -14,11 +14,11 @@ run_terminal() {
     local command=$2
     local shell_command="${command}; status=\$?; ${pause}; exit \$status"
 
-    if command -v ghostty >/dev/null 2>&1; then
-        exec ghostty --title="$title" -e bash -lc "$shell_command"
+    if command -v kitty >/dev/null 2>&1; then
+        exec kitty --title "$title" bash -lc "$shell_command"
     fi
 
-    notify_user "Waybar" "Ghostty is not installed"
+    notify_user "Waybar" "Kitty is not installed"
     exit 1
 }
 

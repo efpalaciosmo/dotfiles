@@ -1,13 +1,15 @@
-/* Night sky: the wallpaper's violet twilight and pale blue stars. */
+/* Deep blue-slate surfaces inspired by the night sky; GNOME blue accent. */
 * {
     font: "Inter 11";
-    surface: #1c1c32;
-    raised: #282641;
-    outline: #48415f;
-    accent: #b8a0ed;
-    accent-soft: #39334f;
-    foreground: #efebf8;
-    muted: #b4abc9;
+    surface: #272a40;
+    view: #202337;
+    raised: #343751;
+    outline: #ffa348;
+    accent: #1c71d8;
+    accent-text: #81d0ff;
+    foreground: #ffffff;
+    muted: #c0bfbc;
+    danger: #ff888c;
     background-color: transparent;
     text-color: var(foreground);
 }
@@ -17,9 +19,9 @@ window {
     location: center;
     anchor: center;
     background-color: var(surface);
-    border: 2px;
+    border: 1px;
     border-color: var(outline);
-    border-radius: 16px;
+    border-radius: 15px;
     padding: 18px;
 }
 
@@ -27,13 +29,15 @@ mainbox { spacing: 12px; }
 
 inputbar {
     children: [ prompt, entry ];
-    background-color: var(raised);
+    background-color: var(view);
+    border: 1px;
+    border-color: var(outline);
     border-radius: 10px;
     padding: 12px 16px;
     spacing: 12px;
 }
 
-prompt { text-color: var(accent); }
+prompt { text-color: var(accent-text); }
 entry {
     placeholder: "Buscar…";
     placeholder-color: var(muted);
@@ -56,17 +60,16 @@ element {
     background-color: transparent;
 }
 
-element alternate.normal { background-color: var(raised); }
 element selected.normal,
 element selected.active,
 element selected.urgent {
-    background-color: var(accent-soft);
+    background-color: var(accent);
     text-color: var(foreground);
 }
-element normal.active { text-color: var(accent); }
-element normal.urgent { text-color: #f38ba8; }
+element normal.active { text-color: var(accent-text); }
+element normal.urgent { text-color: var(danger); }
 element-icon { size: 20px; }
-element-text { text-color: inherit; highlight: bold #b8a0ed; }
+element-text { text-color: inherit; highlight: bold underline; }
 
 mode-switcher { spacing: 6px; }
 button {
@@ -76,6 +79,6 @@ button {
     background-color: var(raised);
 }
 button selected {
-    text-color: var(surface);
+    text-color: var(foreground);
     background-color: var(accent);
 }

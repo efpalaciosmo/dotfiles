@@ -6,7 +6,7 @@ layout {
 
     // Two useful columns on the laptop; Mod+F still maximizes when needed.
     default-column-width { proportion 0.5; }
-    gaps 10
+    gaps 12
 
     // Mod+R / Mod+Shift+R: 2/5, 1/2, 3/5, 2/3, completo.
     preset-column-widths {
@@ -32,9 +32,10 @@ layout {
     border {
         on
         width 2
-        active-color "#b8a0ed"
-        inactive-color "#403957"
-        urgent-color "#f38ba8"
+        // GNOME orange highlights focus; blue keeps inactive windows visible.
+        active-color "#ffa348"
+        inactive-color "#62a0ea"
+        urgent-color "#ed333b"
     }
 
     shadow {
@@ -43,7 +44,7 @@ layout {
         spread 3
         offset x=0 y=3
         draw-behind-window true
-        color "#08091680"
+        color "#00000066"
     }
 
     tab-indicator {
@@ -56,13 +57,13 @@ layout {
         position "right"
         gaps-between-tabs 2
         corner-radius 6
-        active-color "#b8a0ed"
-        inactive-color "#6f628e"
-        urgent-color "#f38ba8"
+        active-color "#ffa348"
+        inactive-color "#62a0ea"
+        urgent-color "#ed333b"
     }
 
     insert-hint {
         on
-        color "#b8a0ed80"
+        color "#ffa34880"
     }
 }

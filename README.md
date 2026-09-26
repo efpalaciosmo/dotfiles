@@ -4,8 +4,8 @@ This repository does exactly three things:
 
 1. Downloads and installs the configured fonts under the user data directory.
 2. Uses the GNU Stow already installed by Fedora.
-3. Links and validates the dotfiles for Niri, Waybar, Rofi, Ghostty, Mako,
-   Neovim, Git, Starship, and the shell.
+3. Links and validates the dotfiles for Niri, Waybar, Rofi, Kitty, Mako,
+   vi, Git, and Bash.
 
 It does not install system packages, graphical applications, language runtimes,
 shell plugins, or developer tools. Install all required software from Fedora
@@ -38,10 +38,14 @@ creates. Files already linked to this repository are left untouched.
 
 The setup itself needs `git`, `make`, `stow`, `curl`, `tar`, `unzip`, `find`,
 `install`, `mktemp`, `python3`, and `fc-cache`. Install Niri, Waybar, Rofi,
-Ghostty, Mako, Neovim, Starship and every graphical-session helper beforehand
+Kitty, vi, Mako and every graphical-session helper beforehand
 from Fedora; this repository only configures and validates them. `make doctor`
 checks the complete runtime, including audio, networking, clipboard,
 brightness, locking, and D-Bus helpers.
+
+On Fedora Silverblue, Kitty can be
+layered with `sudo rpm-ostree install kitty` followed by a
+reboot. Then run `make dotfiles` and `make doctor`.
 
 Static checks cannot prove hardware or graphical integration. After applying
 the dotfiles, log into Niri on the laptop and run:
@@ -52,8 +56,24 @@ make doctor
 
 ## Desktop controls
 
-The night-sky wallpaper drives the violet/blue palette across Niri, Waybar,
-Rofi, Mako and Ghostty. Niri opens windows at half width so two fit on the
+Niri uses GNOME orange 2 (`#ffa348`) for the focused border, blue 2 (`#62a0ea`)
+for inactive borders and red for urgency. The night-sky wallpaper informs the
+restrained blue-slate surfaces (`#272a40`, `#343751`) in Rofi, Waybar and Mako,
+while Kitty keeps Adwaita's neutral view background (`#1d1d20`). Waybar stays
+transparent, with translucent cards and semantic GNOME colors for each
+module (network teal, brightness yellow, audio blue, CPU orange, memory purple,
+battery green, media purple and power red). Waybar and Rofi use orange only on
+their borders; `Super+Return`, Rofi and Waybar actions open Kitty.
+Selected items use GNOME blue 4 (`#1c71d8`) so white labels have enough
+contrast at small sizes. Bash keeps a compact, colored prompt; vi inherits the
+editing essentials (relative numbers, four-space indentation, search and a
+matching-bracket indicator) in `packages/vi/.virc`.
+Color references: [libadwaita CSS variables](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.2/css-variables.html)
+and the [GNOME palette](https://developer.gnome.org/hig/reference/palette.html).
+Screenshots of the running session: [focused window](docs/screenshots/desktop-adwaita-orange.png)
+and [Rofi launcher](docs/screenshots/launcher-adwaita-orange.png). Personal
+network, media and drive names are blurred in these images.
+Niri opens windows at half width so two fit on the
 1920×1200 laptop screen; `Super+F` maximizes a column. The slim bar sits at the
 bottom and keeps playback, connection, brightness, audio, load, battery and clock visible. Hover
 for details; click the network indicator for connection settings, the clock for

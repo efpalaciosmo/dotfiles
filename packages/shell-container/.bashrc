@@ -11,10 +11,8 @@ if [ -f "$HOME/.profile" ]; then
     . "$HOME/.profile"
 fi
 
-if command -v nvim >/dev/null 2>&1; then
-    export EDITOR="nvim"
-    export VISUAL="nvim"
-fi
+export EDITOR=vi
+export VISUAL=vi
 
 if command -v uv >/dev/null 2>&1; then
     eval "$(uv generate-shell-completion bash)"

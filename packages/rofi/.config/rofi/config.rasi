@@ -15,7 +15,7 @@ configuration {
     drun-reload-desktop-cache: true;
     window-format:        "{w}  {c}  {t}";
     sidebar-mode:         false;
-    terminal:             "ghostty";
+    terminal:             "kitty";
     sort:                 true;
     sorting-method:       "fzf";
     matching:             "fuzzy";
@@ -26,4 +26,4 @@ configuration {
     me-accept-entry:      "MousePrimary";
 }
 
-@theme "~/.config/rofi/themes/night-sky.rasi"
+@theme "~/.config/rofi/themes/adwaita-dark.rasi"

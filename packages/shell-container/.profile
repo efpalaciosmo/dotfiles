@@ -1,6 +1,6 @@
 # ~/.profile - Fedora dotfiles
 # POSIX-compatible environment loaded by login shells and sourced from
-# .zshrc/.bashrc. Shell-specific hooks live in those rc files.
+# .bashrc. Shell-specific hooks live there.
 
 _prepend_path() {
     [ -d "$1" ] || return 0

@@ -1,6 +1,6 @@
 environment {
-    EDITOR "nvim"
-    VISUAL "nvim"
+    EDITOR "vi"
+    VISUAL "vi"
     XDG_SESSION_TYPE "wayland"
     CLUTTER_BACKEND "wayland"
     SDL_VIDEODRIVER "wayland"

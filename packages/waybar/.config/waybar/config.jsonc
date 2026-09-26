@@ -1,7 +1,7 @@
 {
     "layer": "top",
     "position": "bottom",
-    "height": 32,
+    "height": 34,
     "spacing": 4,
     "margin-bottom": 6,
     "margin-left": 10,
@@ -101,11 +101,11 @@
             "mode-mon-col": 1,
             "weeks-pos": "right",
             "format": {
-                "months": "<span color='#b8a0ed'><b>{}</b></span>",
-                "weekdays": "<span color='#90bfff'><b>{}</b></span>",
-                "weeks": "<span color='#958bad'>{}</span>",
-                "days": "<span color='#efebf8'>{}</span>",
-                "today": "<span color='#141526' bgcolor='#b8a0ed'><b>{}</b></span>"
+                "months": "<span color='#81d0ff'><b>{}</b></span>",
+                "weekdays": "<span color='#c0bfbc'><b>{}</b></span>",
+                "weeks": "<span color='#9a9996'>{}</span>",
+                "days": "<span color='#ffffff'>{}</span>",
+                "today": "<span color='#ffffff' bgcolor='#1c71d8'><b>{}</b></span>"
             }
         }
     },
