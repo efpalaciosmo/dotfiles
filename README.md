@@ -93,6 +93,14 @@ system Python/SQLite; it keeps at most 60 text or PNG entries (4 MiB each) in
 with `~/.config/rofi/scripts/clipboard --clear`. Start a new Niri session after
 linking the dotfiles to activate its clipboard watchers.
 
+`Ctrl+B` opens the Bluetooth menu in Rofi (also available under quick actions
+with `Super+Shift+D`). It can power on a soft-blocked
+adapter, search for nearby devices, pair/connect, disconnect, and forget them.
+It uses Fedora's `bluetoothctl` (BlueZ) and `rfkill`; no additional Bluetooth
+interface is needed. Pairing that requires a PIN may need an interactive
+Bluetooth agent. This menu is part of the `rofi` Stow package and is linked
+automatically by `make dotfiles`.
+
 ## Fonts
 
 `make fonts` installs IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font, and

@@ -13,6 +13,7 @@ if [[ "$mode" == actions ]]; then
         "󰅌  Portapapeles" \
         "󰹑  Capturas" \
         "󰤨  Conexiones" \
+        "  Bluetooth" \
         "󰍛  Monitor del sistema" \
         "󰋊  Espacio en disco" \
         "  Energía" || true)
@@ -22,6 +23,7 @@ if [[ "$mode" == actions ]]; then
         "󰅌  Portapapeles") exec "$script_dir/clipboard" ;;
         "󰹑  Capturas") exec "$script_dir/screenshot" ;;
         "󰤨  Conexiones") missing_commands nm-connection-editor || exit 1; exec nm-connection-editor ;;
+        "  Bluetooth") exec "$script_dir/bluetooth" ;;
         "󰍛  Monitor del sistema") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" monitor ;;
         "󰋊  Espacio en disco") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" disk ;;
         "  Energía") exec "$script_dir/power-menu" ;;

@@ -9,7 +9,7 @@ check_command() {
     else printf 'MISS command %s\n' "$1" >&2; failures=$((failures + 1)); fi
 }
 
-for command in stow niri waybar rofi kitty vi mako swaybg swaylock wl-copy wl-paste playerctl brightnessctl notify-send wpctl nmcli nm-connection-editor ip cal lsblk systemctl loginctl python3; do
+for command in stow niri waybar rofi kitty vi mako swaybg swaylock wl-copy wl-paste playerctl brightnessctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk systemctl loginctl python3; do
     check_command "$command"
 done
 
