@@ -14,6 +14,7 @@ binds {
     Mod+Shift+S repeat=false hotkey-overlay-title="Captura de pantalla" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/screenshot"; }
     Mod+Shift+Y repeat=false hotkey-overlay-title="Historial del portapapeles" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/clipboard"; }
     Ctrl+B repeat=false hotkey-overlay-title="Dispositivos Bluetooth" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/bluetooth"; }
+    Mod+Shift+N repeat=false hotkey-overlay-title="Redes Wi-Fi" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/wifi"; }
     Mod+Alt+L repeat=false hotkey-overlay-title="Bloquear pantalla" { spawn "swaylock" "-f" "-c" "222226"; }
 
     Mod+O repeat=false { toggle-overview; }

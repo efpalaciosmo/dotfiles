@@ -2,7 +2,7 @@
     "layer": "top",
     "position": "bottom",
     "height": 34,
-    "spacing": 4,
+    "spacing": 3,
     "margin-bottom": 6,
     "margin-left": 10,
     "margin-right": 10,
@@ -16,24 +16,24 @@
     },
     "niri/window": {
         "format": "{}",
-        "max-length": 32,
+        "max-length": 26,
         "separate-outputs": true
     },
     "custom/media": {
         "exec": "~/.config/waybar/scripts/media-status",
         "return-type": "json",
         "interval": 3,
-        "max-length": 38,
+        "max-length": 30,
         "escape": true,
         "on-click": "playerctl play-pause",
         "on-click-right": "playerctl next",
         "on-scroll-up": "playerctl next",
         "on-scroll-down": "playerctl previous"
     },
-    "tray": { "spacing": 8 },
+    "tray": { "spacing": 6 },
     "privacy": {
         "icon-spacing": 4,
-        "icon-size": 15,
+        "icon-size": 13,
         "transition-duration": 250,
         "modules": [
             { "type": "screenshare", "tooltip": true },
@@ -51,9 +51,8 @@
         "exec": "~/.config/waybar/scripts/network-speed",
         "return-type": "json",
         "interval": 3,
-        "max-length": 19,
-        "on-click": "nm-connection-editor",
-        "on-click-right": "~/.config/waybar/scripts/terminal-tool network"
+        "on-click": "~/.config/rofi/scripts/wifi",
+        "on-click-right": "nm-connection-editor"
     },
     "backlight": {
         "format": "{icon}  {percent}%",
@@ -101,11 +100,11 @@
             "mode-mon-col": 1,
             "weeks-pos": "right",
             "format": {
-                "months": "<span color='#81d0ff'><b>{}</b></span>",
-                "weekdays": "<span color='#c0bfbc'><b>{}</b></span>",
-                "weeks": "<span color='#9a9996'>{}</span>",
-                "days": "<span color='#ffffff'>{}</span>",
-                "today": "<span color='#ffffff' bgcolor='#1c71d8'><b>{}</b></span>"
+                "months": "<span color='#d9b8ff'><b>{}</b></span>",
+                "weekdays": "<span color='#b6a9c7'><b>{}</b></span>",
+                "weeks": "<span color='#8c7e9e'>{}</span>",
+                "days": "<span color='#f5effa'>{}</span>",
+                "today": "<span color='#241f31' bgcolor='#d9b8ff'><b>{}</b></span>"
             }
         }
     },

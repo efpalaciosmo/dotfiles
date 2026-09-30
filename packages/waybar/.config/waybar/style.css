@@ -1,19 +1,13 @@
-/* Twilight blue-slate surfaces, GNOME accents and a transparent bar.
- * Gtk CSS uses @define-color/alpha() rather than browser CSS variables. */
-@define-color window #272a40;
-@define-color view #202337;
-@define-color raised #343751;
-@define-color outline #62a0ea;
-@define-color text #ffffff;
-@define-color muted #c0bfbc;
-@define-color blue #81d0ff;
-@define-color teal #7bdff4;
-@define-color green #8de698;
-@define-color yellow #ffc252;
-@define-color orange #ff9c5b;
-@define-color purple #dc8add;
-@define-color red #ff938c;
-@define-color accent #1c71d8;
+/* Solid plum bar with lilac focus and restrained status accents. */
+@define-color surface #241f31;
+@define-color raised #362b47;
+@define-color line #594a6d;
+@define-color text #f5effa;
+@define-color muted #b6a9c7;
+@define-color lilac #d9b8ff;
+@define-color peach #f6c28b;
+@define-color mint #a9dfc4;
+@define-color red #ff8c9b;
 
 * {
     border: none;
@@ -25,67 +19,79 @@
     color: @text;
 }
 
-window#waybar { background: transparent; }
+window#waybar {
+    background: @surface;
+    border: 1px solid @line;
+    border-radius: 14px;
+}
+
 tooltip {
-    background: @raised;
-    border: 1px solid @outline;
+    background: @surface;
+    border: 1px solid @line;
     border-radius: 10px;
 }
 tooltip label { padding: 8px; color: @text; }
 
-#workspaces, #window, #custom-media, .modules-right {
-    background: alpha(@window, 0.88);
-    border: 1px solid @outline;
-    border-radius: 12px;
-}
-#workspaces { padding: 2px 4px; }
+#workspaces { padding: 0 5px; }
 #workspaces button {
-    min-width: 22px;
-    padding: 1px 4px;
-    margin: 0 2px;
+    min-width: 21px;
+    padding: 2px 4px;
+    margin: 3px 1px;
     border-radius: 8px;
     color: @muted;
     background: transparent;
 }
-#workspaces button:hover { background: alpha(@accent, 0.25); color: @text; }
-#workspaces button.active, #workspaces button.focused {
-    background: @accent;
-    color: @text;
+#workspaces button.empty { color: #9f91ae; }
+#workspaces button:hover { background: @raised; color: @text; }
+#workspaces button.active { color: @lilac; background: @raised; }
+#workspaces button.focused { color: @surface; background: @lilac; }
+#workspaces button.urgent { color: @surface; background: @red; }
+
+#window {
+    padding: 0 9px;
+    color: @muted;
+    border-left: 1px solid @line;
 }
-#workspaces button.urgent { background: #c01c28; color: @text; }
+#window.empty { border: none; }
 
-#window { padding: 0 12px; color: @muted; }
-#window.empty { background: transparent; border-color: transparent; }
-#custom-media { padding: 0 14px; color: @purple; }
+#custom-media {
+    padding: 0 12px;
+    color: @peach;
+}
 #custom-media.paused { color: @muted; }
-#custom-media.stopped { background: transparent; border-color: transparent; }
+#custom-media.stopped { color: transparent; }
 
-.modules-right { padding: 2px 4px; }
+.modules-right { padding: 0 4px; }
 #tray, #privacy, #idle_inhibitor, #custom-network-speed,
 #backlight, #pulseaudio, #custom-cpu, #memory, #custom-battery, #clock, #custom-power {
-    padding: 0 7px;
+    padding: 0 6px;
     border-radius: 8px;
 }
-#tray { padding: 0 5px; }
-#privacy { color: @orange; }
+#tray { padding: 0 4px; }
+#privacy { color: @red; }
 #idle_inhibitor { color: @muted; }
-#idle_inhibitor.activated { color: @yellow; background: alpha(@yellow, 0.13); }
-#custom-network-speed { color: @teal; }
+#idle_inhibitor.activated { color: @peach; background: @raised; }
+#custom-network-speed { color: @mint; font-family: "JetBrainsMono Nerd Font", monospace; }
 #custom-network-speed.disconnected { color: @red; }
-#backlight { color: @yellow; }
-#pulseaudio { color: @blue; }
+#backlight { color: @peach; }
+#pulseaudio { color: @lilac; }
 #pulseaudio.muted { color: @muted; }
-#custom-cpu { color: @orange; }
-#memory { color: @purple; }
-#custom-battery { color: @green; }
-#custom-cpu.warning, #custom-battery.warning { color: @yellow; background: alpha(@yellow, 0.13); }
+#custom-cpu, #memory { color: @muted; }
+#custom-battery { color: @mint; }
+#custom-cpu.warning, #custom-battery.warning { color: @peach; background: @raised; }
 #custom-cpu.critical, #memory.critical, #custom-battery.critical {
-    color: @text;
-    background: #c01c28;
+    color: @surface;
+    background: @red;
 }
-#custom-battery.charging, #custom-battery.full { color: @green; }
-#clock { color: @text; background: alpha(@accent, 0.22); }
+#custom-battery.charging, #custom-battery.full { color: @mint; }
+#clock {
+    color: @surface;
+    background: @lilac;
+    margin: 4px 2px;
+    padding: 0 8px;
+}
 #custom-power { color: @red; }
 #idle_inhibitor:hover, #custom-network-speed:hover, #backlight:hover, #pulseaudio:hover,
-#custom-cpu:hover, #memory:hover, #custom-battery:hover, #clock:hover,
-#custom-power:hover { background: alpha(@text, 0.12); }
+#custom-cpu:hover, #memory:hover, #custom-battery:hover, #custom-power:hover {
+    background: @raised;
+}

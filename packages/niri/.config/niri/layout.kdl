@@ -32,10 +32,10 @@ layout {
     border {
         on
         width 2
-        // GNOME orange highlights focus; blue keeps inactive windows visible.
-        active-color "#ffa348"
-        inactive-color "#62a0ea"
-        urgent-color "#ed333b"
+        // Soft lilac follows the wallpaper without overpowering the window.
+        active-color "#d9b8ff"
+        inactive-color "#6d5d83"
+        urgent-color "#ff8c9b"
     }
 
     shadow {
@@ -57,13 +57,13 @@ layout {
         position "right"
         gaps-between-tabs 2
         corner-radius 6
-        active-color "#ffa348"
-        inactive-color "#62a0ea"
-        urgent-color "#ed333b"
+        active-color "#d9b8ff"
+        inactive-color "#6d5d83"
+        urgent-color "#ff8c9b"
     }
 
     insert-hint {
         on
-        color "#ffa34880"
+        color "#d9b8ff80"
     }
 }

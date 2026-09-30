@@ -2,15 +2,10 @@
 set -u
 
 init_state_dir() {
-    local dir
     [[ -n "${XDG_RUNTIME_DIR:-}" ]] || return 0
-    for dir in "${XDG_RUNTIME_DIR:-}/waybar"; do
-        [[ -n "$dir" ]] || continue
-        mkdir -p "$dir" 2>/dev/null || continue
-        [[ -w "$dir" ]] || continue
-        printf '%s\n' "$dir"
-        return
-    done
+    local dir="$XDG_RUNTIME_DIR/waybar"
+    mkdir -p "$dir" 2>/dev/null || return 0
+    [[ -w "$dir" ]] && printf '%s\n' "$dir"
 }
 
 state_dir=$(init_state_dir)
@@ -25,8 +20,8 @@ json_escape() {
 }
 
 read_cpu_totals() {
-    local user nice system idle iowait irq softirq steal guest guest_nice
-    read -r _ user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat
+    local user nice system idle iowait irq softirq steal
+    read -r _ user nice system idle iowait irq softirq steal _ < /proc/stat
     local total=$((user + nice + system + idle + iowait + irq + softirq + steal))
     local idle_all=$((idle + iowait))
     printf '%s %s\n' "$total" "$idle_all"

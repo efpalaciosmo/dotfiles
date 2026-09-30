@@ -3,9 +3,9 @@ SHELL := /bin/bash
 
 PACKAGES := git shell-container vi kitty niri waybar mako rofi
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
-	$(filter-out packages/rofi/.config/rofi/scripts/clipboard-history,$(wildcard packages/rofi/.config/rofi/scripts/*)) \
+	$(filter-out packages/rofi/.config/rofi/scripts/clipboard-history packages/rofi/.config/rofi/scripts/wifi,$(wildcard packages/rofi/.config/rofi/scripts/*)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
-PYTHON_FILES := packages/rofi/.config/rofi/scripts/clipboard-history
+PYTHON_FILES := packages/rofi/.config/rofi/scripts/clipboard-history packages/rofi/.config/rofi/scripts/wifi
 
 .PHONY: help setup fonts dotfiles stow check doctor verify
 
@@ -31,13 +31,13 @@ check: ## Run non-mutating repository syntax checks
 	@python3 -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text()) for p in "$(PYTHON_FILES)".split()]'
 	@if command -v vi >/dev/null 2>&1; then \
 		output=$$(mktemp); \
-		vi --not-a-term -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \
+		vi -Nu packages/vi/.virc --not-a-term -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \
 		grep -Eq '^[[:space:]]*number[[:space:]]*$$' "$$output" && \
 		grep -Eq '^[[:space:]]*relativenumber[[:space:]]*$$' "$$output" && \
 		grep -q 'shiftwidth=4' "$$output"; result=$$?; \
 		rm -f -- "$$output"; exit $$result; \
 	fi
-	@if command -v shellcheck >/dev/null 2>&1; then shellcheck $(SCRIPT_FILES); fi
+	@if command -v shellcheck >/dev/null 2>&1; then shellcheck -x -P packages/rofi/.config/rofi/scripts $(SCRIPT_FILES); fi
 	@echo "check: OK"
 
 doctor: ## Validate required commands, configs, and managed links on this machine

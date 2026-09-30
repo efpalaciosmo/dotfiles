@@ -15,27 +15,27 @@ max-visible=4
 sort=-time
 anchor=top-right
 
-background-color=#272a40
-text-color=#ffffff
-border-color=#555d7a
-progress-color=#3584e4
+background-color=#30283f
+text-color=#f5effa
+border-color=#665475
+progress-color=#d9b8ff
 
 [urgency=low]
-text-color=#c0bfbc
-border-color=#555d7a
-progress-color=#77767b
+text-color=#b6a9c7
+border-color=#594a6d
+progress-color=#8c7e9e
 default-timeout=5000
 
 [urgency=high]
-text-color=#ffffff
-border-color=#ed333b
-progress-color=#ed333b
+text-color=#f5effa
+border-color=#ff8c9b
+progress-color=#ff8c9b
 default-timeout=0
 
 [app-name=volume]
-border-color=#3584e4
-progress-color=#3584e4
+border-color=#d9b8ff
+progress-color=#d9b8ff
 
 [app-name=Spotify]
-border-color=#3584e4
-progress-color=#3584e4
+border-color=#f6c28b
+progress-color=#f6c28b

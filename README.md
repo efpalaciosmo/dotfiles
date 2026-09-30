@@ -56,28 +56,26 @@ make doctor
 
 ## Desktop controls
 
-Niri uses GNOME orange 2 (`#ffa348`) for the focused border, blue 2 (`#62a0ea`)
-for inactive borders and red for urgency. The night-sky wallpaper informs the
-restrained blue-slate surfaces (`#272a40`, `#343751`) in Rofi, Waybar and Mako,
-while Kitty keeps Adwaita's neutral view background (`#1d1d20`). Waybar stays
-transparent, with translucent cards and semantic GNOME colors for each
-module (network teal, brightness yellow, audio blue, CPU orange, memory purple,
-battery green, media purple and power red). Waybar uses the same solid blue
-border as inactive niri windows; Rofi keeps orange borders. `Super+Return`,
-Rofi and Waybar actions open Kitty.
-Selected items use GNOME blue 4 (`#1c71d8`) so white labels have enough
-contrast at small sizes. Bash keeps a compact, colored prompt; vi inherits the
-editing essentials (relative numbers, four-space indentation, search and a
-matching-bracket indicator) in `packages/vi/.virc`.
-Color references: [libadwaita CSS variables](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.2/css-variables.html)
-and the [GNOME palette](https://developer.gnome.org/hig/reference/palette.html).
-Screenshots of the running session: [focused window](docs/screenshots/desktop-adwaita-orange.png)
-and [Rofi launcher](docs/screenshots/launcher-adwaita-orange.png). Personal
-network, media and drive names are blurred in these images.
+Niri uses soft lilac (`#d9b8ff`) for focused borders, muted purple for inactive
+borders and rose for urgency. Rofi uses the requested plum background (`#241f31`)
+with lilac selections. Waybar uses one solid `#241f31` bar with lilac focused
+workspaces and restrained status accents. Its 34-pixel height is a little smaller
+than the first plum design. Urgent workspaces use rose.
+`Super+Return`, Rofi and Waybar actions open Kitty. Mako notifications use a
+raised plum surface with lilac, peach and rose accents. Kitty keeps its
+existing colors. Bash keeps a compact, colored prompt; vi inherits the editing
+essentials (relative numbers, four-space indentation, search and a matching
+bracket indicator) in `packages/vi/.virc`.
+
+The [desktop](docs/screenshots/desktop-adwaita-orange.png) and
+[launcher](docs/screenshots/launcher-adwaita-orange.png) screenshots show the
+previous palette; they have not yet been recaptured in a Niri session.
+
 Niri opens windows at half width so two fit on the
 1920×1200 laptop screen; `Super+F` maximizes a column. The slim bar sits at the
-bottom and keeps playback, connection, brightness, audio, load, battery and clock visible. Hover
-for details; click the network indicator for connection settings, the clock for
+bottom and keeps playback, download/upload speed in Mb/s, brightness, audio,
+load, battery and clock visible. Hover for details; click the network indicator
+for the Wi-Fi menu (right click for connection settings), the clock for
 a calendar, and CPU or memory for a system monitor (`btop` if installed, `top`
 otherwise). Scroll over the brightness indicator to adjust the screen in 5% steps.
 
@@ -92,6 +90,11 @@ system Python/SQLite; it keeps at most 60 text or PNG entries (4 MiB each) in
 `~/.local/share/dotfiles/clipboard/history.sqlite3`. Clear it in the menu or
 with `~/.config/rofi/scripts/clipboard --clear`. Start a new Niri session after
 linking the dotfiles to activate its clipboard watchers.
+
+`Super+Shift+N` opens a Wi-Fi menu in Rofi, also available under quick actions.
+It lists nearby networks and signal strength, connects with a password prompt
+when needed, and can refresh, disconnect, or toggle Wi-Fi. It uses the installed
+NetworkManager `nmcli` and Python's standard library.
 
 `Ctrl+B` opens the Bluetooth menu in Rofi (also available under quick actions
 with `Super+Shift+D`). It can power on a soft-blocked
