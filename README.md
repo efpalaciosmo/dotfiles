@@ -79,6 +79,11 @@ for the Wi-Fi menu (right click for connection settings), the clock for
 a calendar, and CPU or memory for a system monitor (`btop` if installed, `top`
 otherwise). Scroll over the brightness indicator to adjust the screen in 5% steps.
 
+`Super+V` toggles the focused window between tiled and floating; `Super+Shift+V`
+switches focus between those layouts. Niri floats parented dialogs and fixed-size
+windows automatically. Zen and Firefox Picture-in-Picture windows open floating
+at the bottom right; close and reopen an existing PiP window after changing rules.
+
 `Super+D` opens applications; `Super+Shift+D` opens quick actions for windows,
 clipboard, screenshots, connections, system monitoring, disk usage and power.
 `Super+Shift+Y` opens clipboard history, `Super+Shift+S` screenshots,

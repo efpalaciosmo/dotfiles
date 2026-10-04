@@ -4,9 +4,13 @@ window-rule {
     clip-to-geometry true
 }
 
+// Niri already auto-floats parented dialogs and fixed-size windows.
+// Browser PiP needs an explicit rule (Zen, native/Flatpak Firefox).
 window-rule {
-    match app-id="^$" title="^$"
+    match app-id=r#"^(app\.zen_browser\.zen|zen|org\.mozilla\.firefox|firefox)$"# title="^Picture-in-Picture$"
     open-floating true
     open-focused false
-    default-floating-position x=4 y=4 relative-to="bottom-right"
+    default-column-width { fixed 480; }
+    default-window-height { fixed 270; }
+    default-floating-position x=12 y=12 relative-to="bottom-right"
 }
