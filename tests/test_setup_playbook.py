@@ -35,22 +35,38 @@ class SetupPlaybookTests(unittest.TestCase):
         self.assertNotIn("ansible-core", names)
         self.assertNotIn("python", names)
 
-    def test_package_preflight_precedes_only_privileged_task(self):
+    def test_package_preflight_precedes_privileged_tasks(self):
         preflight = PLAY["pre_tasks"]
         self.assertEqual(preflight[0]["tags"], "always")
         self.assertEqual([task["tags"] for task in preflight[1:]], ["packages"] * 3)
         self.assertTrue(all(not task.get("become", False) for task in preflight))
         self.assertIn("cachyos", str(preflight[2]["ansible.builtin.assert"]))
         self.assertIn("cachyos_packages", str(preflight[3]["ansible.builtin.assert"]))
-        packages = task_named("Upgrade CachyOS and install declared packages")
-        self.assertTrue(packages["become"])
-        self.assertEqual(packages["tags"], "packages")
-        pacman = packages["community.general.pacman"]
-        self.assertEqual(pacman["name"], "{{ cachyos_packages }}")
-        self.assertEqual(pacman["state"], "present")
-        self.assertTrue(pacman["update_cache"])
-        self.assertTrue(pacman["upgrade"])
-        self.assertTrue(all(not task.get("become", False) for task in PLAY["tasks"] if task is not packages))
+        upgrade = task_named("Upgrade the complete CachyOS system")
+        install = task_named("Install declared CachyOS packages")
+        self.assertLess(PLAY["tasks"].index(upgrade), PLAY["tasks"].index(install))
+        for task in (upgrade, install):
+            self.assertTrue(task["become"])
+            self.assertEqual(task["tags"], "packages")
+        self.assertEqual(upgrade["community.general.pacman"], {
+            "update_cache": True,
+            "upgrade": True,
+        })
+        self.assertEqual(install["community.general.pacman"], {
+            "name": "{{ cachyos_packages }}",
+            "state": "present",
+        })
+        self.assertTrue(all(
+            not task.get("become", False)
+            for task in PLAY["tasks"]
+            if task not in (upgrade, install)
+        ))
+
+    def test_pacman_never_combines_name_and_upgrade(self):
+        for task in PLAY["tasks"]:
+            pacman = task.get("community.general.pacman")
+            if pacman:
+                self.assertFalse("name" in pacman and "upgrade" in pacman)
 
     def test_static_checks_run_before_any_mutating_task(self):
         self.assertEqual(PLAY["tasks"][0]["name"], "Run static repository checks")

@@ -57,14 +57,20 @@
       when: not ansible_check_mode
       tags: [always, check, local]
 
-    # The module performs a full upgrade and package installation together;
-    # update_cache plus upgrade avoids an unsafe partial pacman upgrade.
-    - name: Upgrade CachyOS and install declared packages
+    # Pacman does not support partial upgrades. Complete -Syu first; the module
+    # intentionally makes `upgrade` and `name` mutually exclusive.
+    - name: Upgrade the complete CachyOS system
+      community.general.pacman:
+        update_cache: true
+        upgrade: true
+      become: true
+      when: not ansible_check_mode
+      tags: packages
+
+    - name: Install declared CachyOS packages
       community.general.pacman:
         name: "{{ cachyos_packages }}"
         state: present
-        update_cache: true
-        upgrade: true
       become: true
       when: not ansible_check_mode
       tags: packages

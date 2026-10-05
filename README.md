@@ -30,8 +30,9 @@ That distribution supplies the `community.general.pacman` module used for
 package management. Ansible asks for the sudo password once at startup and
 keeps it only in memory for the privileged package task. Ansible then checks
 the user, operating system and package manifest, runs the non-mutating static
-checks, and only then asks the Pacman
-module to perform a full upgrade and install the manifest; afterward it
+checks, and only then asks the Pacman module to perform a full system upgrade.
+A second Pacman task installs the manifest because the module deliberately
+does not allow `upgrade` and `name` in the same invocation; afterward it
 installs fonts and links dotfiles. Python is assumed to be
 part of the base installation and is **not** installed by this repository.
 On other distributions, `make setup` **stops before making changes**; use

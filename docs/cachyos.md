@@ -46,8 +46,9 @@ activa para ejecutar el playbook e instala allí la distribución completa
 `ansible` indicada en `requirements-ansible.txt` con pip, **no** con pacman.
 Así queda disponible el módulo `community.general.pacman`. Se asume que Python ya viene en
 la instalación base; si falta, el proceso aborta sin instalarlo. Después
-Ansible ejecuta primero las validaciones que no modifican el equipo y luego usa
-el módulo de Pacman para actualizar el sistema e instalar (solo esta tarea usa sudo) **todos** los paquetes de
+Ansible ejecuta primero las validaciones que no modifican el equipo. Luego usa
+el módulo de Pacman en dos tareas: primero actualiza el sistema completo y
+después instala (solo estas tareas usan sudo) **todos** los paquetes de
 [system-packages/cachyos.txt](../system-packages/cachyos.txt), incluyendo los
 solicitados, los auxiliares y `stow`, y después instala fuentes, enlaza los
 dotfiles. No uses `sudo make`: `make setup` pide una vez la contraseña de sudo
