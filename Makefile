@@ -39,7 +39,7 @@ venv: requirements-ansible.txt ## Create the local Ansible virtualenv
 	@mkdir -p "$(CURDIR)/.ansible/tmp"
 	@test -f "$(INV)" || cp inventory.ini.example "$(INV)"
 
-packages: venv ## Install packages from Fedora repositories with DNF5
+packages: venv ## Install packages from Fedora repositories with dnf
 	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags packages $(CHECK)
 
 fonts: venv ## Install user-local fonts

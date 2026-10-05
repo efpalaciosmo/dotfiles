@@ -3,19 +3,25 @@
 Ansible installs packages from the official Fedora repositories, configures
 user-local tools, and links configuration files with GNU Stow.
 
-## Prerequisite
+## Prerequisites
 
-GNU Stow is intentionally not installed by this repository. Install it before
-running the setup:
+Run the setup in a Fedora Distrobox with passwordless `sudo`. VS Code's
+integrated terminal can inherit `no_new_privs` from Electron, preventing
+privilege escalation even inside Distrobox. The managed VS Code terminal
+profile starts a fresh Distrobox shell through the user service manager so
+`sudo` works without disabling VS Code's sandbox. Open a **new** terminal
+after applying the dotfiles; existing terminals keep their original flag.
+Check from the terminal where you intend to run `make`:
 
 ```sh
-sudo dnf5 install stow
+sudo -n true
+grep NoNewPrivs /proc/self/status # must report 0
 ```
 
 The local Ansible virtualenv uses Python 3.14. `make` recreates an existing
 virtualenv made with another Python version. Run the setup inside the Fedora
 Distrobox (`distrobox enter fedora`). Ansible's local modules also use Python
-3.14; DNF5 runs through its CLI because Fedora 45's `python3-libdnf5` bindings
+3.14; dnf runs through its CLI because Fedora 45's `python3-libdnf5` bindings
 are installed for the container's default Python 3.15 instead.
 
 ## Setup
@@ -24,11 +30,10 @@ are installed for the container's default Python 3.15 instead.
 make
 ```
 
-The default setup installs missing Fedora packages with DNF5 (without weak dependencies),
+The default setup installs missing Fedora packages with dnf (without weak dependencies),
 installs fonts, `fnm`, Node.js and pnpm, applies all Stow packages, runs syntax checks,
-and validates required commands and symbolic links. Only the DNF task uses
-privilege escalation for package installation and setting the Distrobox user's
-login shell to zsh; containers must provide passwordless `sudo`.
+and validates required commands, symbolic links, TeX resources and a LaTeX template build.
+Only DNF requires privilege escalation; Stow is installed by that DNF task.
 
 Interactive Bash sessions in the Fedora Distrobox switch to zsh, and interactive
 zsh sessions attach to the `fedora` tmux session automatically. Detach with
@@ -65,7 +70,7 @@ System packages come only from Fedora repositories. The main groups are:
   AMS packages, `mathtools`, `biblatex`/`biber`, `latexmk`, pdfLaTeX,
   XeLaTeX and LuaLaTeX.
 - ShellCheck for shell scripts.
-- Common shell, archive, Git and terminal utilities.
+- GNU Stow and common shell, archive, Git and terminal utilities.
 
 Fedora's `ncurses-term` provides terminfo entries for terminal applications.
 
@@ -76,7 +81,8 @@ from the container.
 
 The repository does not install a container engine or container tooling.
 
-Starship, lazygit, yazi, resvg, opencode and Harlequin remain optional. The
+Starship, lazygit, yazi, resvg, opencode and Harlequin remain optional because
+they are not supplied by the enabled official Fedora repositories. The
 Neovim configuration requires 0.12+ (available in Fedora 45). Add any
 thesis-specific TeX packages to `fedora_packages` in `group_vars/all.yml` if
 your document uses packages beyond the included mathematical and Beamer set.
@@ -116,6 +122,6 @@ DOTFILES_DIR="$HOME/Projects/dotfiles" \
 bash bootstrap-dotfiles.sh
 ```
 
-The bootstrap installs only Git, Make and Python when missing, verifies that
-GNU Stow was installed manually, clones or updates the repository, and runs
-`make`.
+The bootstrap installs only Git, Make and Python 3.14 when missing, clones or
+updates the repository, and runs `make`. All other Fedora packages, including
+GNU Stow, are listed once in `fedora_packages` in `group_vars/all.yml`.

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# VS Code's terminal process can inherit no_new_privs from Electron. A process
+# created by the user service manager does not inherit that flag.
+set -euo pipefail
+
+if ! grep -qE '^NoNewPrivs:[[:space:]]*1$' /proc/self/status; then
+  exec /usr/bin/zsh -l
+fi
+
+distrobox=$(command -v distrobox) || {
+  printf 'fedora-terminal: distrobox is not in PATH\n' >&2
+  exit 1
+}
+
+exec systemd-run --user --pty --wait --collect --quiet --same-dir \
+  --setenv="TERM=${TERM:-xterm-256color}" \
+  --setenv="COLORTERM=${COLORTERM:-truecolor}" \
+  "$distrobox" enter fedora -- zsh

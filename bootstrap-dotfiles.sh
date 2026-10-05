@@ -24,7 +24,7 @@ require_fedora() {
 	[[ -r /etc/os-release ]] || die "/etc/os-release is missing"
 	# shellcheck disable=SC1091
 	source /etc/os-release
-  [[ "${ID:-}" == "fedora" &&
+	[[ "${ID:-}" == "fedora" &&
 		("${VARIANT_ID:-}" == "workstation" || "${VARIANT_ID:-}" == "container") ]] ||
 		die "This setup requires Fedora Workstation or Container Image."
 }
@@ -33,18 +33,21 @@ ensure_bootstrap_tools() {
 	local packages=()
 	command -v git >/dev/null 2>&1 || packages+=("git")
 	command -v make >/dev/null 2>&1 || packages+=("make")
-	command -v python3.14 >/dev/null 2>&1 || packages+=("python3" "python3-pip")
+	command -v python3.14 >/dev/null 2>&1 || packages+=("python3.14")
 
 	if ((${#packages[@]} > 0)); then
-		log "Installing bootstrap packages with DNF5: ${packages[*]}"
-		sudo dnf5 install -y "${packages[@]}"
+		log "Installing bootstrap packages with dnf: ${packages[*]}"
+		if ((EUID == 0)); then
+			dnf install -y "${packages[@]}"
+		else
+			sudo -n true || die "sudo cannot elevate privileges here. Run bootstrap from a normal Fedora Distrobox terminal with working sudo."
+			sudo -n dnf install -y "${packages[@]}"
+		fi
 	fi
 
-	command -v git >/dev/null 2>&1 || die "git is unavailable after DNF5 bootstrap"
-	command -v make >/dev/null 2>&1 || die "make is unavailable after DNF5 bootstrap"
-	command -v python3.14 >/dev/null 2>&1 || die "python3.14 is unavailable after DNF5 bootstrap"
-	command -v stow >/dev/null 2>&1 ||
-		die "GNU Stow is required. Install it first with: sudo dnf5 install stow"
+	command -v git >/dev/null 2>&1 || die "git is unavailable after dnf bootstrap"
+	command -v make >/dev/null 2>&1 || die "make is unavailable after dnf bootstrap"
+	command -v python3.14 >/dev/null 2>&1 || die "python3.14 is unavailable after dnf bootstrap"
 }
 
 clone_or_update() {

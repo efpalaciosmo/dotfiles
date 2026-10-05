@@ -13,12 +13,13 @@ stow_packages:
   - vscode
 
 # Fedora packages for Python/uv, JS/TS (Node via fnm), C, LaTeX, and shell tools.
-# GNU Stow and optional commands are installed separately by the user.
+# All Fedora-repository packages are installed from this single list.
 fedora_packages:
   - git
   - gh
   - curl
   - make
+  - stow
   - unzip
   - xz
   - 7zip
@@ -54,12 +55,20 @@ fedora_packages:
   - texlive-beamer
   - texlive-amsmath
   - texlive-amscls
+  - texlive-booktabs
+  - texlive-enumitem
+  - texlive-caption
+  - texlive-listings
   - texlive-amsfonts
   - texlive-mathtools
+  - texlive-eepic
   - texlive-geometry
   - texlive-microtype
+  - texlive-setspace
+  - texlive-threeparttable
   - texlive-lm
   - texlive-biblatex
+  - texlive-csquotes
   - biber
   - latexmk
   - texlive-xetex
@@ -72,6 +81,9 @@ expected_commands:
   - git
   - gh
   - make
+  - stow
+  - nvim
+  - python3.14
   - python3
   - curl
   - unzip
@@ -114,7 +126,6 @@ expected_commands:
   - kpsewhich
 
 optional_commands:
-  - nvim
   - starship
   - lazygit
   - yazi

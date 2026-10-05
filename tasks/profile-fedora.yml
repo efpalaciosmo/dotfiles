@@ -23,17 +23,6 @@
     name: fedora_packages
   tags: [packages]
 
-- name: Use zsh as the Fedora Distrobox login shell
-  become: "{{ ansible_facts.user_uid != 0 }}"
-  ansible.builtin.user:
-    name: "{{ ansible_facts.user_id }}"
-    shell: /usr/bin/zsh
-    create_home: false
-  when:
-    - ansible_facts.env.CONTAINER_ID | default('') == 'fedora'
-    - ansible_facts.user_uid != 0
-  tags: [packages]
-
 - name: Fast Node Manager
   ansible.builtin.import_role:
     name: fnm

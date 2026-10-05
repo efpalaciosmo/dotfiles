@@ -35,12 +35,50 @@
   ansible.builtin.debug:
     var: doctor_required_commands.stdout_lines
 
-- name: Check Beamer class is available to TeX
+- name: Check TeX resources used by the template and presentations
   ansible.builtin.command:
-    argv: [kpsewhich, beamer.cls]
-  register: doctor_beamer_class
+    argv: [kpsewhich, "{{ item }}"]
+  loop:
+    - article.cls
+    - beamer.cls
+    - amsthm.sty
+    - mathtools.sty
+    - lmodern.sty
+    - eepic.sty
+    - setspace.sty
+    - threeparttable.sty
+    - csquotes.sty
+    - biblatex.sty
+  register: doctor_tex_resources
   changed_when: false
   failed_when: false
+
+- name: Compile the managed LaTeX template
+  block:
+    - name: Create temporary LaTeX output directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: -dotfiles-latex
+      register: doctor_latex_dir
+
+    - name: Build the LaTeX template with latexmk
+      ansible.builtin.command:
+        argv:
+          - latexmk
+          - -pdf
+          - -halt-on-error
+          - -interaction=nonstopmode
+          - "-output-directory={{ doctor_latex_dir.path }}"
+          - "{{ dotfiles_packages_root }}/nvim-vm/.config/nvim/templates/latex.tex"
+      register: doctor_latex_build
+      changed_when: false
+      failed_when: false
+  always:
+    - name: Remove temporary LaTeX output
+      ansible.builtin.file:
+        path: "{{ doctor_latex_dir.path }}"
+        state: absent
+      when: doctor_latex_dir.path is defined
 
 - name: Check optional commands in one shell
   ansible.builtin.shell: |
@@ -101,11 +139,16 @@
   ansible.builtin.assert:
     that:
       - doctor_required_commands.rc == 0
-      - doctor_beamer_class.rc == 0
+      - doctor_tex_resources.results | selectattr('rc', 'ne', 0) | list | length == 0
+      - doctor_latex_build.rc == 0
       - doctor_links.rc == 0
     fail_msg: >-
       Dotfiles doctor failed:
        {{ ((doctor_required_commands.stdout_lines + doctor_links.stdout_lines)
            | select('match', '^MISS ') | join(', '))
-          ~ (', Beamer class missing' if doctor_beamer_class.rc != 0 else '') }}
+          ~ (', missing TeX resources: ' ~ (doctor_tex_resources.results
+             | selectattr('rc', 'ne', 0) | map(attribute='item') | join(', '))
+             if doctor_tex_resources.results | selectattr('rc', 'ne', 0) | list | length > 0 else '')
+          ~ (', LaTeX template failed to compile: ' ~ (doctor_latex_build.stdout_lines[-15:] | join(' '))
+             if doctor_latex_build.rc != 0 else '') }}
     quiet: true
