@@ -34,6 +34,8 @@ playerctl
 wireplumber
 
 # Desktop: GDM login, Niri session, and selected GNOME components
+adwaita-fonts
+adwaita-icon-theme
 fuzzel
 gdm
 gnome-control-center

@@ -134,21 +134,31 @@ store credentials or perform account authentication.
 
 ## Desktop controls
 
-Niri uses soft lilac (`#d9b8ff`) for focused borders, muted purple for inactive
-borders and rose for urgency. Fuzzel uses a raised plum surface (`#30283f`)
-with restrained lilac highlights. Waybar uses one solid `#241f31` bar with lilac focused
-workspaces and restrained status accents. Its 34-pixel height is a little smaller
-than the first plum design. Urgent workspaces use rose.
+The desktop follows vanilla **Adwaita Dark**, with the requested `#ff7800`
+active window border, tab indicator, workspace selection and launcher selection.
+Niri uses quiet gray inactive borders, 12-pixel corners and soft shadows.
+Fuzzel and Mako use Adwaita's raised `#36363a` surface; Waybar uses solid
+`#222226` chrome at 36 pixels high. Normal status indicators are neutral;
+amber, red and green communicate warnings, urgency and charging.
 `Super+Return`, Fuzzel and Waybar actions open Kitty. Mako notifications use a
-raised plum surface with lilac, peach and rose accents. Kitty keeps its
-existing colors. Bash keeps a compact, colored prompt; Zsh uses the linked
-Starship Adwaita prompt. Vim inherits the editing
+raised Adwaita surface. Kitty uses Adwaita Mono, a `#1d1d20` text surface,
+orange selections and tabs, and the GNOME terminal palette. Bash keeps a
+compact, colored prompt; Zsh uses the linked Starship Adwaita prompt with
+orange directory accents. Vim inherits the editing
 essentials (relative numbers, four-space indentation, search and a matching
 bracket indicator) in `packages/vi/.vimrc`.
 
-The [desktop](docs/screenshots/desktop-adwaita-orange.png) and
-[launcher](docs/screenshots/launcher-adwaita-orange.png) screenshots show the
-previous palette; they have not yet been recaptured in a Niri session.
+The `desktop` Stow package adds GTK settings, Swaylock colors and Zathura
+chrome. Linking it runs `dotfiles-appearance`, which sets GNOME's supported
+dark preference, native orange accent, Adwaita icons/cursor and Adwaita fonts.
+GTK/libadwaita retain their native styling; GNOME's native orange is `#ed5b00`,
+while compositor focus and shell selections use exactly `#ff7800`.
+To reapply preferences, run `~/.local/bin/dotfiles-appearance`.
+
+See the [research and palette](docs/adwaita-theme.md),
+[desktop](docs/screenshots/desktop-adwaita-orange.png),
+[launcher](docs/screenshots/launcher-adwaita-orange.png) and
+[notifications](docs/screenshots/notifications-adwaita-orange.png).
 
 Niri opens windows at half width so two fit on the
 1920×1200 laptop screen; `Super+F` maximizes a column. The slim bar sits at the
@@ -174,8 +184,9 @@ locks the session through `~/.config/niri/scripts/lock-screen`. In Niri,
 locks before sleep. Install both `swaylock` and `swayidle`, run the dotfiles task,
 then **log out and back in** to start the idle daemon. `make doctor` checks the
 script links, wallpaper and running idle daemon. The wallpaper is the
-repository's `packages/niri/.config/niri/backgrounds/bluesky.png`, linked at
-`~/.config/niri/backgrounds/bluesky.png`; no absolute repository path is used.
+official GNOME Adwaita Dark wallpaper at
+`packages/niri/.config/niri/backgrounds/adwaita-dark.png`, linked at
+`~/.config/niri/backgrounds/adwaita-dark.png`; no absolute repository path is used.
 Fuzzel does not support Rofi's in-launcher `?` and
 `Control+Tab` mode switching: use `Super+Shift+D` for file search
 under home, file browsing, windows and commands instead. Search lists only
@@ -211,6 +222,8 @@ automatically by the dotfiles task.
 The fonts task installs IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font, and
 Inter into `${XDG_DATA_HOME:-$HOME/.local/share}/fonts`. Archives are cached in
 `${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/fonts` and `fc-cache` is refreshed.
+The system manifest installs `adwaita-fonts` and `adwaita-icon-theme` for the
+desktop's native typography and icons. Nerd Fonts remain available for symbols.
 
 ## Shell
 

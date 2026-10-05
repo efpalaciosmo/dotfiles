@@ -1,0 +1,30 @@
+# Adwaita dark surface with orange authentication feedback.
+color=222226
+font=Adwaita Sans
+font-size=18
+indicator-radius=72
+indicator-thickness=6
+inside-color=36363a
+inside-clear-color=36363a
+inside-ver-color=36363a
+inside-wrong-color=36363a
+ring-color=45454a
+ring-clear-color=ff9c5b
+ring-ver-color=ff7800
+ring-wrong-color=ff938c
+key-hl-color=ff7800
+bs-hl-color=ff9c5b
+line-uses-inside
+separator-color=36363a
+text-color=ffffff
+text-clear-color=ffffff
+text-ver-color=ffffff
+text-wrong-color=ff938c
+inside-caps-lock-color=36363a
+ring-caps-lock-color=ffc252
+text-caps-lock-color=ffc252
+caps-lock-key-hl-color=ffc252
+caps-lock-bs-hl-color=ff9c5b
+layout-bg-color=36363a
+layout-border-color=45454a
+layout-text-color=ffffff

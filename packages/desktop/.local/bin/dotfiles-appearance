@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Use supported system preferences so GTK/libadwaita and portals agree.
+set -euo pipefail
+
+schema=org.gnome.desktop.interface
+command -v gsettings >/dev/null 2>&1 || {
+    printf 'appearance: gsettings is required\n' >&2
+    exit 1
+}
+keys=$(gsettings list-keys "$schema")
+
+set_preference() {
+    local key=$1 value=$2
+    if ! grep -Fxq "$key" <<< "$keys"; then
+        printf 'appearance: %s is unavailable in this GNOME version; skipped\n' "$key" >&2
+        return
+    fi
+    if [[ $(gsettings writable "$schema" "$key") != true ]]; then
+        printf 'appearance: %s is locked by system policy\n' "$key" >&2
+        return 1
+    fi
+    if [[ $(gsettings get "$schema" "$key") != "$value" ]]; then
+        gsettings set "$schema" "$key" "$value"
+    fi
+}
+
+set_preference color-scheme "'prefer-dark'"
+set_preference gtk-theme "'Adwaita-dark'"
+set_preference icon-theme "'Adwaita'"
+set_preference cursor-theme "'Adwaita'"
+set_preference cursor-size 24
+set_preference font-name "'Adwaita Sans 11'"
+set_preference monospace-font-name "'Adwaita Mono 11'"
+# Native Adwaita orange is #ed5b00; compositor focus is exactly #ff7800.
+set_preference accent-color "'orange'"
+printf 'appearance: Adwaita dark with orange accent applied\n'

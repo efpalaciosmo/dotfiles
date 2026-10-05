@@ -9,7 +9,7 @@ check_command() {
     else printf 'MISS command %s\n' "$1" >&2; failures=$((failures + 1)); fi
 }
 
-for command in stow niri waybar fuzzel kitty vim zsh starship mako swaybg swaylock swayidle wl-copy wl-paste playerctl brightnessctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk pgrep systemctl loginctl python3 xdg-open podman distrobox epiphany flatpak virsh timeout tailscale tailscaled; do
+for command in stow niri waybar fuzzel kitty vim zsh starship mako swaybg swaylock swayidle wl-copy wl-paste playerctl brightnessctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk pgrep systemctl loginctl python3 xdg-open podman distrobox epiphany flatpak virsh timeout tailscale tailscaled gsettings; do
     check_command "$command"
 done
 
@@ -109,7 +109,7 @@ for relative in niri/scripts/lock-screen niri/scripts/session-idle; do
     fi
 done
 
-wallpaper=$HOME/.config/niri/backgrounds/bluesky.png
+wallpaper=$HOME/.config/niri/backgrounds/adwaita-dark.png
 if [[ -s $wallpaper ]]; then
     printf 'OK   wallpaper %s -> %s\n' "$wallpaper" "$(readlink -f -- "$wallpaper")"
 else
@@ -135,7 +135,7 @@ else
 fi
 
 if command -v niri >/dev/null 2>&1; then niri validate || failures=$((failures + 1)); fi
-if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --config="$HOME/.config/fuzzel/fuzzel.ini" || failures=$((failures + 1)); fi
+if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config="$HOME/.config/fuzzel/fuzzel.ini" || failures=$((failures + 1)); fi
 
 for package in "$@"; do
     while IFS= read -r -d '' source; do

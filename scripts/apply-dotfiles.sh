@@ -47,6 +47,10 @@ stow --restow --no-folding \
     --ignore='(^|/)(README\.md|README)$' \
     "$@"
 
+if [[ " $* " == *" desktop "* ]]; then
+    "$repo_root/packages/desktop/.local/bin/dotfiles-appearance"
+fi
+
 # Only after the new package is linked, remove legacy links owned by us.
 # Never touch unrelated Rofi settings or user files.
 if [[ " $* " == *" fuzzel "* ]]; then

@@ -1,54 +1,58 @@
-/* Solid plum bar with lilac focus and restrained status accents. */
-@define-color surface #241f31;
-@define-color raised #362b47;
-@define-color line #594a6d;
-@define-color text #f5effa;
-@define-color muted #b6a9c7;
-@define-color lilac #d9b8ff;
-@define-color peach #f6c28b;
-@define-color mint #a9dfc4;
-@define-color red #ff8c9b;
+/* Adwaita dark: neutral chrome, orange focus, color only for state. */
+@define-color surface #222226;
+@define-color raised #36363a;
+@define-color line #45454a;
+@define-color text #ffffff;
+@define-color muted #c0bfbc;
+@define-color dim #9a9996;
+@define-color accent #ff7800;
+@define-color accent_text #ff9c5b;
+@define-color warning #ffc252;
+@define-color success #78e9ab;
+@define-color error #ff938c;
 
 * {
     border: none;
     border-radius: 0;
     min-height: 0;
-    font-family: "Inter", "JetBrainsMono Nerd Font", sans-serif;
-    font-size: 12px;
-    font-weight: 600;
+    font-family: "Adwaita Sans", "JetBrainsMono Nerd Font", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
     color: @text;
 }
 
 window#waybar {
     background: @surface;
     border: 1px solid @line;
-    border-radius: 14px;
+    border-radius: 12px;
 }
 
 tooltip {
-    background: @surface;
+    background: @raised;
     border: 1px solid @line;
-    border-radius: 10px;
+    border-radius: 12px;
 }
 tooltip label { padding: 8px; color: @text; }
 
 #workspaces { padding: 0 5px; }
 #workspaces button {
-    min-width: 21px;
+    min-width: 22px;
     padding: 2px 4px;
     margin: 3px 1px;
     border-radius: 8px;
     color: @muted;
     background: transparent;
+    box-shadow: none;
+    text-shadow: none;
 }
-#workspaces button.empty { color: #9f91ae; }
+#workspaces button.empty { color: @dim; }
 #workspaces button:hover { background: @raised; color: @text; }
-#workspaces button.active { color: @lilac; background: @raised; }
-#workspaces button.focused { color: @surface; background: @lilac; }
-#workspaces button.urgent { color: @surface; background: @red; }
+#workspaces button.active { color: @accent_text; background: @raised; }
+#workspaces button.focused { color: #1d1d20; background: @accent; font-weight: 700; }
+#workspaces button.urgent { color: #1d1d20; background: @error; }
 
 #window {
-    padding: 0 9px;
+    padding: 0 10px;
     color: @muted;
     border-left: 1px solid @line;
 }
@@ -56,7 +60,7 @@ tooltip label { padding: 8px; color: @text; }
 
 #custom-media {
     padding: 0 12px;
-    color: @peach;
+    color: @text;
 }
 #custom-media.paused { color: @muted; }
 #custom-media.stopped { color: transparent; }
@@ -64,34 +68,33 @@ tooltip label { padding: 8px; color: @text; }
 .modules-right { padding: 0 4px; }
 #tray, #privacy, #idle_inhibitor, #custom-network-speed,
 #backlight, #pulseaudio, #custom-cpu, #memory, #custom-battery, #clock, #custom-power {
-    padding: 0 6px;
+    padding: 0 7px;
     border-radius: 8px;
 }
 #tray { padding: 0 4px; }
-#privacy { color: @red; }
+#privacy { color: @error; }
 #idle_inhibitor { color: @muted; }
-#idle_inhibitor.activated { color: @peach; background: @raised; }
-#custom-network-speed { color: @mint; font-family: "JetBrainsMono Nerd Font", monospace; }
-#custom-network-speed.disconnected { color: @red; }
-#backlight { color: @peach; }
-#pulseaudio { color: @lilac; }
-#pulseaudio.muted { color: @muted; }
+#idle_inhibitor.activated { color: @accent_text; background: @raised; }
+#custom-network-speed { font-family: "Adwaita Mono", "JetBrainsMono Nerd Font", monospace; }
+#custom-network-speed.disconnected { color: @error; }
+#pulseaudio.muted { color: @dim; }
 #custom-cpu, #memory { color: @muted; }
-#custom-battery { color: @mint; }
-#custom-cpu.warning, #custom-battery.warning { color: @peach; background: @raised; }
+#custom-cpu.warning, #custom-battery.warning { color: @warning; background: @raised; }
 #custom-cpu.critical, #memory.critical, #custom-battery.critical {
-    color: @surface;
-    background: @red;
+    color: #1d1d20;
+    background: @error;
 }
-#custom-battery.charging, #custom-battery.full { color: @mint; }
+#custom-battery.charging, #custom-battery.full { color: @success; }
 #clock {
-    color: @surface;
-    background: @lilac;
-    margin: 4px 2px;
-    padding: 0 8px;
+    color: @text;
+    background: @raised;
+    margin: 4px 3px;
+    padding: 0 10px;
+    font-weight: 600;
 }
-#custom-power { color: @red; }
+#custom-power { color: @muted; }
 #idle_inhibitor:hover, #custom-network-speed:hover, #backlight:hover, #pulseaudio:hover,
-#custom-cpu:hover, #memory:hover, #custom-battery:hover, #custom-power:hover {
+#custom-cpu:hover, #memory:hover, #clock:hover, #custom-battery:hover, #custom-power:hover {
     background: @raised;
 }
+#custom-power:hover { color: @error; }

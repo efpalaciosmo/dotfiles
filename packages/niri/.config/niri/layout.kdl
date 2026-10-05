@@ -32,19 +32,19 @@ layout {
     border {
         on
         width 2
-        // Soft lilac follows the wallpaper without overpowering the window.
-        active-color "#d9b8ff"
-        inactive-color "#6d5d83"
-        urgent-color "#ff8c9b"
+        // Exact requested orange; quiet Adwaita chrome on inactive windows.
+        active-color "#ff7800"
+        inactive-color "#45454a"
+        urgent-color "#ff938c"
     }
 
     shadow {
         on
         softness 20
-        spread 3
-        offset x=0 y=3
+        spread 1
+        offset x=0 y=4
         draw-behind-window true
-        color "#00000066"
+        color "#00000055"
     }
 
     tab-indicator {
@@ -57,13 +57,13 @@ layout {
         position "right"
         gaps-between-tabs 2
         corner-radius 6
-        active-color "#d9b8ff"
-        inactive-color "#6d5d83"
-        urgent-color "#ff8c9b"
+        active-color "#ff7800"
+        inactive-color "#45454a"
+        urgent-color "#ff938c"
     }
 
     insert-hint {
         on
-        color "#d9b8ff80"
+        color "#ff780080"
     }
 }

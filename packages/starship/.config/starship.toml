@@ -23,6 +23,7 @@ cyan = "#7bdff4"
 green = "#8de698"
 yellow = "#ffc057"
 orange = "#ff9c5b"
+accent = "#ff7800"
 red = "#ff888c"
 purple = "#fba7ff"
 pink = "#ffa0d8"
@@ -30,7 +31,7 @@ teal = "#7bdff4"
 
 [os]
 disabled = false
-style = "bold fg:blue"
+style = "bold fg:accent"
 format = "[$symbol]($style) "
 
 [os.symbols]
@@ -64,7 +65,7 @@ style = "bold fg:orange"
 format = "[$symbol $name]($style) "
 
 [directory]
-style = "bold fg:blue"
+style = "bold fg:orange"
 read_only_style = "fg:red"
 read_only = " "
 format = "[$path]($style)[$read_only]($read_only_style) "

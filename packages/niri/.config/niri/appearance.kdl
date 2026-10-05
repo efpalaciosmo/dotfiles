@@ -9,3 +9,7 @@ cursor {
     hide-when-typing
     hide-after-inactive-ms 5000
 }
+// Neutral backdrop for the workspace overview; wallpaper covers each workspace.
+overview {
+    backdrop-color "#1d1d20"
+}

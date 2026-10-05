@@ -2,4 +2,4 @@
 # -f returns only once the lock surface is visible: required before suspend.
 set -euo pipefail
 
-exec swaylock -f -e -F -c 222226
+exec swaylock -f -e -F -c 222226 -C "${XDG_CONFIG_HOME:-$HOME/.config}/swaylock/config"
