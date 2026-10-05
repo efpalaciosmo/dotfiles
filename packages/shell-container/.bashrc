@@ -1,18 +1,37 @@
-# ~/.bashrc - interactive Bash
+# ~/.bashrc - interactive Bash on CachyOS and in the Fedora Distrobox.
 # Interactive Bash configuration. Shared PATH and environment live in ~/.profile.
 
 [[ $- != *i* ]] && return
 
+# Distrobox may launch Bash even when the container user's login shell is zsh.
+# Keep non-interactive commands and Bash inside tmux untouched.
+if [[ ${CONTAINER_ID:-} == fedora && -z ${TMUX:-} && -z ${BASH_EXECUTION_STRING:-} && -t 0 && -t 1 ]] \
+    && command -v zsh >/dev/null 2>&1; then
+    exec zsh -l
+fi
+
 if [ -f /etc/bash.bashrc ]; then
     . /etc/bash.bashrc
+elif [ -f /etc/bashrc ]; then
+    . /etc/bashrc
 fi
 
 if [ -f "$HOME/.profile" ]; then
     . "$HOME/.profile"
 fi
 
-export EDITOR=vim
-export VISUAL=vim
+if command -v fnm >/dev/null 2>&1; then
+    eval "$(fnm env --use-on-cd --shell bash)"
+    fnm use >/dev/null 2>&1
+fi
+
+if command -v nvim >/dev/null 2>&1; then
+    export EDITOR=nvim
+    export VISUAL=nvim
+else
+    export EDITOR=vim
+    export VISUAL=vim
+fi
 
 if command -v uv >/dev/null 2>&1; then
     eval "$(uv generate-shell-completion bash)"
@@ -64,6 +83,7 @@ alias ll='ls -lh'
 alias la='ls -A'
 alias l='ls -CF'
 alias getaudio='read -p "Enter YouTube URL: " url; yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "$HOME/Music/%(title)s.%(ext)s" "$url"'
+alias fedora='distrobox enter fedora'
 
 # Programmable completion definitions when installed.
 if [[ -z ${BASH_COMPLETION_VERSINFO:-} && -r /usr/share/bash-completion/bash_completion ]]; then

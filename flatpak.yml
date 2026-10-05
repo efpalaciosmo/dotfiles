@@ -1,0 +1,74 @@
+---
+- name: Install user Flatpaks from Flathub
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    flathub_apps: >-
+      {{ lookup('ansible.builtin.file', playbook_dir ~ '/flatpak-apps/flathub.txt').splitlines()
+         | reject('match', '^\s*(#|$)') | list }}
+    existing_user_flathub: >-
+      {{ user_remotes.stdout_lines | select('match', '^flathub\s+') | list }}
+
+  tasks:
+    - name: Refuse to run Flatpak as root
+      ansible.builtin.assert:
+        that: ansible_facts['user_uid'] | int != 0
+        fail_msg: Run make flatpak as your normal user, not with sudo.
+
+    - name: Validate Flathub application IDs
+      ansible.builtin.assert:
+        that:
+          - flathub_apps | length > 0
+          - flathub_apps | reject('match', '^[A-Za-z0-9][A-Za-z0-9._-]*$') | list | length == 0
+          - flathub_apps | unique | list | length == flathub_apps | length
+        fail_msg: flatpak-apps/flathub.txt has an invalid or duplicate application ID.
+
+    - name: Require Flatpak (install system packages with make setup first)
+      ansible.builtin.command:
+        argv: [flatpak, --version]
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Read only user Flatpak remotes
+      ansible.builtin.command:
+        argv: [flatpak, remotes, --user, "--columns=name,url"]
+      register: user_remotes
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Reject an existing user flathub pointing to another URL
+      ansible.builtin.assert:
+        that: >-
+          existing_user_flathub | length == 0 or
+          existing_user_flathub | select('match', '^flathub\s+https://dl\.flathub\.org/repo/?$') | list | length == 1
+        fail_msg: An existing user flathub remote has an unexpected URL; inspect it manually.
+      when: not ansible_check_mode
+
+    - name: Add Flathub to the user installation only
+      ansible.builtin.command:
+        argv:
+          - flatpak
+          - remote-add
+          - --user
+          - --if-not-exists
+          - flathub
+          - https://dl.flathub.org/repo/flathub.flatpakrepo
+      when:
+        - not ansible_check_mode
+        - existing_user_flathub | length == 0
+
+    - name: Read only user-installed Flatpaks
+      ansible.builtin.command:
+        argv: [flatpak, list, --user, --columns=application]
+      register: installed_user_flatpaks
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Install apps and extensions from user Flathub
+      ansible.builtin.command:
+        argv: [flatpak, install, --user, --noninteractive, --assumeyes, flathub, "{{ item }}"]
+      loop: "{{ flathub_apps }}"
+      when:
+        - not ansible_check_mode
+        - item not in installed_user_flatpaks.stdout_lines

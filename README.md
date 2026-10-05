@@ -1,16 +1,16 @@
 # CachyOS laptop dotfiles (Niri + componentes GNOME)
 
-This repository does four things on CachyOS:
+The Ansible playbook `setup.yml` does four things on CachyOS:
 
 1. Runs a full `pacman -Syu --needed` with the packages in
    [system-packages/cachyos.txt](system-packages/cachyos.txt), **including `stow`**.
 2. Downloads and installs the configured fonts under the user data directory.
-3. Links dotfiles with GNU Stow.
+3. Links dotfiles with GNU Stow, backing up conflicts first.
 4. Validates the dotfiles for Niri, Waybar, Fuzzel, Kitty, Mako,
-   Vim, Git, and Bash.
+   Vim, Git, Bash, Zsh, and Starship.
 
-**`make`/`make setup` requires sudo access and only installs packages on
-CachyOS.** It does not enable services, alter pacman repositories, or change
+**The full playbook requires sudo access and only installs packages on CachyOS.**
+It does not enable services, alter pacman repositories, or change
 your v4 CPU/repository selection. For the minimal GNOME scope, x86-64-v4
 eligibility and security checklist, read [docs/cachyos.md](docs/cachyos.md).
 This is a Niri
@@ -19,26 +19,39 @@ session with selected GNOME components, not a full GNOME Shell session.
 ## Usage
 
 ```sh
-make
+make setup
 ```
 
-`make` is equivalent to `make setup`: first `make packages` (one complete
-system update and package installation), then fonts, dotfiles and checks.
-On other distributions, `make setup` **stops before making changes**;
-use `make local` if you only want fonts and dotfiles there.
+Run as your normal user, **not** with `sudo make`. `make setup` verifies CachyOS
+and that Python is available, then creates a user-owned Python virtual
+environment at `${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles/ansible-venv`
+and installs `ansible-core` there with pip. It refreshes sudo credentials before
+running the playbook. Ansible checks the user, operating system and package
+manifest before one complete `pacman -Syu --needed` transaction; then it
+installs fonts, links dotfiles and runs static checks. Python is assumed to be
+part of the base installation and is **not** installed by this repository.
+On other distributions, `make setup` **stops before making changes**; use
+`make local` to install only fonts and dotfiles (requires their tools).
 
 ```sh
-make packages   # CachyOS-only: update/install all listed system packages
-make local      # fonts + dotfiles + check, without system packages
-make fonts      # install/update user-local fonts
-make dotfiles   # link all dotfile packages with stow
-make stow       # alias for make dotfiles
+make packages   # CachyOS-only system package upgrade/install
+make local      # fonts, links, checks; no system packages
+make fonts      # only fonts
+make dotfiles   # only Stow links
+make flatpak    # user Flathub remote and apps; NEVER part of setup
 make check      # static Bash/JSON/residue checks
 make doctor     # machine commands, app configs, and every managed symlink
 make verify     # static checks plus doctor
 ```
 
-Before invoking GNU Stow, `make dotfiles` moves every unmanaged conflicting
+Every installation target reuses the same virtual environment and creates it
+if missing. Only `setup`/`packages` use sudo. Plain `make` only lists targets.
+To run the playbook directly, use the venv's `bin/ansible-playbook` (add `-K`
+if sudo requires a password).
+`--check` validates the preconditions but **skips** pacman, fonts, Stow and
+checks: it is not a simulation of the installation or its backups.
+
+Before invoking GNU Stow, the dotfiles task moves every unmanaged conflicting
 file or link to a sibling backup named `.bak` (or `.bak.N` when that name is
 already occupied). It never deletes existing data and reports every backup it
 creates. Files already linked to this repository are left untouched.
@@ -47,17 +60,19 @@ unrelated Rofi files and settings are not touched.
 
 ## Prerequisites
 
-To run `make setup` in an existing clone you only need `make`, `bash`,
-`pacman` and `sudo` initially; it installs `stow`, `curl`, `python3` (package
-`python`), `fontconfig`, desktop applications and the other declared
-dependencies before using them. Bootstrap also needs `git` to clone the
-repository. If missing, first run `sudo pacman -Syu --needed git make`.
+On CachyOS, an existing clone needs `make`, `bash`, `python3`, `pacman` and `sudo` to run
+`make setup`. For a fresh clone, install `git` and `make` first:
+`sudo pacman -Syu --needed git make`. Ansible is written in Python, but
+Python alone does not include `ansible-playbook`; `make setup` installs it
+into the virtual environment, never as a system package.
+The playbook installs `stow`, `curl`, `fontconfig`, desktop applications and
+the other declared dependencies before using them. Bootstrap also needs `git`.
 `make doctor`
 checks the complete runtime, including audio, networking, clipboard,
 brightness, locking, and D-Bus helpers.
 
 Select **Niri** at GDM (not a plain `niri` TTY invocation) after running
-`make setup`, then run `make doctor`.
+the playbook, then run `make doctor`.
 
 Static checks cannot prove hardware or graphical integration. After applying
 the dotfiles, log into Niri on the laptop and run:
@@ -75,7 +90,8 @@ workspaces and restrained status accents. Its 34-pixel height is a little smalle
 than the first plum design. Urgent workspaces use rose.
 `Super+Return`, Fuzzel and Waybar actions open Kitty. Mako notifications use a
 raised plum surface with lilac, peach and rose accents. Kitty keeps its
-existing colors. Bash keeps a compact, colored prompt; Vim inherits the editing
+existing colors. Bash keeps a compact, colored prompt; Zsh uses the linked
+Starship Adwaita prompt. Vim inherits the editing
 essentials (relative numbers, four-space indentation, search and a matching
 bracket indicator) in `packages/vi/.vimrc`.
 
@@ -104,7 +120,7 @@ monitoring, disk usage and power.
 `Super+Shift+P` power and `Super+Alt+L`
 locks the session through `~/.config/niri/scripts/lock-screen`. In Niri,
 `swayidle` locks after 5 minutes, powers off monitors after 10 minutes and
-locks before sleep. Install both `swaylock` and `swayidle`, run `make dotfiles`,
+locks before sleep. Install both `swaylock` and `swayidle`, run the dotfiles task,
 then **log out and back in** to start the idle daemon. `make doctor` checks the
 script links, wallpaper and running idle daemon. The wallpaper is the
 repository's `packages/niri/.config/niri/backgrounds/bluesky.png`, linked at
@@ -136,18 +152,41 @@ adapter, search for nearby devices, pair/connect, disconnect, and forget them.
 It uses `bluetoothctl` (BlueZ) and `rfkill`; no additional Bluetooth
 interface is needed. Pairing that requires a PIN may need an interactive
 Bluetooth agent. This menu is part of the `fuzzel` Stow package and is linked
-automatically by `make dotfiles`.
+automatically by the dotfiles task.
 
 ## Fonts
 
-`make fonts` installs IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font, and
+The fonts task installs IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font, and
 Inter into `${XDG_DATA_HOME:-$HOME/.local/share}/fonts`. Archives are cached in
 `${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/fonts` and `fc-cache` is refreshed.
 
+## Shell
+
+`make setup` installs `zsh`, `zsh-completions`, and `starship`. Stow links
+`~/.zshrc`, `~/.bashrc`, `~/.profile`,
+`~/.config/starship.toml` and the optional `~/.local/bin/fedora-terminal`.
+Zsh loads Starship and standard completions; Oh My Zsh, its plugins, fnm,
+uv, pnpm, and zoxide are only used if already installed. The Fedora Distrobox
+aliases and tmux hook activate only in that container. No login shell is
+changed automatically; start `zsh` manually if you want to use it.
+
+## Flatpak apps (separate opt-in)
+
+Run `make flatpak` **only when you want the applications**. It does not run in
+`make setup`. The apps and extensions are listed in
+[flatpak-apps/flathub.txt](flatpak-apps/flathub.txt). It adds Flathub to the
+**user** Flatpak installation (`flatpak remote-add --user --if-not-exists`)
+and installs each ID with `flatpak install --user`; it does not use sudo or
+add a system remote. It requires the `flatpak` command, which `make setup`
+installs on CachyOS. The `flatpak run com.valvesoftware.Steam` entry in the
+original list is treated as an **installation** of Steam; nothing is launched.
+If any app/extension is unavailable, the command reports the failing ID;
+rerun after resolving it. Existing user installations are skipped.
+
 ## Bootstrap
 
-The bootstrap script invokes `make setup`, including system package
-installation. On CachyOS with `git` and `make` already installed:
+The bootstrap script invokes `make setup`, including Ansible bootstrapping and
+system package installation. On CachyOS with `git` and `make` already installed:
 
 ```sh
 DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \

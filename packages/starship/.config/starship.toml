@@ -1,0 +1,165 @@
+"$schema" = "https://starship.rs/config-schema.json"
+
+format = """
+[╭─](fg:surface)$os$username$hostname$container$directory$git_branch$git_status$git_state$fill$cmd_duration$status$jobs$time
+[╰─](fg:surface)$character"""
+
+right_format = """
+$python$nodejs$c$package"""
+
+add_newline = true
+continuation_prompt = "[∙](fg:muted) "
+command_timeout = 1000
+scan_timeout = 30
+palette = "adwaita"
+
+[palettes.adwaita]
+base = "#1a1a1d"
+surface = "#77767b"
+muted = "#9a9996"
+text = "#deddda"
+blue = "#81d0ff"
+cyan = "#7bdff4"
+green = "#8de698"
+yellow = "#ffc057"
+orange = "#ff9c5b"
+red = "#ff888c"
+purple = "#fba7ff"
+pink = "#ffa0d8"
+teal = "#7bdff4"
+
+[os]
+disabled = false
+style = "bold fg:blue"
+format = "[$symbol]($style) "
+
+[os.symbols]
+AlmaLinux = ""
+Alpine = ""
+Arch = ""
+Debian = ""
+Fedora = ""
+Linux = ""
+Macos = ""
+NixOS = ""
+Redhat = ""
+Ubuntu = ""
+Windows = "󰍲"
+Unknown = ""
+
+[username]
+show_always = false
+style_user = "bold fg:green"
+style_root = "bold fg:red"
+format = "[$user]($style) "
+
+[hostname]
+ssh_only = true
+style = "bold fg:yellow"
+format = "[@$hostname]($style) "
+
+[container]
+symbol = "⬢"
+style = "bold fg:orange"
+format = "[$symbol $name]($style) "
+
+[directory]
+style = "bold fg:blue"
+read_only_style = "fg:red"
+read_only = " "
+format = "[$path]($style)[$read_only]($read_only_style) "
+truncation_length = 4
+truncation_symbol = "…/"
+truncate_to_repo = false
+home_symbol = "~"
+
+[directory.substitutions]
+"Desktop" = "󰇄 Desktop"
+"Documents" = "󰈙 Documents"
+"Downloads" = " Downloads"
+"Music" = " Music"
+"Pictures" = " Pictures"
+"Projects" = "󰲋 Projects"
+
+[git_branch]
+symbol = " "
+style = "bold fg:purple"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+style = "bold fg:yellow"
+format = "([$all_status$ahead_behind]($style) )"
+conflicted = "=${count} "
+ahead = "⇡${count} "
+behind = "⇣${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
+up_to_date = ""
+untracked = "?${count} "
+stashed = "$${count} "
+modified = "!${count} "
+staged = "+${count} "
+renamed = "»${count} "
+deleted = "✘${count} "
+
+[git_state]
+style = "bold fg:red"
+format = '\([$state( $progress_current/$progress_total)]($style)\) '
+
+[fill]
+symbol = " "
+style = "fg:surface"
+
+[cmd_duration]
+min_time = 800
+style = "fg:muted"
+format = "[󱦟 $duration]($style) "
+
+[status]
+disabled = false
+style = "bold fg:red"
+symbol = "✘"
+success_symbol = ""
+format = "[$symbol$status]($style) "
+map_symbol = true
+
+[jobs]
+symbol = " "
+style = "bold fg:orange"
+number_threshold = 1
+format = "[$symbol$number]($style) "
+
+[time]
+disabled = false
+style = "fg:muted"
+format = "[ $time]($style)"
+time_format = "%H:%M"
+
+[character]
+success_symbol = "[❯](bold fg:green)"
+error_symbol = "[❯](bold fg:red)"
+vimcmd_symbol = "[❮](bold fg:blue)"
+vimcmd_visual_symbol = "[❮](bold fg:yellow)"
+vimcmd_replace_symbol = "[❮](bold fg:purple)"
+
+[python]
+symbol = " "
+style = "bold fg:yellow"
+format = '[$symbol${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+pyenv_version_name = true
+pyenv_prefix = ""
+
+[nodejs]
+symbol = " "
+style = "bold fg:green"
+format = "[$symbol($version )]($style)"
+
+[c]
+symbol = " "
+style = "bold fg:blue"
+format = "[$symbol($version(-$name) )]($style)"
+
+[package]
+symbol = "󰏗 "
+style = "bold fg:pink"
+format = "[$symbol$version]($style) "
+display_private = false

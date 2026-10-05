@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# VS Code's terminal may inherit no_new_privs from Electron; the user service
+# manager does not. This helper is optional and specific to the Fedora Distrobox.
+set -euo pipefail
+
+if ! grep -qE '^NoNewPrivs:[[:space:]]*1$' /proc/self/status; then
+    exec /usr/bin/zsh -l
+fi
+
+distrobox=$(command -v distrobox) || {
+    printf 'fedora-terminal: distrobox is not in PATH\n' >&2
+    exit 1
+}
+
+exec systemd-run --user --pty --wait --collect --quiet --same-dir \
+    --setenv="TERM=${TERM:-xterm-256color}" \
+    --setenv="COLORTERM=${COLORTERM:-truecolor}" \
+    "$distrobox" enter fedora -- zsh

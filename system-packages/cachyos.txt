@@ -33,6 +33,9 @@ edk2-ovmf
 swtpm
 
 # Commands used by the dotfiles and setup
+zsh
+zsh-completions
+starship
 swaybg
 playerctl
 brightnessctl
@@ -43,7 +46,6 @@ bluez
 bluez-utils
 iproute2
 util-linux
-python
 git
 make
 stow

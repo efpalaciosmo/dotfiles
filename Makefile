@@ -1,43 +1,57 @@
 SHELL := /bin/bash
-.DEFAULT_GOAL := setup
+.DEFAULT_GOAL := help
 
-PACKAGES := git shell-container vi kitty niri waybar mako fuzzel
+ANSIBLE_VENV ?= $(if $(XDG_DATA_HOME),$(XDG_DATA_HOME),$(HOME)/.local/share)/dotfiles/ansible-venv
+ANSIBLE_PLAYBOOK = $(ANSIBLE_VENV)/bin/ansible-playbook
+TEST_PYTHON = $(if $(wildcard $(ANSIBLE_VENV)/bin/python),$(ANSIBLE_VENV)/bin/python,python3)
+
+PACKAGES := git shell-container starship vi kitty niri waybar mako fuzzel
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/niri/.config/niri/scripts/*) \
 	$(filter-out packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker,$(shell find packages/fuzzel/.config/fuzzel/scripts -maxdepth 1 -type f)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
 PYTHON_FILES := packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
 
-.PHONY: help setup local packages fonts dotfiles stow check doctor verify
+.PHONY: help setup local packages fonts dotfiles stow flatpak check doctor verify
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-setup: ## Install CachyOS packages, fonts and dotfiles, then check
-	@$(MAKE) --no-print-directory packages
-	@$(MAKE) --no-print-directory local
+setup: ## Run the full Ansible playbook (CachyOS only)
+	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
+	@sudo -v
+	@"$(ANSIBLE_PLAYBOOK)" -i localhost, setup.yml
 
-local: ## Install fonts and dotfiles without touching system packages
-	@$(MAKE) --no-print-directory fonts
-	@$(MAKE) --no-print-directory dotfiles
-	@$(MAKE) --no-print-directory check
+local: ## Run Ansible fonts, dotfiles and checks without system packages
+	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
+	@"$(ANSIBLE_PLAYBOOK)" -i localhost, setup.yml --tags local
 
-packages: ## Full CachyOS upgrade and install manifest (including stow)
-	@./scripts/install-system-packages.sh
+packages: ## Run Ansible package installation (CachyOS only)
+	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
+	@sudo -v
+	@"$(ANSIBLE_PLAYBOOK)" -i localhost, setup.yml --tags packages
 
-fonts: scripts/install-fonts.sh ## Install the configured user-local fonts
-	@./scripts/install-fonts.sh
+fonts: ## Install the configured user-local fonts with Ansible
+	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
+	@"$(ANSIBLE_PLAYBOOK)" -i localhost, setup.yml --tags fonts
 
-dotfiles: ## Link every dotfile package with the existing GNU Stow
-	@./scripts/apply-dotfiles.sh $(PACKAGES)
+dotfiles: ## Link every dotfile package with Ansible and GNU Stow
+	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
+	@"$(ANSIBLE_PLAYBOOK)" -i localhost, setup.yml --tags dotfiles
 
 stow: dotfiles ## Alias for dotfiles
 
+flatpak: ## Install Flathub apps for this user (not part of setup)
+	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
+	@"$(ANSIBLE_PLAYBOOK)" -i localhost, flatpak.yml
+
 check: ## Run non-mutating repository syntax checks
-	@for file in $(SCRIPT_FILES) packages/shell-container/.bashrc packages/shell-container/.profile; do bash -n "$$file" || exit 1; done
+	@for file in $(SCRIPT_FILES) packages/shell-container/.bashrc packages/shell-container/.profile packages/shell-container/.local/bin/fedora-terminal; do bash -n "$$file" || exit 1; done
+	@if command -v zsh >/dev/null 2>&1; then zsh -n packages/shell-container/.zshrc; fi
+	@python3 -c 'import pathlib, tomllib; tomllib.loads(pathlib.Path("packages/starship/.config/starship.toml").read_text())'
 	@python3 -m json.tool packages/waybar/.config/waybar/config.jsonc >/dev/null
 	@python3 -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text()) for p in "$(PYTHON_FILES)".split()]'
-	@PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+	@PYTHONDONTWRITEBYTECODE=1 "$(TEST_PYTHON)" -m unittest discover -s tests -p 'test_*.py'
 	@if command -v niri >/dev/null 2>&1; then niri validate --config packages/niri/.config/niri/config.kdl; fi
 	@if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --config=packages/fuzzel/.config/fuzzel/fuzzel.ini; fi
 	@if command -v vim >/dev/null 2>&1; then \

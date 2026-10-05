@@ -1,7 +1,8 @@
 # Migración a CachyOS: Niri con componentes GNOME mínimos
 
 Esta guía prepara una **instalación nueva** de CachyOS, no convierte in situ
-Silverblue. `make setup` **sí ejecuta `sudo pacman -Syu --needed`** para instalar
+Silverblue. El playbook `setup.yml` **sí ejecuta `pacman -Syu --needed` con sudo**
+para instalar
 los paquetes declarados; no activa servicios ni cambia repositorios. Haz copia
 de seguridad de tus archivos y verifica la ISO oficial antes de particionar.
 Elige instalación mínima/sin entorno de escritorio si el instalador lo permite:
@@ -40,17 +41,35 @@ Tras el primer arranque, en este repositorio ejecuta:
 make setup
 ```
 
-`make setup` instala con `sudo pacman -Syu --needed` **todos** los paquetes de
+`make setup` crea un entorno virtual de Python bajo
+`${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles/ansible-venv` e instala allí
+`ansible-core` con pip, **no** con pacman. Se asume que Python ya viene en
+la instalación base; si falta, el proceso aborta sin instalarlo. Después
+Ansible instala con
+`pacman -Syu --needed` (solo los paquetes del sistema usan sudo) **todos** los paquetes de
 [system-packages/cachyos.txt](../system-packages/cachyos.txt), incluyendo los
 solicitados, los auxiliares y `stow`, y después instala fuentes, enlaza los
-dotfiles y pasa `make check`. No uses `sudo make`: sudo se solicita únicamente
-para pacman. Una segunda ejecución actualiza el sistema y salta paquetes ya
-instalados. Desde fuera de CachyOS `make setup` aborta antes de tocar nada;
-`make local` solo instala fuentes/dotfiles. Si arrancas desde una instalación
-mínima sin Git o Make, instala primero `sudo pacman -Syu --needed git make` para
-poder clonar/ejecutar el repositorio. **No** actives repositorios v4 si el CPU
-no los soporta: el script usa únicamente los repositorios ya configurados por
+dotfiles y pasa `make check`. No uses `sudo make`: `make setup` valida sudo
+y eleva privilegios solo para pacman. Una segunda ejecución actualiza
+el sistema y salta paquetes ya instalados. Desde fuera de CachyOS el playbook
+completo aborta antes de tocar nada; `make local` solo instala
+fuentes/dotfiles y ejecuta los checks (prepara su propio entorno virtual). Si arrancas desde una instalación
+mínima, instala primero `sudo pacman -Syu --needed git make` para
+poder clonar y ejecutar el repositorio. **No** actives repositorios v4 si el CPU
+no los soporta: el playbook usa únicamente los repositorios ya configurados por
 el instalador.
+
+`make flatpak` es **opcional y separado** de `make setup`: configura Flathub
+con `flatpak remote-add --user --if-not-exists` e instala solo para el usuario
+las aplicaciones de [flatpak-apps/flathub.txt](../flatpak-apps/flathub.txt).
+No usa sudo ni modifica el remoto Flatpak del sistema. Incluye Steam como
+instalación (`com.valvesoftware.Steam`), pero no lo ejecuta.
+
+`make setup` instala también `zsh`, `zsh-completions` y `starship`, y enlaza
+`.zshrc`, `.profile`, `.bashrc`, `~/.config/starship.toml` y el ayudante
+opcional `~/.local/bin/fedora-terminal`. No cambia la shell de inicio de sesión
+ni instala Oh My Zsh; los ajustes específicos del contenedor Fedora solo se
+activan dentro de ese contenedor.
 
 Los paquetes auxiliares satisfacen comandos usados por estos dotfiles: fondo,
 reproducción, brillo, notificaciones, Wi-Fi, ajustes de conexiones,
@@ -106,7 +125,7 @@ abras forwarding global solo porque una guía genérica lo indique.
 ## Dotfiles y verificación
 
 ```sh
-make                 # paquetes (incluye stow), fuentes, enlaces y pruebas
+make setup           # Ansible, paquetes, fuentes, enlaces y pruebas
 make doctor          # en el CachyOS instalado, tras iniciar sesión Niri
 systemctl --user status pipewire pipewire-pulse wireplumber xdg-desktop-portal
 systemctl status gdm NetworkManager bluetooth
@@ -115,7 +134,8 @@ systemctl status gdm NetworkManager bluetooth
 El fondo de Niri usa `~/.config/niri/backgrounds/bluesky.png`, enlazado por
 Stow desde `packages/niri/.config/niri/backgrounds/bluesky.png`. No hace falta
 copiarlo fuera del repositorio. Tras instalar `swayidle` y ejecutar
-`make dotfiles`, **cierra sesión y vuelve a entrar en Niri**: `spawn-at-startup`
+el playbook con `--tags dotfiles`, **cierra sesión y vuelve a entrar en Niri**:
+`spawn-at-startup`
 no se vuelve a ejecutar al recargar la configuración. Comprueba
 `pgrep -a swayidle` y `make doctor`; `swayidle` bloquea después de 5 minutos,
 apaga pantallas a los 10, y bloquea antes de suspender. El bloqueo manual,

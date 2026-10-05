@@ -1,0 +1,79 @@
+---
+- name: Configure CachyOS laptop
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    dotfile_packages:
+      - git
+      - shell-container
+      - starship
+      - vi
+      - kitty
+      - niri
+      - waybar
+      - mako
+      - fuzzel
+    cachyos_packages: >-
+      {{ lookup('ansible.builtin.file', playbook_dir ~ '/system-packages/cachyos.txt').splitlines()
+         | reject('match', '^\s*(#|$)') | list }}
+
+  pre_tasks:
+    - name: Refuse to run the playbook as root
+      ansible.builtin.assert:
+        that: ansible_facts['user_uid'] | int != 0
+        fail_msg: Run ansible-playbook as your normal user, not with sudo.
+      tags: always
+
+    - name: Read the installed operating system
+      ansible.builtin.slurp:
+        src: /etc/os-release
+      register: installed_os
+      tags: packages
+
+    - name: Refuse system package installation outside CachyOS
+      ansible.builtin.assert:
+        that: (installed_os.content | b64decode) is search('(?m)^ID="?cachyos"?$')
+        fail_msg: Package installation is only supported on CachyOS; use --tags local for fonts and links.
+      tags: packages
+
+    - name: Validate the package manifest before using sudo
+      ansible.builtin.assert:
+        that:
+          - cachyos_packages | length > 0
+          - cachyos_packages | reject('match', '^[a-z0-9][a-z0-9@._+-]*$') | list | length == 0
+          - cachyos_packages | unique | list | length == cachyos_packages | length
+        fail_msg: system-packages/cachyos.txt has an invalid or duplicate package name.
+      tags: packages
+
+  tasks:
+    # Keep upgrade and installation in ONE transaction; never run a partial -Sy.
+    - name: Upgrade CachyOS and install declared packages
+      ansible.builtin.command:
+        argv: "{{ ['pacman', '-Syu', '--needed'] + cachyos_packages }}"
+      become: true
+      when: not ansible_check_mode
+      tags: packages
+
+    - name: Install user-local fonts
+      ansible.builtin.command:
+        argv:
+          - "{{ playbook_dir }}/scripts/install-fonts.sh"
+      when: not ansible_check_mode
+      tags: [fonts, local]
+
+    # The existing helper backs up conflicting targets before calling Stow.
+    - name: Link dotfiles with safe conflict backups
+      ansible.builtin.command:
+        argv: "{{ [playbook_dir ~ '/scripts/apply-dotfiles.sh'] + dotfile_packages }}"
+      when: not ansible_check_mode
+      tags: [dotfiles, local]
+
+    - name: Run static repository checks
+      ansible.builtin.command:
+        argv: [make, -C, "{{ playbook_dir }}", check]
+      environment:
+        ANSIBLE_VENV: "{{ ansible_playbook_python | dirname | dirname }}"
+      changed_when: false
+      when: not ansible_check_mode
+      tags: [check, local]
