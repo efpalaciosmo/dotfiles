@@ -2,4 +2,16 @@
 # -f returns only once the lock surface is visible: required before suspend.
 set -euo pipefail
 
-exec swaylock -f -e -F -c 222226 -C "${XDG_CONFIG_HOME:-$HOME/.config}/swaylock/config"
+config_home=${XDG_CONFIG_HOME:-$HOME/.config}
+lock_config=$config_home/swaylock/config
+wallpaper=$config_home/niri/backgrounds/adwaita-dark.png
+
+# Missing appearance files must never prevent the session from locking.
+[[ -r $lock_config ]] || lock_config=/dev/null
+args=(-f -e -F -c 222226 -C "$lock_config" --indicator-idle-visible)
+if [[ -r $wallpaper ]]; then
+    # A leading colon disambiguates image paths containing ':' from output names.
+    args+=(--image ":$wallpaper" --scaling fill)
+fi
+
+exec swaylock "${args[@]}"

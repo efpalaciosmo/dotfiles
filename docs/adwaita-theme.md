@@ -80,8 +80,10 @@ Validation uses `make check`, Niri's validator, Fuzzel's validator, Mako's live
 reload and screenshots from the running 1920×1200 Niri session. The native
 Adwaita preview uses ordinary libadwaita widgets without CSS overrides or
 forcing the style, checking that the session preference actually reaches apps.
-Swaylock's invocation is checked by the existing stub-based test; visual lock
-verification is deferred to the next user-initiated lock.
+Swaylock uses the same wallpaper with a visible orange unlock indicator, keyboard
+layout and Caps Lock feedback. Stub-based tests check the lock/suspend handshake,
+image paths containing spaces or colons, and safe locking when appearance files
+are missing. Visual lock verification is deferred to the next user-initiated lock.
 
 Screenshots: [desktop](screenshots/desktop-adwaita-orange.png),
 [launcher](screenshots/launcher-adwaita-orange.png),

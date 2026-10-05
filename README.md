@@ -181,7 +181,11 @@ monitoring, disk usage and power.
 `Super+Shift+P` power and `Super+Alt+L`
 locks the session through `~/.config/niri/scripts/lock-screen`. In Niri,
 `swayidle` locks after 5 minutes, powers off monitors after 10 minutes and
-locks before sleep. Install both `swaylock` and `swayidle`, run the dotfiles task,
+locks before sleep. Swaylock shows the Adwaita wallpaper and a visible orange
+unlock indicator; type your password and press Enter. Caps Lock and the keyboard
+layout are shown while typing. The display wakes on activity and after suspend.
+Missing wallpaper or appearance settings fall back to a solid dark lock screen.
+Install both `swaylock` and `swayidle`, run the dotfiles task,
 then **log out and back in** to start the idle daemon. `make doctor` checks the
 script links, wallpaper and running idle daemon. The wallpaper is the
 official GNOME Adwaita Dark wallpaper at
