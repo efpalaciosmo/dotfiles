@@ -47,10 +47,30 @@
       tags: packages
 
   tasks:
-    # Keep upgrade and installation in ONE transaction; never run a partial -Sy.
-    - name: Upgrade CachyOS and install declared packages
+    # Fail on repository/configuration problems before making system changes.
+    - name: Run static repository checks
       ansible.builtin.command:
-        argv: "{{ ['pacman', '-Syu', '--needed'] + cachyos_packages }}"
+        argv: [make, -C, "{{ playbook_dir }}", check]
+      environment:
+        ANSIBLE_VENV: "{{ ansible_playbook_python | dirname | dirname }}"
+      changed_when: false
+      when: not ansible_check_mode
+      tags: [always, check, local]
+
+    # Pacman does not support partial upgrades. Complete -Syu first; the module
+    # intentionally makes `upgrade` and `name` mutually exclusive.
+    - name: Upgrade the complete CachyOS system
+      community.general.pacman:
+        update_cache: true
+        upgrade: true
+      become: true
+      when: not ansible_check_mode
+      tags: packages
+
+    - name: Install declared CachyOS packages
+      community.general.pacman:
+        name: "{{ cachyos_packages }}"
+        state: present
       become: true
       when: not ansible_check_mode
       tags: packages
@@ -68,12 +88,3 @@
         argv: "{{ [playbook_dir ~ '/scripts/apply-dotfiles.sh'] + dotfile_packages }}"
       when: not ansible_check_mode
       tags: [dotfiles, local]
-
-    - name: Run static repository checks
-      ansible.builtin.command:
-        argv: [make, -C, "{{ playbook_dir }}", check]
-      environment:
-        ANSIBLE_VENV: "{{ ansible_playbook_python | dirname | dirname }}"
-      changed_when: false
-      when: not ansible_check_mode
-      tags: [check, local]

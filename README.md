@@ -1,13 +1,13 @@
 # CachyOS laptop dotfiles (Niri + componentes GNOME)
 
-The Ansible playbook `setup.yml` does four things on CachyOS:
+The Ansible playbook `setup.yml` does four things on CachyOS, ordered to catch
+cheap failures before changing the machine:
 
-1. Runs a full `pacman -Syu --needed` with the packages in
+1. Validates the repository configuration and tests.
+2. Runs a full system upgrade and installs the packages in
    [system-packages/cachyos.txt](system-packages/cachyos.txt), **including `stow`**.
-2. Downloads and installs the configured fonts under the user data directory.
-3. Links dotfiles with GNU Stow, backing up conflicts first.
-4. Validates the dotfiles for Niri, Waybar, Fuzzel, Kitty, Mako,
-   Vim, Git, Bash, Zsh, and Starship.
+3. Downloads and installs the configured fonts under the user data directory.
+4. Links dotfiles with GNU Stow, backing up conflicts first.
 
 **The full playbook requires sudo access and only installs packages on CachyOS.**
 It does not enable services, alter pacman repositories, or change
@@ -24,11 +24,16 @@ make setup
 
 Run as your normal user, **not** with `sudo make`. `make setup` verifies CachyOS
 and that Python is available, then creates a user-owned Python virtual
-environment at `${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles/ansible-venv`
-and installs `ansible-core` there with pip. It refreshes sudo credentials before
-running the playbook. Ansible checks the user, operating system and package
-manifest before one complete `pacman -Syu --needed` transaction; then it
-installs fonts, links dotfiles and runs static checks. Python is assumed to be
+environment at `.venv`, activates it for the playbook command, and installs the
+complete `ansible` distribution from `requirements-ansible.txt` there with pip.
+That distribution supplies the `community.general.pacman` module used for
+package management. Ansible asks for the sudo password once at startup and
+keeps it only in memory for the privileged package task. Ansible then checks
+the user, operating system and package manifest, runs the non-mutating static
+checks, and only then asks the Pacman module to perform a full system upgrade.
+A second Pacman task installs the manifest because the module deliberately
+does not allow `upgrade` and `name` in the same invocation; afterward it
+installs fonts and links dotfiles. Python is assumed to be
 part of the base installation and is **not** installed by this repository.
 On other distributions, `make setup` **stops before making changes**; use
 `make local` to install only fonts and dotfiles (requires their tools).
@@ -46,8 +51,8 @@ make verify     # static checks plus doctor
 
 Every installation target reuses the same virtual environment and creates it
 if missing. Only `setup`/`packages` use sudo. Plain `make` only lists targets.
-To run the playbook directly, use the venv's `bin/ansible-playbook` (add `-K`
-if sudo requires a password).
+To run the complete playbook directly, run `source .venv/bin/activate` first
+and pass `--ask-become-pass` (or `-K`) to `ansible-playbook`.
 `--check` validates the preconditions but **skips** pacman, fonts, Stow and
 checks: it is not a simulation of the installation or its backups.
 
