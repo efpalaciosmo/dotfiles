@@ -57,7 +57,8 @@ class EnsureAnsibleTests(unittest.TestCase):
                 'if [ "$3" = "install" ]; then\n'
                 '  printf "pip\\n" >> "$MARKER"\n'
                 '  printf "#!/bin/sh\\n" > "$ANSIBLE_VENV/bin/ansible-playbook"\n'
-                '  chmod +x "$ANSIBLE_VENV/bin/ansible-playbook"\n'
+                '  printf "#!/bin/sh\\n" > "$ANSIBLE_VENV/bin/ansible-doc"\n'
+                '  chmod +x "$ANSIBLE_VENV/bin/ansible-playbook" "$ANSIBLE_VENV/bin/ansible-doc"\n'
                 'fi\nEOF\nchmod +x "$3/bin/python"\n'
             )
             fake_python.chmod(0o755)

@@ -45,8 +45,16 @@ class SetupPlaybookTests(unittest.TestCase):
         packages = task_named("Upgrade CachyOS and install declared packages")
         self.assertTrue(packages["become"])
         self.assertEqual(packages["tags"], "packages")
-        self.assertIn("['pacman', '-Syu', '--needed'] + cachyos_packages", packages["ansible.builtin.command"]["argv"])
-        self.assertTrue(all(not task.get("become", False) for task in PLAY["tasks"][1:]))
+        pacman = packages["community.general.pacman"]
+        self.assertEqual(pacman["name"], "{{ cachyos_packages }}")
+        self.assertEqual(pacman["state"], "present")
+        self.assertTrue(pacman["update_cache"])
+        self.assertTrue(pacman["upgrade"])
+        self.assertTrue(all(not task.get("become", False) for task in PLAY["tasks"] if task is not packages))
+
+    def test_static_checks_run_before_any_mutating_task(self):
+        self.assertEqual(PLAY["tasks"][0]["name"], "Run static repository checks")
+        self.assertFalse(PLAY["tasks"][0].get("become", False))
 
     def test_local_tasks_use_existing_helpers_and_skip_check_mode(self):
         fonts = task_named("Install user-local fonts")

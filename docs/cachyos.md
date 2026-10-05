@@ -41,16 +41,18 @@ Tras el primer arranque, en este repositorio ejecuta:
 make setup
 ```
 
-`make setup` crea un entorno virtual de Python bajo
-`${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles/ansible-venv` e instala allí
-`ansible-core` con pip, **no** con pacman. Se asume que Python ya viene en
+`make setup` crea el entorno virtual de Python `.venv` en el repositorio, lo
+activa para ejecutar el playbook e instala allí la distribución completa
+`ansible` indicada en `requirements-ansible.txt` con pip, **no** con pacman.
+Así queda disponible el módulo `community.general.pacman`. Se asume que Python ya viene en
 la instalación base; si falta, el proceso aborta sin instalarlo. Después
-Ansible instala con
-`pacman -Syu --needed` (solo los paquetes del sistema usan sudo) **todos** los paquetes de
+Ansible ejecuta primero las validaciones que no modifican el equipo y luego usa
+el módulo de Pacman para actualizar el sistema e instalar (solo esta tarea usa sudo) **todos** los paquetes de
 [system-packages/cachyos.txt](../system-packages/cachyos.txt), incluyendo los
 solicitados, los auxiliares y `stow`, y después instala fuentes, enlaza los
-dotfiles y pasa `make check`. No uses `sudo make`: `make setup` valida sudo
-y eleva privilegios solo para pacman. Una segunda ejecución actualiza
+dotfiles. No uses `sudo make`: `make setup` pide una vez la contraseña de sudo
+mediante `--ask-become-pass` y eleva privilegios solo para la tarea de Pacman.
+Una segunda ejecución actualiza
 el sistema y salta paquetes ya instalados. Desde fuera de CachyOS el playbook
 completo aborta antes de tocar nada; `make local` solo instala
 fuentes/dotfiles y ejecuta los checks (prepara su propio entorno virtual). Si arrancas desde una instalación
