@@ -1,7 +1,8 @@
 # Migración a CachyOS: Niri con componentes GNOME mínimos
 
 Esta guía prepara una **instalación nueva** de CachyOS, no convierte in situ
-Silverblue ni ejecuta comandos privilegiados desde este repositorio. Haz copia
+Silverblue. `make setup` **sí ejecuta `sudo pacman -Syu --needed`** para instalar
+los paquetes declarados; no activa servicios ni cambia repositorios. Haz copia
 de seguridad de tus archivos y verifica la ISO oficial antes de particionar.
 Elige instalación mínima/sin entorno de escritorio si el instalador lo permite:
 GDM es la pantalla de acceso, **Niri es la sesión**, y Nautilus, Ajustes y
@@ -33,28 +34,29 @@ globales `-march=native`. La ganancia depende de cada carga de trabajo.
 
 ## Paquetes
 
-Tras el primer arranque, actualiza e instala los paquetes oficiales con una
-**actualización completa** (`-Syu`, nunca `-Sy` seguido de instalaciones):
+Tras el primer arranque, en este repositorio ejecuta:
 
 ```sh
-sudo pacman -Syu \
-  gdm gnome-control-center gnome-keyring nautilus \
-  niri xwayland-satellite xdg-desktop-portal-gnome xdg-desktop-portal-gtk \
-  kitty fuzzel mako waybar swaylock swayidle polkit-gnome wl-clipboard \
-  pipewire pipewire-pulse pipewire-alsa wireplumber flatpak \
-  zathura zathura-pdf-mupdf zathura-djvu \
-  qemu-desktop libvirt virt-manager dnsmasq edk2-ovmf swtpm \
-  swaybg playerctl brightnessctl libnotify networkmanager \
-  network-manager-applet bluez bluez-utils iproute2 util-linux \
-  python git make stow curl tar unzip fontconfig vim bash-completion xdg-utils procps-ng \
-  btop
+make setup
 ```
 
-Los paquetes añadidos satisfacen comandos usados por estos dotfiles: fondo,
+`make setup` instala con `sudo pacman -Syu --needed` **todos** los paquetes de
+[system-packages/cachyos.txt](../system-packages/cachyos.txt), incluyendo los
+solicitados, los auxiliares y `stow`, y después instala fuentes, enlaza los
+dotfiles y pasa `make check`. No uses `sudo make`: sudo se solicita únicamente
+para pacman. Una segunda ejecución actualiza el sistema y salta paquetes ya
+instalados. Desde fuera de CachyOS `make setup` aborta antes de tocar nada;
+`make local` solo instala fuentes/dotfiles. Si arrancas desde una instalación
+mínima sin Git o Make, instala primero `sudo pacman -Syu --needed git make` para
+poder clonar/ejecutar el repositorio. **No** actives repositorios v4 si el CPU
+no los soporta: el script usa únicamente los repositorios ya configurados por
+el instalador.
+
+Los paquetes auxiliares satisfacen comandos usados por estos dotfiles: fondo,
 reproducción, brillo, notificaciones, Wi-Fi, ajustes de conexiones,
 Bluetooth, utilidades de red y compilación de fuentes. `cal` y `rfkill` los
 proporciona `util-linux` en Arch (no existe paquete separado `rfkill`). Si el instalador
-ya incluyó algunos paquetes, pacman no los duplicará. No uses AUR para estos
+ya incluyó algunos paquetes, `--needed` no los reinstalará. No uses AUR para estos
 componentes básicos. `pipewire` es necesario para el screencast de Niri; los
 portales GNOME+GTK y Nautilus proporcionan compartir pantalla/selector de
 archivos; `gnome-keyring` proporciona el portal Secret.
@@ -104,7 +106,7 @@ abras forwarding global solo porque una guía genérica lo indique.
 ## Dotfiles y verificación
 
 ```sh
-make                 # fuentes, enlaces (copias .bak para conflictos) y pruebas
+make                 # paquetes (incluye stow), fuentes, enlaces y pruebas
 make doctor          # en el CachyOS instalado, tras iniciar sesión Niri
 systemctl --user status pipewire pipewire-pulse wireplumber xdg-desktop-portal
 systemctl status gdm NetworkManager bluetooth

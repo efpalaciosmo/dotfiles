@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Clone or update this repo and apply fonts and dotfiles. It installs no packages.
+# Clone or update this repo, then install CachyOS packages and apply dotfiles.
 set -Eeuo pipefail
 
 DOTFILES_REPO_URL=${DOTFILES_REPO_URL:-}
@@ -8,8 +8,8 @@ DOTFILES_DIR=${DOTFILES_DIR:-$HOME/Projects/dotfiles}
 log() { printf '[bootstrap] %s\n' "$*"; }
 die() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
 
-for command in git make stow curl tar unzip find install mktemp python3 fc-cache; do
-    command -v "$command" >/dev/null 2>&1 || die "$command is required; install it from CachyOS first"
+for command in git make; do
+    command -v "$command" >/dev/null 2>&1 || die "$command is required for bootstrapping; install it first with sudo pacman -Syu --needed git make"
 done
 
 if [[ -d "$DOTFILES_DIR/.git" ]]; then
@@ -23,5 +23,5 @@ else
     git clone "$DOTFILES_REPO_URL" "$DOTFILES_DIR"
 fi
 
-log "Installing fonts and linking dotfiles"
+log "Installing CachyOS packages, fonts and dotfiles"
 make -C "$DOTFILES_DIR" setup

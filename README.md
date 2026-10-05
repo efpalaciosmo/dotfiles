@@ -1,16 +1,19 @@
 # CachyOS laptop dotfiles (Niri + componentes GNOME)
 
-This repository does exactly three things:
+This repository does four things on CachyOS:
 
-1. Downloads and installs the configured fonts under the user data directory.
-2. Uses GNU Stow installed by the user.
-3. Links and validates the dotfiles for Niri, Waybar, Fuzzel, Kitty, Mako,
+1. Runs a full `pacman -Syu --needed` with the packages in
+   [system-packages/cachyos.txt](system-packages/cachyos.txt), **including `stow`**.
+2. Downloads and installs the configured fonts under the user data directory.
+3. Links dotfiles with GNU Stow.
+4. Validates the dotfiles for Niri, Waybar, Fuzzel, Kitty, Mako,
    Vim, Git, and Bash.
 
-It does not install system packages, graphical applications, language runtimes,
-shell plugins, or developer tools. **For package installation, the minimal GNOME
-scope, x86-64-v4 eligibility and security checklist, see
-[docs/cachyos.md](docs/cachyos.md) before running the setup.** This is a Niri
+**`make`/`make setup` requires sudo access and only installs packages on
+CachyOS.** It does not enable services, alter pacman repositories, or change
+your v4 CPU/repository selection. For the minimal GNOME scope, x86-64-v4
+eligibility and security checklist, read [docs/cachyos.md](docs/cachyos.md).
+This is a Niri
 session with selected GNOME components, not a full GNOME Shell session.
 
 ## Usage
@@ -19,12 +22,16 @@ session with selected GNOME components, not a full GNOME Shell session.
 make
 ```
 
-`make` is equivalent to `make setup` and invokes, in order, only `make fonts`,
-`make dotfiles`, and `make check`.
+`make` is equivalent to `make setup`: first `make packages` (one complete
+system update and package installation), then fonts, dotfiles and checks.
+On other distributions, `make setup` **stops before making changes**;
+use `make local` if you only want fonts and dotfiles there.
 
 ```sh
+make packages   # CachyOS-only: update/install all listed system packages
+make local      # fonts + dotfiles + check, without system packages
 make fonts      # install/update user-local fonts
-make dotfiles   # link all packages with the existing stow command
+make dotfiles   # link all dotfile packages with stow
 make stow       # alias for make dotfiles
 make check      # static Bash/JSON/residue checks
 make doctor     # machine commands, app configs, and every managed symlink
@@ -40,16 +47,17 @@ unrelated Rofi files and settings are not touched.
 
 ## Prerequisites
 
-The setup itself needs `git`, `make`, `stow`, `curl`, `tar`, `unzip`, `find`,
-`install`, `mktemp`, `python3`, and `fc-cache`. Install Niri, Waybar, Fuzzel,
-Kitty, Vim, Mako and every graphical-session helper beforehand
-from CachyOS; this repository only configures and validates them. `make doctor`
+To run `make setup` in an existing clone you only need `make`, `bash`,
+`pacman` and `sudo` initially; it installs `stow`, `curl`, `python3` (package
+`python`), `fontconfig`, desktop applications and the other declared
+dependencies before using them. Bootstrap also needs `git` to clone the
+repository. If missing, first run `sudo pacman -Syu --needed git make`.
+`make doctor`
 checks the complete runtime, including audio, networking, clipboard,
 brightness, locking, and D-Bus helpers.
 
-Install the dependencies from the [CachyOS guide](docs/cachyos.md), select
-**Niri** at GDM (not a plain `niri` TTY invocation), then run `make dotfiles`
-and `make doctor`.
+Select **Niri** at GDM (not a plain `niri` TTY invocation) after running
+`make setup`, then run `make doctor`.
 
 Static checks cannot prove hardware or graphical integration. After applying
 the dotfiles, log into Niri on the laptop and run:
@@ -138,7 +146,8 @@ Inter into `${XDG_DATA_HOME:-$HOME/.local/share}/fonts`. Archives are cached in
 
 ## Bootstrap
 
-The bootstrap script installs no dependencies. On a prepared CachyOS system:
+The bootstrap script invokes `make setup`, including system package
+installation. On CachyOS with `git` and `make` already installed:
 
 ```sh
 DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \

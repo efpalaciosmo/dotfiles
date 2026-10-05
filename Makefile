@@ -8,15 +8,22 @@ SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
 PYTHON_FILES := packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
 
-.PHONY: help setup fonts dotfiles stow check doctor verify
+.PHONY: help setup local packages fonts dotfiles stow check doctor verify
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-setup: ## Install fonts, link dotfiles, and run static checks
+setup: ## Install CachyOS packages, fonts and dotfiles, then check
+	@$(MAKE) --no-print-directory packages
+	@$(MAKE) --no-print-directory local
+
+local: ## Install fonts and dotfiles without touching system packages
 	@$(MAKE) --no-print-directory fonts
 	@$(MAKE) --no-print-directory dotfiles
 	@$(MAKE) --no-print-directory check
+
+packages: ## Full CachyOS upgrade and install manifest (including stow)
+	@./scripts/install-system-packages.sh
 
 fonts: scripts/install-fonts.sh ## Install the configured user-local fonts
 	@./scripts/install-fonts.sh
