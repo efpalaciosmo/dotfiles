@@ -46,3 +46,18 @@ stow --restow --no-folding \
     --target="$HOME" \
     --ignore='(^|/)(README\.md|README)$' \
     "$@"
+
+# Only after the new package is linked, remove legacy links owned by us.
+# Never touch unrelated Rofi settings or user files.
+if [[ " $* " == *" fuzzel "* ]]; then
+    for relative in config.rasi themes/adwaita-dark.rasi \
+        scripts/common scripts/launcher scripts/power-menu scripts/screenshot \
+        scripts/clipboard scripts/clipboard-history scripts/bluetooth scripts/wifi; do
+        target=$HOME/.config/rofi/$relative
+        if [[ -L $target ]] &&
+            [[ $(readlink -m -- "$target") == "$repo_root/packages/rofi/.config/rofi/$relative" ]]; then
+            printf 'dotfiles: removing old managed Rofi link %s\n' "$target"
+            rm -- "$target"
+        fi
+    done
+fi

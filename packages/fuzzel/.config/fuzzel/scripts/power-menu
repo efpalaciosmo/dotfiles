@@ -50,30 +50,30 @@ logout_session() {
 }
 
 choice=$(menu "Power" \
-    "  Bloquear" \
-    "⏾  Suspender" \
-    "󰍹  Apagar pantalla" \
-    "  Cerrar sesión" \
-    "  Reiniciar" \
-    "  Apagar" || true)
+    "Bloquear" \
+    "Suspender" \
+    "Apagar pantalla" \
+    "Cerrar sesión" \
+    "Reiniciar" \
+    "Apagar" || true)
 
 case "$choice" in
-    "  Apagar")
+    "Apagar")
         confirm "¿Apagar el equipo?" "Apagar" && run_systemctl poweroff
         ;;
-    "  Reiniciar")
+    "Reiniciar")
         confirm "¿Reiniciar el equipo?" "Reiniciar" && run_systemctl reboot
         ;;
-    "⏾  Suspender")
+    "Suspender")
         confirm "¿Suspender el equipo?" "Suspender" && run_systemctl suspend
         ;;
-    "  Bloquear")
+    "Bloquear")
         lock_session
         ;;
-    "  Cerrar sesión")
+    "Cerrar sesión")
         confirm "¿Cerrar sesión?" "Cerrar sesión" && logout_session
         ;;
-    "󰍹  Apagar pantalla")
+    "Apagar pantalla")
         turn_displays_off
         ;;
 esac

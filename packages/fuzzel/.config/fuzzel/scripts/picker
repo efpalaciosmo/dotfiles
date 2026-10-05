@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""Window and file modes missing from Fuzzel's native application launcher."""
+
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+
+def choose(prompt, labels, width=44, sort=False, message=None):
+    if not labels:
+        return None
+    args = ["fuzzel", "--dmenu", "--index", "--only-match",
+            "--cache=/dev/null", "--minimal-lines", "--lines=12",
+            f"--width={width}", f"--prompt={prompt}  │  "]
+    if message is not None:
+        args.append(f"--mesg={message}")
+    if not sort:
+        args.append("--no-sort")
+    result = subprocess.run(
+        args,
+        input="\n".join(labels) + "\n", text=True, capture_output=True, check=False,
+    )
+    if result.returncode != 0:
+        return None
+    try:
+        index = int(result.stdout.strip())
+    except ValueError:
+        return None
+    return index if 0 <= index < len(labels) else None
+
+
+def windows():
+    result = subprocess.run(["niri", "msg", "-j", "windows"],
+                            capture_output=True, text=True, check=False)
+    if result.returncode:
+        print(result.stderr, file=sys.stderr)
+        return 1
+    items = json.loads(result.stdout)
+    labels = [f"{w.get('app_id') or 'Ventana'}  ·  {w.get('title') or 'Sin título'}  ·  {w['id']}"
+              for w in items]
+    selected = choose("Ventanas", labels)
+    if selected is not None:
+        return subprocess.call(["niri", "msg", "action", "focus-window", "--id",
+                                str(items[selected]["id"])])
+    return 0
+
+
+def open_path(path):
+    # Opening a folder uses the configured file manager, just like a file.
+    subprocess.Popen(["xdg-open", str(path)], stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, start_new_session=True)
+
+
+def within_home(path, home):
+    # Links inside HOME may point outside of it; do not open those targets.
+    try:
+        path.resolve().relative_to(home.resolve())
+        return True
+    except (OSError, ValueError, RuntimeError):
+        return False
+
+
+def browse():
+    home = Path.home()
+    directory = home
+    while True:
+        try:
+            entries = sorted(directory.iterdir(), key=lambda p: (not p.is_dir(), p.name.casefold()))
+        except OSError as exc:
+            print(f"Archivos: {exc}", file=sys.stderr)
+            return 1
+        entries = [p for p in entries if "\n" not in p.name and within_home(p, home)]
+        options = (["..  Volver"] if directory != home else []) + [
+            p.name + ("/" if p.is_dir() else "") for p in entries
+        ]
+        relative = directory.relative_to(home)
+        selected = choose("Archivos", options,
+                          message=f"~/{relative}" if relative != Path(".") else "~")
+        if selected is None:
+            return 0
+        if directory != home and selected == 0:
+            directory = directory.parent
+        else:
+            entry = entries[selected - int(directory != home)]
+            if entry.is_dir():
+                directory = entry
+            elif entry.is_file():
+                open_path(entry)
+                return 0
+
+
+def home_files(home):
+    """User files, not caches, VCS metadata or generated dependency trees."""
+    generated = {"node_modules", "target", "build", "dist", "__pycache__", "venv", ".venv"}
+    for root, dirs, files in os.walk(home):
+        # Keep ~/.config searchable, but skip other hidden directory trees
+        # (e.g. ~/.cache, ~/.local, .git and per-project virtualenvs).
+        dirs[:] = sorted((d for d in dirs if d not in generated and
+                          (not d.startswith(".") or d == ".config" and Path(root) == home)),
+                         key=str.casefold)
+        for name in sorted(files, key=str.casefold):
+            if "\n" not in name:
+                path = Path(root) / name
+                if path.is_file() and within_home(path, home):
+                    yield path
+
+
+def recursive():
+    home = Path.home()
+    paths = list(home_files(home))
+    labels = [f"{p.name}  ·  {p.parent.relative_to(home) if p.parent != home else '~'}"
+              for p in paths]
+    selected = choose("Buscar archivos", labels, sort=True)
+    if selected is not None and within_home(paths[selected], home):
+        open_path(paths[selected])
+    return 0
+
+
+if __name__ == "__main__":
+    mode = sys.argv[1] if len(sys.argv) > 1 else ""
+    if mode in ("filebrowser", "recursivebrowser") and not shutil.which("xdg-open"):
+        sys.exit("Se necesita xdg-open para abrir archivos.")
+    if mode == "window":
+        sys.exit(windows())
+    if mode == "filebrowser":
+        sys.exit(browse())
+    if mode == "recursivebrowser":
+        sys.exit(recursive())
+    sys.exit("usage: picker {window|filebrowser|recursivebrowser}")

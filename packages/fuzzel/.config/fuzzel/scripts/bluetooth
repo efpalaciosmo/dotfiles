@@ -5,7 +5,7 @@ script_dir=${BASH_SOURCE[0]%/*}
 # shellcheck source=common
 . "$script_dir/common"
 
-missing_commands rofi bluetoothctl rfkill || exit 1
+missing_commands fuzzel bluetoothctl rfkill || exit 1
 
 bluetooth_error() {
     notify_user "Bluetooth" "$1"
@@ -38,13 +38,13 @@ while :; do
     controller=$(bluetoothctl show 2>/dev/null || true)
     [[ $controller == Controller\ * ]] || bluetooth_error "No se encontró un adaptador Bluetooth."
     if [[ $controller != *'Powered: yes'* ]]; then
-        choice=$(menu "Bluetooth · apagado" "  Activar Bluetooth" || true)
-        [[ $choice == "  Activar Bluetooth" ]] || exit 0
+        choice=$(menu "Bluetooth" "Activar Bluetooth" || true)
+        [[ $choice == "Activar Bluetooth" ]] || exit 0
         power_on
         continue
     fi
 
-    options=("󰑐  Buscar dispositivos (10 s)" "󰂲  Apagar Bluetooth")
+    options=("Buscar dispositivos (10 s)" "Apagar Bluetooth")
     macs=() labels=()
     while IFS= read -r line; do
         if [[ $line =~ ^Device[[:space:]]+(([[:xdigit:]]{2}:){5}[[:xdigit:]]{2})[[:space:]]+(.+)$ ]]; then
@@ -52,13 +52,13 @@ while :; do
             name=${BASH_REMATCH[3]}
             info=$(bluetoothctl info "$mac" 2>/dev/null || true)
             if [[ $info == *'Connected: yes'* ]]; then
-                icon="󰂱"
+                state="conectado"
             elif [[ $info == *'Paired: yes'* ]]; then
-                icon=""
+                state="vinculado"
             else
-                icon=""
+                state="nuevo"
             fi
-            labels+=("$icon  $name · $mac")
+            labels+=("$name · $state · $mac")
             macs+=("$mac")
             options+=("${labels[-1]}")
         fi
@@ -66,12 +66,12 @@ while :; do
 
     choice=$(menu "Bluetooth" "${options[@]}" || true)
     case "$choice" in
-        "󰑐  Buscar dispositivos (10 s)")
+        "Buscar dispositivos (10 s)")
             bluetoothctl --timeout 10 scan on >/dev/null 2>&1 || true
             bluetoothctl scan off >/dev/null 2>&1 || true
             continue
             ;;
-        "󰂲  Apagar Bluetooth")
+        "Apagar Bluetooth")
             bluetoothctl power off >/dev/null 2>&1 || bluetooth_error "No se pudo apagar Bluetooth."
             exit 0
             ;;
@@ -89,29 +89,29 @@ while :; do
 
     info=$(bluetoothctl info "$selected" 2>/dev/null || true)
     if [[ $info == *'Connected: yes'* ]]; then
-        action=$(menu "Dispositivo · conectado" "󰂲  Desconectar" "󰆴  Olvidar dispositivo" || true)
+        action=$(menu "Conectado" "Desconectar" "Olvidar dispositivo" || true)
     elif [[ $info == *'Paired: yes'* ]]; then
-        action=$(menu "Dispositivo · vinculado" "󰂱  Conectar" "󰆴  Olvidar dispositivo" || true)
+        action=$(menu "Vinculado" "Conectar" "Olvidar dispositivo" || true)
     else
-        action=$(menu "Dispositivo · nuevo" "󰂱  Emparejar y conectar" || true)
+        action=$(menu "Nuevo" "Emparejar y conectar" || true)
     fi
 
     case "$action" in
-        "󰂱  Emparejar y conectar")
+        "Emparejar y conectar")
             run_device_action pair "$selected" "emparejar el dispositivo"
             bluetoothctl trust "$selected" >/dev/null 2>&1 || true
             run_device_action connect "$selected" "conectar el dispositivo"
             notify_user "Bluetooth" "Dispositivo conectado."
             ;;
-        "󰂱  Conectar")
+        "Conectar")
             run_device_action connect "$selected" "conectar el dispositivo"
             notify_user "Bluetooth" "Dispositivo conectado."
             ;;
-        "󰂲  Desconectar")
+        "Desconectar")
             run_device_action disconnect "$selected" "desconectar el dispositivo"
             notify_user "Bluetooth" "Dispositivo desconectado."
             ;;
-        "󰆴  Olvidar dispositivo")
+        "Olvidar dispositivo")
             confirm=$(menu "¿Olvidar dispositivo?" "Cancelar" "Olvidar" || true)
             [[ $confirm == Olvidar ]] || exit 0
             run_device_action remove "$selected" "olvidar el dispositivo"

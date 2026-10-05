@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pick and connect to a Wi-Fi network with rofi and NetworkManager."""
+"""Pick and connect to a Wi-Fi network with fuzzel and NetworkManager."""
 import subprocess
 import sys
 import shutil
@@ -52,9 +52,13 @@ def fields(line):
     return parts
 
 
-def choose(prompt, choices):
+def choose(prompt, choices, message=None):
+    args = ["fuzzel", "--dmenu", "--index", "--only-match", "--no-sort",
+            "--minimal-lines", "--cache=/dev/null", f"--prompt={prompt}  │  "]
+    if message:
+        args.append(f"--mesg={message}")
     result = subprocess.run(
-        ["rofi", "-dmenu", "-i", "-no-custom", "-format", "i", "-p", prompt],
+        args,
         input="\n".join(choices) + "\n",
         text=True,
         capture_output=True,
@@ -71,8 +75,7 @@ def choose(prompt, choices):
 
 def password_for(ssid):
     result = subprocess.run(
-        ["rofi", "-dmenu", "-password", "-p", f"Clave · {ssid}"],
-        input="",
+        ["fuzzel", "--prompt-only=Clave  │  ", f"--mesg={ssid}", "--password"],
         text=True,
         capture_output=True,
         check=False,
@@ -139,8 +142,8 @@ def connect(device, ssid, security):
 
 
 def main():
-    if not shutil.which("rofi") or not shutil.which("nmcli"):
-        error("Se necesitan rofi y nmcli.")
+    if not shutil.which("fuzzel") or not shutil.which("nmcli"):
+        error("Se necesitan fuzzel y nmcli.")
         return 1
     device = wifi_device()
     if not device:
@@ -152,7 +155,7 @@ def main():
         error("No se pudo consultar el estado del Wi-Fi.")
         return 1
     if radio.stdout.strip() != "enabled":
-        if choose("Wi-Fi apagado", ["󰤨  Activar Wi-Fi"]) == 0:
+        if choose("Wi-Fi apagado", ["Activar Wi-Fi"]) == 0:
             result = nmcli("radio", "wifi", "on")
             if result.returncode:
                 error(result.stderr.strip() or "No se pudo activar el Wi-Fi.")
@@ -166,10 +169,10 @@ def main():
         if found is None:
             return 1
         rescan = False
-        options = ["󰑐  Actualizar redes", "󰖪  Apagar Wi-Fi"]
+        options = ["Actualizar redes", "Apagar Wi-Fi"]
         for ssid, signal, security, active in found:
             marker = "●" if active else "○"
-            lock = "  󰌾" if security not in ("", "--") else ""
+            lock = " · protegida" if security not in ("", "--") else ""
             options.append(f"{marker}  {ssid}  ·  {signal}%{lock}")
         choice = choose("Wi-Fi", options)
         if choice is None:
@@ -187,7 +190,7 @@ def main():
 
         ssid, _, security, active = found[choice - 2]
         if active:
-            if choose(ssid, ["󰤭  Desconectar", "Cancelar"]) == 0:
+            if choose("Wi-Fi", ["Desconectar", "Cancelar"], message=ssid) == 0:
                 result = nmcli("device", "disconnect", device)
                 if result.returncode:
                     error(result.stderr.strip() or "No se pudo desconectar.")

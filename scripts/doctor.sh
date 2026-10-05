@@ -9,14 +9,12 @@ check_command() {
     else printf 'MISS command %s\n' "$1" >&2; failures=$((failures + 1)); fi
 }
 
-for command in stow niri waybar rofi kitty vi mako swaybg swaylock wl-copy wl-paste playerctl brightnessctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk systemctl loginctl python3; do
+for command in stow niri waybar fuzzel kitty vi mako swaybg swaylock wl-copy wl-paste playerctl brightnessctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk systemctl loginctl python3 xdg-open; do
     check_command "$command"
 done
 
 if command -v niri >/dev/null 2>&1; then niri validate || failures=$((failures + 1)); fi
-# Rofi 2.0 can segfault in -rasi-validate even for a valid config. Dumping
-# the fully resolved theme parses both configuration and theme safely.
-if command -v rofi >/dev/null 2>&1; then rofi -dump-theme -config "$HOME/.config/rofi/config.rasi" >/dev/null || failures=$((failures + 1)); fi
+if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --config="$HOME/.config/fuzzel/fuzzel.ini" || failures=$((failures + 1)); fi
 
 for package in "$@"; do
     while IFS= read -r -d '' source; do

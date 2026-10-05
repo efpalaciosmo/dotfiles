@@ -7,5 +7,5 @@ spawn-sh-at-startup "swaybg -i \"${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrou
 // Make the compositor environment available to D-Bus and systemd user units.
 spawn-sh-at-startup "systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_DATA_DIRS PATH"
 // One text watcher and one PNG watcher feed the local SQLite history.
-spawn-sh-at-startup "wl-paste --no-newline --type text --watch \"${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/clipboard-history\" store text"
-spawn-sh-at-startup "wl-paste --type image/png --watch \"${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/clipboard-history\" store image/png"
+spawn-sh-at-startup "wl-paste --no-newline --type text --watch \"${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/clipboard-history\" store text"
+spawn-sh-at-startup "wl-paste --type image/png --watch \"${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/clipboard-history\" store image/png"

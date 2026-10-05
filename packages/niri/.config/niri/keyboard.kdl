@@ -5,16 +5,16 @@ binds {
 
     Mod+Return repeat=false hotkey-overlay-title="Abrir terminal" { spawn "kitty"; }
     Mod+D repeat=false hotkey-overlay-title="Lanzador de apps" {
-      spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/launcher"
+      spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/launcher"
     }
     Mod+Shift+D repeat=false hotkey-overlay-title="Acciones rapidas" {
-      spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/launcher actions"
+      spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/launcher actions"
     }
-    Mod+Shift+P repeat=false hotkey-overlay-title="Menu de energia" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/power-menu"; }
-    Mod+Shift+S repeat=false hotkey-overlay-title="Captura de pantalla" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/screenshot"; }
-    Mod+Shift+Y repeat=false hotkey-overlay-title="Historial del portapapeles" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/clipboard"; }
-    Ctrl+B repeat=false hotkey-overlay-title="Dispositivos Bluetooth" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/bluetooth"; }
-    Mod+Shift+N repeat=false hotkey-overlay-title="Redes Wi-Fi" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/scripts/wifi"; }
+    Mod+Shift+P repeat=false hotkey-overlay-title="Menu de energia" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/power-menu"; }
+    Mod+Shift+S repeat=false hotkey-overlay-title="Captura de pantalla" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/screenshot"; }
+    Mod+Shift+Y repeat=false hotkey-overlay-title="Historial del portapapeles" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/clipboard"; }
+    Ctrl+B repeat=false hotkey-overlay-title="Dispositivos Bluetooth" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/bluetooth"; }
+    Mod+Shift+N repeat=false hotkey-overlay-title="Redes Wi-Fi" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/wifi"; }
     Mod+Alt+L repeat=false hotkey-overlay-title="Bloquear pantalla" { spawn "swaylock" "-f" "-c" "222226"; }
 
     Mod+O repeat=false { toggle-overview; }

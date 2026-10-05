@@ -5,9 +5,9 @@ script_dir=${BASH_SOURCE[0]%/*}
 # shellcheck source=common
 . "$script_dir/common"
 
-missing_commands rofi wl-copy python3 || exit 1
+missing_commands fuzzel wl-copy python3 || exit 1
 history="$script_dir/clipboard-history"
-clear_label="󰆴  Borrar historial"
+clear_label="Borrar historial"
 
 if [[ "${1:-}" == --clear ]]; then
     "$history" clear
@@ -16,8 +16,8 @@ if [[ "${1:-}" == --clear ]]; then
 fi
 
 choice=$({ printf '%s\n' "$clear_label"; "$history" list; } |
-    rofi -dmenu -i -no-custom -p "Portapapeles" -matching fuzzy \
-        -theme-str 'window { width: 760px; } listview { lines: 12; }' || true)
+    fuzzel --dmenu --only-match --no-sort --cache=/dev/null \
+        --prompt='Portapapeles  │  ' --width=44 --lines=10 --minimal-lines || true)
 [[ -n "$choice" ]] || exit 0
 
 if [[ "$choice" == "$clear_label" ]]; then

@@ -4,7 +4,7 @@ This repository does exactly three things:
 
 1. Downloads and installs the configured fonts under the user data directory.
 2. Uses the GNU Stow already installed by Fedora.
-3. Links and validates the dotfiles for Niri, Waybar, Rofi, Kitty, Mako,
+3. Links and validates the dotfiles for Niri, Waybar, Fuzzel, Kitty, Mako,
    vi, Git, and Bash.
 
 It does not install system packages, graphical applications, language runtimes,
@@ -33,11 +33,13 @@ Before invoking GNU Stow, `make dotfiles` moves every unmanaged conflicting
 file or link to a sibling backup named `.bak` (or `.bak.N` when that name is
 already occupied). It never deletes existing data and reports every backup it
 creates. Files already linked to this repository are left untouched.
+When migrating, only old Rofi symlinks pointing to this repository are removed;
+unrelated Rofi files and settings are not touched.
 
 ## Prerequisites
 
 The setup itself needs `git`, `make`, `stow`, `curl`, `tar`, `unzip`, `find`,
-`install`, `mktemp`, `python3`, and `fc-cache`. Install Niri, Waybar, Rofi,
+`install`, `mktemp`, `python3`, and `fc-cache`. Install Niri, Waybar, Fuzzel,
 Kitty, vi, Mako and every graphical-session helper beforehand
 from Fedora; this repository only configures and validates them. `make doctor`
 checks the complete runtime, including audio, networking, clipboard,
@@ -57,11 +59,11 @@ make doctor
 ## Desktop controls
 
 Niri uses soft lilac (`#d9b8ff`) for focused borders, muted purple for inactive
-borders and rose for urgency. Rofi uses the requested plum background (`#241f31`)
-with lilac selections. Waybar uses one solid `#241f31` bar with lilac focused
+borders and rose for urgency. Fuzzel uses a raised plum surface (`#30283f`)
+with restrained lilac highlights. Waybar uses one solid `#241f31` bar with lilac focused
 workspaces and restrained status accents. Its 34-pixel height is a little smaller
 than the first plum design. Urgent workspaces use rose.
-`Super+Return`, Rofi and Waybar actions open Kitty. Mako notifications use a
+`Super+Return`, Fuzzel and Waybar actions open Kitty. Mako notifications use a
 raised plum surface with lilac, peach and rose accents. Kitty keeps its
 existing colors. Bash keeps a compact, colored prompt; vi inherits the editing
 essentials (relative numbers, four-space indentation, search and a matching
@@ -84,29 +86,35 @@ switches focus between those layouts. Niri floats parented dialogs and fixed-siz
 windows automatically. Zen and Firefox Picture-in-Picture windows open floating
 at the bottom right; close and reopen an existing PiP window after changing rules.
 
-`Super+D` opens applications; `Super+Shift+D` opens quick actions for windows,
-clipboard, screenshots, connections, system monitoring, disk usage and power.
+`Super+D` opens Fuzzel's native application launcher (desktop icons and launch
+history); `Super+Shift+D` opens quick actions for windows, recursive file
+search, file browsing, commands, clipboard, screenshots, connections, system
+monitoring, disk usage and power.
 `Super+Shift+Y` opens clipboard history, `Super+Shift+S` screenshots,
 `Super+Shift+P` power and `Super+Alt+L`
-locks the session. In Rofi, `?` switches from applications to recursive file
-search under your home directory; `Control+Tab` cycles through the available
-modes. Clipboard history uses `wl-paste`, `wl-copy` and the
+locks the session. Fuzzel does not support Rofi's in-launcher `?` and
+`Control+Tab` mode switching: use `Super+Shift+D` for file search
+under home, file browsing, windows and commands instead. Search lists only
+files inside home; it skips hidden directory trees (except `~/.config`), caches,
+dependencies and generated build files for responsiveness. The file browser
+can navigate hidden folders, but cannot leave home. Clipboard history
+uses `wl-paste`, `wl-copy` and the
 system Python/SQLite; it keeps at most 60 text or PNG entries (4 MiB each) in
 `~/.local/share/dotfiles/clipboard/history.sqlite3`. Clear it in the menu or
-with `~/.config/rofi/scripts/clipboard --clear`. Start a new Niri session after
+with `~/.config/fuzzel/scripts/clipboard --clear`. Start a new Niri session after
 linking the dotfiles to activate its clipboard watchers.
 
-`Super+Shift+N` opens a Wi-Fi menu in Rofi, also available under quick actions.
+`Super+Shift+N` opens a Wi-Fi menu in Fuzzel, also available under quick actions.
 It lists nearby networks and signal strength, connects with a password prompt
 when needed, and can refresh, disconnect, or toggle Wi-Fi. It uses the installed
 NetworkManager `nmcli` and Python's standard library.
 
-`Ctrl+B` opens the Bluetooth menu in Rofi (also available under quick actions
+`Ctrl+B` opens the Bluetooth menu in Fuzzel (also available under quick actions
 with `Super+Shift+D`). It can power on a soft-blocked
 adapter, search for nearby devices, pair/connect, disconnect, and forget them.
 It uses Fedora's `bluetoothctl` (BlueZ) and `rfkill`; no additional Bluetooth
 interface is needed. Pairing that requires a PIN may need an interactive
-Bluetooth agent. This menu is part of the `rofi` Stow package and is linked
+Bluetooth agent. This menu is part of the `fuzzel` Stow package and is linked
 automatically by `make dotfiles`.
 
 ## Fonts

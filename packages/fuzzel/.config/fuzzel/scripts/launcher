@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir=${BASH_SOURCE[0]%/*}
+mode=${1:-drun}
+# shellcheck source=common
+. "$script_dir/common"
+
+if [[ "$mode" == actions ]]; then
+    choice=$(menu "Acciones" \
+        "Aplicaciones" \
+        "Ventanas" \
+        "Buscar archivos" \
+        "Explorar archivos" \
+        "Comandos" \
+        "Portapapeles" \
+        "Capturas" \
+        "Wi-Fi" \
+        "Conexiones" \
+        "Bluetooth" \
+        "Monitor del sistema" \
+        "Espacio en disco" \
+        "Energía" || true)
+    case "$choice" in
+        "Aplicaciones") mode=drun ;;
+        "Ventanas") mode=window ;;
+        "Buscar archivos") mode=recursivebrowser ;;
+        "Explorar archivos") mode=filebrowser ;;
+        "Comandos") mode=run ;;
+        "Portapapeles") exec "$script_dir/clipboard" ;;
+        "Capturas") exec "$script_dir/screenshot" ;;
+        "Wi-Fi") exec "$script_dir/wifi" ;;
+        "Conexiones") missing_commands nm-connection-editor || exit 1; exec nm-connection-editor ;;
+        "Bluetooth") exec "$script_dir/bluetooth" ;;
+        "Monitor del sistema") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" monitor ;;
+        "Espacio en disco") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" disk ;;
+        "Energía") exec "$script_dir/power-menu" ;;
+        *) exit 0 ;;
+    esac
+fi
+
+case "$mode" in
+    drun)
+        missing_commands fuzzel || exit 1
+        # Native desktop entries, icons and launch history.
+        exec fuzzel
+        ;;
+    window|recursivebrowser|filebrowser)
+        missing_commands fuzzel python3 || exit 1
+        exec "$script_dir/picker" "$mode"
+        ;;
+    run)
+        missing_commands fuzzel || exit 1
+        exec fuzzel --list-executables-in-path --prompt='Comandos  │  '
+        ;;
+    *) exec "$0" drun ;;
+esac

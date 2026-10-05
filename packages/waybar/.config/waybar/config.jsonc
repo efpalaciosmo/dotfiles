@@ -51,7 +51,7 @@
         "exec": "~/.config/waybar/scripts/network-speed",
         "return-type": "json",
         "interval": 3,
-        "on-click": "~/.config/rofi/scripts/wifi",
+        "on-click": "~/.config/fuzzel/scripts/wifi",
         "on-click-right": "nm-connection-editor"
     },
     "backlight": {
@@ -112,6 +112,6 @@
         "format": "",
         "tooltip": true,
         "tooltip-format": "Energía · bloquear, suspender o apagar",
-        "on-click": "~/.config/rofi/scripts/power-menu"
+        "on-click": "~/.config/fuzzel/scripts/power-menu"
     }
 }
