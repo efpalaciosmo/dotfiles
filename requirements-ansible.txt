@@ -1,0 +1,3 @@
+# The Ansible distribution includes community.general, whose pacman module is
+# used by setup.yml. Keep core and bundled collections on compatible releases.
+ansible>=11,<13
