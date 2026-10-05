@@ -1,0 +1,52 @@
+---
+- name: Check the configured display manager
+  ansible.builtin.stat:
+    path: /etc/systemd/system/display-manager.service
+    follow: false
+  register: display_manager
+
+- name: Refuse to replace another display manager
+  ansible.builtin.assert:
+    that: >-
+      not display_manager.stat.exists or
+      (display_manager.stat.islnk | default(false) and
+       display_manager.stat.lnk_source | default('') == '/usr/lib/systemd/system/gdm.service')
+    fail_msg: Another display manager is enabled; disable it before enabling GDM.
+
+# Enable at boot without switching away from the current graphical session.
+- name: Enable GDM for the next boot
+  ansible.builtin.systemd_service:
+    name: gdm.service
+    enabled: true
+    daemon_reload: true
+  become: true
+
+- name: Enable and start system services and sockets
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - NetworkManager.service
+    - bluetooth.service
+    - tailscaled.service
+  become: true
+
+- name: Configure modular libvirt daemons
+  ansible.builtin.import_tasks: libvirt.yml
+  tags: libvirt
+
+# Podman and libvirt use socket activation; Distrobox has no daemon to enable.
+# Portals, keyring and polkit are activated by D-Bus or the Niri session.
+- name: Enable and start user audio services and the Podman socket
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: true
+  loop:
+    - pipewire.socket
+    - pipewire-pulse.socket
+    - wireplumber.service
+    - podman.socket

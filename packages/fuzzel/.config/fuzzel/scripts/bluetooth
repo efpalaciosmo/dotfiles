@@ -5,7 +5,7 @@ script_dir=${BASH_SOURCE[0]%/*}
 # shellcheck source=common
 . "$script_dir/common"
 
-missing_commands fuzzel bluetoothctl rfkill || exit 1
+missing_commands fuzzel bluetoothctl rfkill systemctl || exit 1
 
 bluetooth_error() {
     notify_user "Bluetooth" "$1"
@@ -13,11 +13,17 @@ bluetooth_error() {
     exit 1
 }
 
-controller=$(bluetoothctl show 2>/dev/null || true)
+systemctl is-active --quiet bluetooth.service ||
+    bluetooth_error "El servicio Bluetooth no está activo. Ejecuta make services en el repositorio dotfiles."
+
+controller=$(bluetoothctl --timeout 5 show 2>/dev/null || true)
 [[ $controller == Controller\ * ]] || bluetooth_error "No se encontró un adaptador Bluetooth."
 
 power_on() {
-    if rfkill -n -o SOFT list bluetooth | grep -q blocked; then
+    if rfkill -n -o HARD list bluetooth | grep -qx blocked; then
+        bluetooth_error "Bluetooth está bloqueado por hardware. Revisa el interruptor físico o el modo avión."
+    fi
+    if rfkill -n -o SOFT list bluetooth | grep -qx blocked; then
         if ! rfkill unblock bluetooth >/dev/null 2>&1; then
             if ! command -v pkexec >/dev/null 2>&1 || ! pkexec rfkill unblock bluetooth; then
                 bluetooth_error "No se pudo desbloquear Bluetooth. Prueba: sudo rfkill unblock bluetooth"
@@ -35,7 +41,7 @@ run_device_action() {
 }
 
 while :; do
-    controller=$(bluetoothctl show 2>/dev/null || true)
+    controller=$(bluetoothctl --timeout 5 show 2>/dev/null || true)
     [[ $controller == Controller\ * ]] || bluetooth_error "No se encontró un adaptador Bluetooth."
     if [[ $controller != *'Powered: yes'* ]]; then
         choice=$(menu "Bluetooth" "Activar Bluetooth" || true)

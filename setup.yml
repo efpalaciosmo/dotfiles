@@ -29,13 +29,13 @@
       ansible.builtin.slurp:
         src: /etc/os-release
       register: installed_os
-      tags: packages
+      tags: [packages, services, libvirt]
 
     - name: Refuse system package installation outside CachyOS
       ansible.builtin.assert:
         that: (installed_os.content | b64decode) is search('(?m)^ID="?cachyos"?$')
         fail_msg: Package installation is only supported on CachyOS; use --tags local for fonts and links.
-      tags: packages
+      tags: [packages, services, libvirt]
 
     - name: Validate the package manifest before using sudo
       ansible.builtin.assert:
@@ -69,11 +69,43 @@
 
     - name: Install declared CachyOS packages
       community.general.pacman:
-        name: "{{ cachyos_packages }}"
+        name: "{{ item }}"
         state: present
+      loop: "{{ cachyos_packages }}"
+      loop_control:
+        index_var: package_index
+        label: "{{ package_index + 1 }}/{{ cachyos_packages | length }} {{ item }}"
       become: true
       when: not ansible_check_mode
       tags: packages
+
+    - name: Configure the user Flathub remote
+      ansible.builtin.import_tasks: tasks/flathub-user.yml
+      when: not ansible_check_mode
+      tags: packages
+
+    - name: Read system Flatpak remotes
+      ansible.builtin.command:
+        argv: [flatpak, remotes, --system, --columns=name]
+      register: system_remotes
+      changed_when: false
+      when: not ansible_check_mode
+      tags: packages
+
+    # Without --force, Flatpak refuses removal if installed system refs use it.
+    - name: Remove the system Flathub remote
+      ansible.builtin.command:
+        argv: [flatpak, remote-delete, --system, flathub]
+      become: true
+      when:
+        - not ansible_check_mode
+        - "'flathub' in system_remotes.stdout_lines"
+      tags: packages
+
+    - name: Configure required system and user services
+      ansible.builtin.import_tasks: tasks/services.yml
+      when: not ansible_check_mode
+      tags: [packages, services]
 
     - name: Install user-local fonts
       ansible.builtin.command:

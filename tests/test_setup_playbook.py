@@ -30,15 +30,22 @@ class SetupPlaybookTests(unittest.TestCase):
             "zathura", "zathura-pdf-mupdf", "zathura-djvu", "qemu-desktop",
             "libvirt", "virt-manager", "dnsmasq", "edk2-ovmf", "swtpm",
             "stow", "swaybg", "zsh", "zsh-completions", "starship", "fontconfig", "make",
+            "podman", "distrobox", "epiphany", "bluez", "bluez-utils", "networkmanager", "tailscale",
         ):
             self.assertIn(name, names)
         self.assertNotIn("ansible-core", names)
         self.assertNotIn("python", names)
 
+    def test_package_groups_are_alphabetized(self):
+        for group in MANIFEST.read_text().strip().split("\n\n"):
+            names = [line for line in group.splitlines() if not line.startswith("#")]
+            self.assertEqual(names, sorted(names))
+
     def test_package_preflight_precedes_privileged_tasks(self):
         preflight = PLAY["pre_tasks"]
         self.assertEqual(preflight[0]["tags"], "always")
-        self.assertEqual([task["tags"] for task in preflight[1:]], ["packages"] * 3)
+        self.assertEqual([task["tags"] for task in preflight[1:]],
+                         [["packages", "services", "libvirt"], ["packages", "services", "libvirt"], "packages"])
         self.assertTrue(all(not task.get("become", False) for task in preflight))
         self.assertIn("cachyos", str(preflight[2]["ansible.builtin.assert"]))
         self.assertIn("cachyos_packages", str(preflight[3]["ansible.builtin.assert"]))
@@ -53,14 +60,67 @@ class SetupPlaybookTests(unittest.TestCase):
             "upgrade": True,
         })
         self.assertEqual(install["community.general.pacman"], {
-            "name": "{{ cachyos_packages }}",
+            "name": "{{ item }}",
             "state": "present",
         })
+        self.assertEqual(install["loop"], "{{ cachyos_packages }}")
+        self.assertIn("package_index + 1", install["loop_control"]["label"])
         self.assertTrue(all(
             not task.get("become", False)
             for task in PLAY["tasks"]
-            if task not in (upgrade, install)
+            if task not in (upgrade, install, task_named("Remove the system Flathub remote"))
         ))
+
+    def test_services_use_correct_scope_and_leave_gdm_for_next_boot(self):
+        tasks = yaml.safe_load((ROOT / "tasks/services.yml").read_text())
+        system = next(task for task in tasks if "system services and sockets" in task["name"])
+        user = next(task for task in tasks if "user audio services" in task["name"])
+        gdm = next(task for task in tasks if task["name"] == "Enable GDM for the next boot")
+        self.assertEqual(set(system["loop"]), {"NetworkManager.service", "bluetooth.service", "tailscaled.service"})
+        self.assertTrue(system["become"])
+        self.assertEqual(set(user["loop"]), {"pipewire.socket", "pipewire-pulse.socket", "wireplumber.service", "podman.socket"})
+        self.assertFalse(user.get("become", False))
+        for task in (system, user):
+            self.assertTrue(task["ansible.builtin.systemd_service"]["enabled"])
+            self.assertEqual(task["ansible.builtin.systemd_service"]["state"], "started")
+        self.assertEqual(user["ansible.builtin.systemd_service"]["scope"], "user")
+        self.assertTrue(gdm["ansible.builtin.systemd_service"]["enabled"])
+        self.assertNotIn("state", gdm["ansible.builtin.systemd_service"])
+        guard = next(task for task in tasks if task["name"] == "Refuse to replace another display manager")
+        self.assertLess(tasks.index(guard), tasks.index(gdm))
+        self.assertIn("gdm.service", guard["ansible.builtin.assert"]["that"])
+
+    def test_modular_libvirt_replaces_legacy_sockets_and_checks_connections(self):
+        services = yaml.safe_load((ROOT / "tasks/services.yml").read_text())
+        included = next(task for task in services if task.get("ansible.builtin.import_tasks") == "libvirt.yml")
+        self.assertEqual(included["tags"], "libvirt")
+        tasks = yaml.safe_load((ROOT / "tasks/libvirt.yml").read_text())
+        legacy = next(task for task in tasks if task["name"] == "Disable and stop legacy libvirt sockets")
+        daemon = next(task for task in tasks if task["name"] == "Disable and stop the legacy libvirt daemon")
+        modular = next(task for task in tasks if task["name"] == "Enable and start modular libvirt driver sockets")
+        self.assertEqual(set(legacy["loop"]), {
+            "libvirtd.socket", "libvirtd-ro.socket", "libvirtd-admin.socket",
+            "libvirtd-tcp.socket", "libvirtd-tls.socket",
+        })
+        for task in (legacy, daemon):
+            self.assertTrue(task["become"])
+            self.assertFalse(task["ansible.builtin.systemd_service"]["enabled"])
+            self.assertEqual(task["ansible.builtin.systemd_service"]["state"], "stopped")
+            self.assertLess(tasks.index(task), tasks.index(modular))
+        self.assertEqual(set(modular["vars"]["libvirt_driver_daemons"]), {
+            "virtqemud", "virtnetworkd", "virtstoraged", "virtnodedevd",
+            "virtnwfilterd", "virtsecretd", "virtinterfaced", "virtproxyd",
+        })
+        self.assertIn("['', '-ro', '-admin']", modular["loop"])
+        self.assertTrue(modular["become"])
+        self.assertTrue(modular["ansible.builtin.systemd_service"]["enabled"])
+        self.assertEqual(modular["ansible.builtin.systemd_service"]["state"], "started")
+        verify = next(task for task in tasks if task["name"] == "Verify system libvirt connections")
+        self.assertEqual(verify["loop"], ["list", "net-list", "pool-list"])
+        self.assertIn("--readonly", verify["ansible.builtin.command"]["argv"])
+        self.assertIn("qemu:///system", verify["ansible.builtin.command"]["argv"])
+        self.assertFalse(verify["changed_when"])
+        self.assertFalse(verify.get("become", False))
 
     def test_pacman_never_combines_name_and_upgrade(self):
         for task in PLAY["tasks"]:
@@ -78,7 +138,10 @@ class SetupPlaybookTests(unittest.TestCase):
         self.assertIn("scripts/install-fonts.sh", fonts["ansible.builtin.command"]["argv"][0])
         self.assertIn("scripts/apply-dotfiles.sh", links["ansible.builtin.command"]["argv"])
         for task in PLAY["tasks"]:
-            self.assertEqual(task["when"], "not ansible_check_mode")
+            conditions = task["when"]
+            if isinstance(conditions, str):
+                conditions = [conditions]
+            self.assertIn("not ansible_check_mode", conditions)
         for task in (fonts, links, task_named("Run static repository checks")):
             self.assertIn("local", task["tags"])
 

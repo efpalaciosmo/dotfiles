@@ -1,0 +1,26 @@
+---
+- name: Read only user Flatpak remotes
+  ansible.builtin.command:
+    argv: [flatpak, remotes, --user, "--columns=name,url"]
+  register: user_remotes
+  changed_when: false
+
+- name: Reject an existing user flathub pointing to another URL
+  ansible.builtin.assert:
+    that: >-
+      existing_user_flathub | length == 0 or
+      existing_user_flathub | select('match', '^flathub\s+https://dl\.flathub\.org/repo/?$') | list | length == 1
+    fail_msg: An existing user flathub remote has an unexpected URL; inspect it manually.
+  vars:
+    existing_user_flathub: "{{ user_remotes.stdout_lines | select('match', '^flathub\\s+') | list }}"
+
+- name: Add Flathub to the user installation only
+  ansible.builtin.command:
+    argv:
+      - flatpak
+      - --user
+      - remote-add
+      - --if-not-exists
+      - flathub
+      - https://dl.flathub.org/repo/flathub.flatpakrepo
+  when: user_remotes.stdout_lines | select('match', '^flathub\s+') | list | length == 0

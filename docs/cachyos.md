@@ -3,7 +3,8 @@
 Esta guía prepara una **instalación nueva** de CachyOS, no convierte in situ
 Silverblue. El playbook `setup.yml` **sí ejecuta `pacman -Syu --needed` con sudo**
 para instalar
-los paquetes declarados; no activa servicios ni cambia repositorios. Haz copia
+los paquetes declarados, configura Flathub para el usuario y activa los servicios
+necesarios; usa los repositorios existentes. Haz copia
 de seguridad de tus archivos y verifica la ISO oficial antes de particionar.
 Elige instalación mínima/sin entorno de escritorio si el instalador lo permite:
 GDM es la pantalla de acceso, **Niri es la sesión**, y Nautilus, Ajustes y
@@ -48,11 +49,14 @@ Así queda disponible el módulo `community.general.pacman`. Se asume que Python
 la instalación base; si falta, el proceso aborta sin instalarlo. Después
 Ansible ejecuta primero las validaciones que no modifican el equipo. Luego usa
 el módulo de Pacman en dos tareas: primero actualiza el sistema completo y
-después instala (solo estas tareas usan sudo) **todos** los paquetes de
+después instala en un bucle, mostrando `n/total paquete`, **todos** los paquetes de
 [system-packages/cachyos.txt](../system-packages/cachyos.txt), incluyendo los
-solicitados, los auxiliares y `stow`, y después instala fuentes, enlaza los
+solicitados (`podman`, `distrobox`, `epiphany`), los auxiliares y `stow`.
+La lista está agrupada por función y ordenada alfabéticamente dentro de cada grupo.
+Después configura Flathub y servicios, instala fuentes y enlaza los
 dotfiles. No uses `sudo make`: `make setup` pide una vez la contraseña de sudo
-mediante `--ask-become-pass` y eleva privilegios solo para la tarea de Pacman.
+mediante `--ask-become-pass` y eleva privilegios para Pacman, los servicios del
+sistema y la eliminación del remoto Flathub del sistema.
 Una segunda ejecución actualiza
 el sistema y salta paquetes ya instalados. Desde fuera de CachyOS el playbook
 completo aborta antes de tocar nada; `make local` solo instala
@@ -65,7 +69,11 @@ el instalador.
 `make flatpak` es **opcional y separado** de `make setup`: configura Flathub
 con `flatpak remote-add --user --if-not-exists` e instala solo para el usuario
 las aplicaciones de [flatpak-apps/flathub.txt](../flatpak-apps/flathub.txt).
-No usa sudo ni modifica el remoto Flatpak del sistema. Incluye Steam como
+No usa sudo ni modifica el remoto Flatpak del sistema. `make setup` y
+`make packages` crean el remoto del usuario y eliminan el remoto `flathub`
+del sistema. No fuerzan su eliminación si hay aplicaciones/runtimes del
+sistema que lo usan: primero migra esas instalaciones y vuelve a ejecutar.
+Incluye Steam como
 instalación (`com.valvesoftware.Steam`), pero no lo ejecuta.
 
 `make setup` instala también `zsh`, `zsh-completions` y `starship`, y enlaza
@@ -83,10 +91,20 @@ componentes básicos. `pipewire` es necesario para el screencast de Niri; los
 portales GNOME+GTK y Nautilus proporcionan compartir pantalla/selector de
 archivos; `gnome-keyring` proporciona el portal Secret.
 
-```sh
-sudo systemctl enable --now NetworkManager.service bluetooth.service
-sudo systemctl enable gdm.service
-```
+`make setup` y `make packages` habilitan y arrancan `NetworkManager.service`
+y `bluetooth.service`, junto con `tailscaled.service`, y habilitan GDM para el próximo arranque. También
+habilitan y arrancan los sockets de usuario `pipewire.socket`,
+`pipewire-pulse.socket` y `podman.socket`, junto con `wireplumber.service`.
+Distrobox y Epiphany no necesitan un servicio propio. Para repetir solo
+esta configuración después de instalar los paquetes, usa `make services`.
+`make doctor` comprueba los servicios, el adaptador Bluetooth, sus bloqueos
+de radio y el alcance de los remotos Flatpak.
+
+Tailscale se instala como paquete `tailscale` en el bucle de Pacman; es el
+método que selecciona el [instalador oficial](https://tailscale.com/install.sh)
+para CachyOS. Después de la instalación, ejecuta `sudo tailscale up` y sigue
+la URL para autenticar el equipo en tu tailnet. El workflow activa el daemon;
+la autenticación de tu cuenta se realiza interactivamente.
 
 Antes de activar GDM, confirma que `pacman -Q niri gdm swaylock` tiene éxito,
 que no haya otro gestor de inicio de sesión habilitado y que
@@ -99,12 +117,22 @@ que **swaylock acepta tu contraseña** antes de confiar en la suspensión; no
 desactives PAM. GDM integra el desbloqueo del keyring si usas contraseña de
 usuario (no esperes desbloqueo automático con huella/autologin).
 
-## Máquinas virtuales (optativo, solo si las usas)
+## Máquinas virtuales
+
+El workflow deshabilita `libvirtd.service` y sus sockets antiguos y habilita
+los sockets modulares de QEMU (`virtqemud`), red, almacenamiento, dispositivos,
+filtros, secretos e interfaces. También configura `virtproxyd` para clientes
+que usan la ruta antigua, y los sockets de logging/bloqueo. Arranca las variantes
+principal, de solo lectura y administrativa, y comprueba las conexiones de
+VMs, redes y almacenamiento. Para reparar solo libvirt sin actualizar paquetes:
+
+```sh
+make libvirt
+```
 
 Para VMs de sistema, usa `qemu:///system` en virt-manager:
 
 ```sh
-sudo systemctl enable --now libvirtd.socket
 virsh -c qemu:///system list --all
 ```
 
@@ -119,10 +147,8 @@ sudo virsh net-start default
 sudo virsh net-autostart default
 ```
 
-Si tu instalación usa los sockets modulares de libvirt en lugar de
-`libvirtd.socket`, revisa `systemctl list-unit-files 'virt*qemu*' 'libvirtd*'`
-y la [guía de virtualización de CachyOS](https://wiki.cachyos.org/virtualization/qemu_and_vmm_setup/)
-antes de habilitar otros servicios. No cambies el firewall a `iptables` ni
+La transición sigue la [guía oficial de daemons de libvirt](https://libvirt.org/daemons.html#switching-to-modular-daemons).
+No cambies el firewall a `iptables` ni
 abras forwarding global solo porque una guía genérica lo indique.
 
 ## Dotfiles y verificación

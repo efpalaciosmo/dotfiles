@@ -11,7 +11,7 @@ SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
 PYTHON_FILES := packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
 
-.PHONY: help setup local packages fonts dotfiles stow flatpak check doctor verify
+.PHONY: help setup local packages services libvirt fonts dotfiles stow flatpak check doctor verify
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
@@ -24,9 +24,17 @@ local: ## Run Ansible fonts, dotfiles and checks without system packages
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
 	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook -i localhost, setup.yml --tags local
 
-packages: ## Run Ansible package installation (CachyOS only)
+packages: ## Upgrade/install packages, configure Flathub and services (CachyOS only)
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
 	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml --tags packages
+
+services: ## Enable required system and user units (run make packages first)
+	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
+	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml --tags services
+
+libvirt: ## Repair modular libvirt sockets and verify the system connection
+	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
+	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml --tags libvirt
 
 fonts: ## Install the configured user-local fonts with Ansible
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh

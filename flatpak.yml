@@ -7,8 +7,6 @@
     flathub_apps: >-
       {{ lookup('ansible.builtin.file', playbook_dir ~ '/flatpak-apps/flathub.txt').splitlines()
          | reject('match', '^\s*(#|$)') | list }}
-    existing_user_flathub: >-
-      {{ user_remotes.stdout_lines | select('match', '^flathub\s+') | list }}
 
   tasks:
     - name: Refuse to run Flatpak as root
@@ -30,33 +28,9 @@
       changed_when: false
       when: not ansible_check_mode
 
-    - name: Read only user Flatpak remotes
-      ansible.builtin.command:
-        argv: [flatpak, remotes, --user, "--columns=name,url"]
-      register: user_remotes
-      changed_when: false
+    - name: Configure the user Flathub remote
+      ansible.builtin.import_tasks: tasks/flathub-user.yml
       when: not ansible_check_mode
-
-    - name: Reject an existing user flathub pointing to another URL
-      ansible.builtin.assert:
-        that: >-
-          existing_user_flathub | length == 0 or
-          existing_user_flathub | select('match', '^flathub\s+https://dl\.flathub\.org/repo/?$') | list | length == 1
-        fail_msg: An existing user flathub remote has an unexpected URL; inspect it manually.
-      when: not ansible_check_mode
-
-    - name: Add Flathub to the user installation only
-      ansible.builtin.command:
-        argv:
-          - flatpak
-          - remote-add
-          - --user
-          - --if-not-exists
-          - flathub
-          - https://dl.flathub.org/repo/flathub.flatpakrepo
-      when:
-        - not ansible_check_mode
-        - existing_user_flathub | length == 0
 
     - name: Read only user-installed Flatpaks
       ansible.builtin.command:

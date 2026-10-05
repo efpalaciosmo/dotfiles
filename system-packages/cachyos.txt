@@ -1,60 +1,72 @@
+# Setup and command-line tools
+bash-completion
+btop
+curl
+fontconfig
+git
+iproute2
+libnotify
+make
+procps-ng
+starship
+stow
+tar
+unzip
+util-linux
+vim
+xdg-utils
+zsh
+zsh-completions
+
+# Networking and Bluetooth
+bluez
+bluez-utils
+network-manager-applet
+networkmanager
+tailscale
+
+# Audio and media controls
+brightnessctl
+pipewire
+pipewire-alsa
+pipewire-pulse
+playerctl
+wireplumber
+
 # Desktop: GDM login, Niri session, and selected GNOME components
+fuzzel
 gdm
 gnome-control-center
 gnome-keyring
+kitty
+mako
 nautilus
 niri
-xwayland-satellite
+polkit-gnome
+swaybg
+swayidle
+swaylock
+waybar
+wl-clipboard
 xdg-desktop-portal-gnome
 xdg-desktop-portal-gtk
-kitty
-fuzzel
-mako
-waybar
-swaylock
-swayidle
-polkit-gnome
-wl-clipboard
-pipewire
-pipewire-pulse
-pipewire-alsa
-wireplumber
+xwayland-satellite
+
+# Applications and user Flatpak support
+epiphany
 flatpak
 zathura
-zathura-pdf-mupdf
 zathura-djvu
+zathura-pdf-mupdf
 
-# Virtualization (requested; services are not enabled automatically)
-qemu-desktop
-libvirt
-virt-manager
+# Containers (Podman uses a user socket; Distrobox has no service)
+distrobox
+podman
+
+# Virtualization (modular libvirt sockets are enabled by setup)
 dnsmasq
 edk2-ovmf
+libvirt
+qemu-desktop
 swtpm
-
-# Commands used by the dotfiles and setup
-zsh
-zsh-completions
-starship
-swaybg
-playerctl
-brightnessctl
-libnotify
-networkmanager
-network-manager-applet
-bluez
-bluez-utils
-iproute2
-util-linux
-git
-make
-stow
-curl
-tar
-unzip
-fontconfig
-vim
-bash-completion
-xdg-utils
-procps-ng
-btop
+virt-manager

@@ -1,0 +1,66 @@
+---
+# The modular daemons conflict with the old monolithic daemon and its sockets.
+# Stopping the daemon does not stop QEMU guests (the packaged units use
+# KillMode=process); no domains, networks or storage pools are modified here.
+- name: Disable and stop legacy libvirt sockets
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop:
+    - libvirtd.socket
+    - libvirtd-ro.socket
+    - libvirtd-admin.socket
+    - libvirtd-tcp.socket
+    - libvirtd-tls.socket
+  become: true
+
+- name: Disable and stop the legacy libvirt daemon
+  ansible.builtin.systemd_service:
+    name: libvirtd.service
+    enabled: false
+    state: stopped
+  become: true
+
+# Each primary driver socket enables its read-only and admin sockets via Also=.
+# virtproxyd keeps the old local libvirt-sock path available for older clients.
+- name: Enable and start libvirt logging and locking sockets
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - virtlogd.socket
+    - virtlockd.socket
+  become: true
+
+- name: Enable and start modular libvirt driver sockets
+  ansible.builtin.systemd_service:
+    name: "{{ item.0 }}{{ item.1 }}.socket"
+    enabled: true
+    state: started
+  loop: "{{ libvirt_driver_daemons | product(['', '-ro', '-admin']) | list }}"
+  loop_control:
+    label: "{{ item.0 }}{{ item.1 }}.socket"
+  vars:
+    libvirt_driver_daemons:
+      - virtqemud
+      - virtinterfaced
+      - virtnetworkd
+      - virtnodedevd
+      - virtnwfilterd
+      - virtsecretd
+      - virtstoraged
+      - virtproxyd
+  become: true
+
+# Exercise QEMU, network and storage driver connections with bounded reads.
+# --readonly lets the check run as the normal user without a polkit prompt.
+- name: Verify system libvirt connections
+  ansible.builtin.command:
+    argv: [timeout, "15", virsh, --readonly, --connect, qemu:///system, "{{ item }}", --all]
+  loop:
+    - list
+    - net-list
+    - pool-list
+  changed_when: false

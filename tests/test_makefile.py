@@ -9,7 +9,7 @@ MAKEFILE = (Path(__file__).resolve().parents[1] / "Makefile").read_text()
 
 class MakefileTests(unittest.TestCase):
     def test_privileged_targets_ask_ansible_for_become_password(self):
-        for target in ("setup", "packages"):
+        for target in ("setup", "packages", "services", "libvirt"):
             recipe = MAKEFILE.split(f"\n{target}:", 1)[1].split("\n\n", 1)[0]
             self.assertIn("ansible-playbook --ask-become-pass", recipe)
             self.assertNotIn("sudo -v", recipe)
