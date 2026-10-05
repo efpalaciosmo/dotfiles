@@ -2,7 +2,6 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 ANSIBLE_VENV ?= $(CURDIR)/.venv
-ANSIBLE_PLAYBOOK = $(ANSIBLE_VENV)/bin/ansible-playbook
 TEST_PYTHON = $(if $(wildcard $(ANSIBLE_VENV)/bin/python),$(ANSIBLE_VENV)/bin/python,python3)
 
 PACKAGES := git shell-container starship vi kitty niri waybar mako fuzzel
@@ -19,8 +18,7 @@ help: ## List available targets
 
 setup: ## Run the full Ansible playbook (CachyOS only)
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
-	@sudo -v
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook -i localhost, setup.yml
+	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml
 
 local: ## Run Ansible fonts, dotfiles and checks without system packages
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
@@ -28,8 +26,7 @@ local: ## Run Ansible fonts, dotfiles and checks without system packages
 
 packages: ## Run Ansible package installation (CachyOS only)
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
-	@sudo -v
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook -i localhost, setup.yml --tags packages
+	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml --tags packages
 
 fonts: ## Install the configured user-local fonts with Ansible
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh

@@ -27,9 +27,10 @@ and that Python is available, then creates a user-owned Python virtual
 environment at `.venv`, activates it for the playbook command, and installs the
 complete `ansible` distribution from `requirements-ansible.txt` there with pip.
 That distribution supplies the `community.general.pacman` module used for
-package management. It refreshes sudo credentials before
-running the playbook. Ansible checks the user, operating system and package
-manifest, runs the non-mutating static checks, and only then asks the Pacman
+package management. Ansible asks for the sudo password once at startup and
+keeps it only in memory for the privileged package task. Ansible then checks
+the user, operating system and package manifest, runs the non-mutating static
+checks, and only then asks the Pacman
 module to perform a full upgrade and install the manifest; afterward it
 installs fonts and links dotfiles. Python is assumed to be
 part of the base installation and is **not** installed by this repository.
@@ -49,8 +50,8 @@ make verify     # static checks plus doctor
 
 Every installation target reuses the same virtual environment and creates it
 if missing. Only `setup`/`packages` use sudo. Plain `make` only lists targets.
-To run the playbook directly, run `source .venv/bin/activate` first (add `-K`
-to `ansible-playbook` if sudo requires a password).
+To run the complete playbook directly, run `source .venv/bin/activate` first
+and pass `--ask-become-pass` (or `-K`) to `ansible-playbook`.
 `--check` validates the preconditions but **skips** pacman, fonts, Stow and
 checks: it is not a simulation of the installation or its backups.
 

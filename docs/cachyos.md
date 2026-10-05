@@ -50,8 +50,9 @@ Ansible ejecuta primero las validaciones que no modifican el equipo y luego usa
 el módulo de Pacman para actualizar el sistema e instalar (solo esta tarea usa sudo) **todos** los paquetes de
 [system-packages/cachyos.txt](../system-packages/cachyos.txt), incluyendo los
 solicitados, los auxiliares y `stow`, y después instala fuentes, enlaza los
-dotfiles. No uses `sudo make`: `make setup` valida sudo
-y eleva privilegios solo para pacman. Una segunda ejecución actualiza
+dotfiles. No uses `sudo make`: `make setup` pide una vez la contraseña de sudo
+mediante `--ask-become-pass` y eleva privilegios solo para la tarea de Pacman.
+Una segunda ejecución actualiza
 el sistema y salta paquetes ya instalados. Desde fuera de CachyOS el playbook
 completo aborta antes de tocar nada; `make local` solo instala
 fuentes/dotfiles y ejecuta los checks (prepara su propio entorno virtual). Si arrancas desde una instalación
