@@ -4,7 +4,7 @@ set -Eeuo pipefail
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 
 command -v stow >/dev/null 2>&1 || {
-    printf 'dotfiles: GNU Stow is required but is not installed; install it from Fedora first\n' >&2
+    printf 'dotfiles: GNU Stow is required but is not installed; install it from CachyOS first\n' >&2
     exit 1
 }
 
@@ -60,4 +60,15 @@ if [[ " $* " == *" fuzzel "* ]]; then
             rm -- "$target"
         fi
     done
+fi
+
+# Fedora's ~/.virc is not read by Vim on Arch. Remove only the old link
+# installed by this repository; never delete an independent user's file.
+if [[ " $* " == *" vi "* ]]; then
+    target=$HOME/.virc
+    if [[ -L $target ]] &&
+        [[ $(readlink -m -- "$target") == "$repo_root/packages/vi/.virc" ]]; then
+        printf 'dotfiles: removing old managed vi link %s\n' "$target"
+        rm -- "$target"
+    fi
 fi

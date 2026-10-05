@@ -1,6 +1,6 @@
 environment {
-    EDITOR "vi"
-    VISUAL "vi"
+    EDITOR "vim"
+    VISUAL "vim"
     XDG_SESSION_TYPE "wayland"
     CLUTTER_BACKEND "wayland"
     SDL_VIDEODRIVER "wayland"

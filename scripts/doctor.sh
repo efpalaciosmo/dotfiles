@@ -9,9 +9,50 @@ check_command() {
     else printf 'MISS command %s\n' "$1" >&2; failures=$((failures + 1)); fi
 }
 
-for command in stow niri waybar fuzzel kitty vi mako swaybg swaylock wl-copy wl-paste playerctl brightnessctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk systemctl loginctl python3 xdg-open; do
+for command in stow niri waybar fuzzel kitty vim mako swaybg swaylock swayidle wl-copy wl-paste playerctl brightnessctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk pgrep systemctl loginctl python3 xdg-open; do
     check_command "$command"
 done
+
+if [[ -r /etc/pam.d/swaylock ]]; then
+    printf 'OK   swaylock PAM configuration\n'
+else
+    printf 'MISS /etc/pam.d/swaylock (reinstall the official swaylock package)\n' >&2
+    failures=$((failures + 1))
+fi
+
+for relative in niri/scripts/lock-screen niri/scripts/session-idle; do
+    if [[ -x $HOME/.config/$relative ]]; then
+        printf 'OK   executable ~/.config/%s\n' "$relative"
+    else
+        printf 'MISS executable ~/.config/%s (run make dotfiles)\n' "$relative" >&2
+        failures=$((failures + 1))
+    fi
+done
+
+wallpaper=$HOME/.config/niri/backgrounds/bluesky.png
+if [[ -s $wallpaper ]]; then
+    printf 'OK   wallpaper %s -> %s\n' "$wallpaper" "$(readlink -f -- "$wallpaper")"
+else
+    printf 'MISS wallpaper %s\n' "$wallpaper" >&2
+    failures=$((failures + 1))
+fi
+
+desktop=${XDG_CURRENT_DESKTOP:-}
+if [[ ${desktop,,} == *niri* && -n ${WAYLAND_DISPLAY:-} ]] &&
+    command -v pgrep >/dev/null 2>&1; then
+    if pgrep -u "$(id -u)" -x swayidle >/dev/null; then
+        printf 'OK   swayidle is running\n'
+    else
+        printf 'MISS swayidle is not running (install swayidle, link dotfiles, then log out and back in)\n' >&2
+        failures=$((failures + 1))
+    fi
+fi
+if [[ -x /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ]]; then
+    printf 'OK   polkit-gnome agent\n'
+else
+    printf 'MISS polkit-gnome agent\n' >&2
+    failures=$((failures + 1))
+fi
 
 if command -v niri >/dev/null 2>&1; then niri validate || failures=$((failures + 1)); fi
 if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --config="$HOME/.config/fuzzel/fuzzel.ini" || failures=$((failures + 1)); fi

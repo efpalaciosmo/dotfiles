@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# -f returns only once the lock surface is visible: required before suspend.
+set -euo pipefail
+
+exec swaylock -f -e -F -c 222226

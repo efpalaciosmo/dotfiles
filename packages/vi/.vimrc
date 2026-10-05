@@ -1,4 +1,4 @@
-" Basic vi on Fedora: keep the familiar editing options.
+" Minimal Vim configuration for CachyOS.
 set nocompatible
 set number relativenumber
 set scrolloff=10 sidescrolloff=10 nowrap

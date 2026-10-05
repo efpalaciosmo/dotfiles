@@ -1,0 +1,36 @@
+Quiero migrar de Fedora silverblue a CachyOs, me interesa especificametne
+por su optimizacion y compilaciones v4, quiero que por favor mantengamos
+un gnome lo mas simple posible, en el sistema instalare
+estos paquetes
+
+gdm
+gnome-control-center
+gnome-keyring
+nautilus
+niri
+xwayland-satellite
+xdg-desktop-portal-gnome
+xdg-desktop-portal-gtk
+kitty
+fuzzel
+mako
+waybar
+swaylock
+swayidle
+polkit-gnome
+wl-clipboard
+pipewire-pulse
+pipewire-alsa
+wireplumber
+flatpak
+zathura
+zathura-pdf-mupdf
+zathura-djvu
+qemu-desktop
+libvirt
+virt-manager
+dnsmasq
+edk2-ovmf
+swtpm
+
+Asegurate que el sistema quede confiable, seguro, no quiero errores

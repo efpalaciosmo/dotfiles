@@ -32,13 +32,16 @@ turn_displays_off() {
 }
 
 lock_session() {
-    if command -v swaylock >/dev/null 2>&1; then
-        swaylock -f -c 222226 || notify_user "Power menu" "Could not lock the session"
-    elif command -v loginctl >/dev/null 2>&1; then
-        loginctl lock-session || notify_user "Power menu" "Could not lock the session"
+    local lock_script="${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/lock-screen"
+    if [[ -x $lock_script ]]; then
+        if "$lock_script"; then
+            return 0
+        fi
+        notify_user "Power menu" "Could not lock the session"
     else
-        notify_user "Power menu" "No screen locker found"
+        notify_user "Power menu" "Niri screen locker is missing; run make dotfiles"
     fi
+    return 1
 }
 
 logout_session() {
@@ -65,7 +68,7 @@ case "$choice" in
         confirm "¿Reiniciar el equipo?" "Reiniciar" && run_systemctl reboot
         ;;
     "Suspender")
-        confirm "¿Suspender el equipo?" "Suspender" && run_systemctl suspend
+        confirm "¿Suspender el equipo?" "Suspender" && lock_session && run_systemctl suspend
         ;;
     "Bloquear")
         lock_session

@@ -1,18 +1,18 @@
-# ~/.bashrc - Fedora dotfiles
+# ~/.bashrc - interactive Bash
 # Interactive Bash configuration. Shared PATH and environment live in ~/.profile.
 
 [[ $- != *i* ]] && return
 
-if [ -f /etc/bashrc ]; then
-    . /etc/bashrc
+if [ -f /etc/bash.bashrc ]; then
+    . /etc/bash.bashrc
 fi
 
 if [ -f "$HOME/.profile" ]; then
     . "$HOME/.profile"
 fi
 
-export EDITOR=vi
-export VISUAL=vi
+export EDITOR=vim
+export VISUAL=vim
 
 if command -v uv >/dev/null 2>&1; then
     eval "$(uv generate-shell-completion bash)"
@@ -65,7 +65,7 @@ alias la='ls -A'
 alias l='ls -CF'
 alias getaudio='read -p "Enter YouTube URL: " url; yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "$HOME/Music/%(title)s.%(ext)s" "$url"'
 
-# Fedora's programmable completion definitions for Git, systemd, dnf, etc.
+# Programmable completion definitions when installed.
 if [[ -z ${BASH_COMPLETION_VERSINFO:-} && -r /usr/share/bash-completion/bash_completion ]]; then
     . /usr/share/bash-completion/bash_completion
 fi
@@ -83,8 +83,3 @@ shopt -s checkwinsize globstar histappend
 HISTCONTROL=ignoreboth:erasedups
 HISTSIZE=10000
 HISTFILESIZE=20000
-
-# opencode
-export PATH=/var/home/efpalaciosmo/.opencode/bin:$PATH
-
-alias dev='distrobox enter fedora'

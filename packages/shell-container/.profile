@@ -1,4 +1,4 @@
-# ~/.profile - Fedora dotfiles
+# ~/.profile - user environment
 # POSIX-compatible environment loaded by login shells and sourced from
 # .bashrc. Shell-specific hooks live there.
 

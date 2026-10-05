@@ -3,6 +3,7 @@ SHELL := /bin/bash
 
 PACKAGES := git shell-container vi kitty niri waybar mako fuzzel
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
+	$(wildcard packages/niri/.config/niri/scripts/*) \
 	$(filter-out packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker,$(shell find packages/fuzzel/.config/fuzzel/scripts -maxdepth 1 -type f)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
 PYTHON_FILES := packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
@@ -30,10 +31,11 @@ check: ## Run non-mutating repository syntax checks
 	@python3 -m json.tool packages/waybar/.config/waybar/config.jsonc >/dev/null
 	@python3 -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text()) for p in "$(PYTHON_FILES)".split()]'
 	@PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+	@if command -v niri >/dev/null 2>&1; then niri validate --config packages/niri/.config/niri/config.kdl; fi
 	@if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --config=packages/fuzzel/.config/fuzzel/fuzzel.ini; fi
-	@if command -v vi >/dev/null 2>&1; then \
+	@if command -v vim >/dev/null 2>&1; then \
 		output=$$(mktemp); \
-		vi -Nu packages/vi/.virc --not-a-term -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \
+		vim -Nu packages/vi/.vimrc --not-a-term -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \
 		grep -Eq '^[[:space:]]*number[[:space:]]*$$' "$$output" && \
 		grep -Eq '^[[:space:]]*relativenumber[[:space:]]*$$' "$$output" && \
 		grep -q 'shiftwidth=4' "$$output"; result=$$?; \

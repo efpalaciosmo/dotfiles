@@ -2,10 +2,11 @@
 // niri only starts long-running session processes.
 spawn-at-startup "waybar"
 spawn-at-startup "mako"
+spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
+spawn-sh-at-startup "${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/session-idle"
 spawn-sh-at-startup "swaybg -i \"${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/bluesky.png\" -m fill"
 
-// Make the compositor environment available to D-Bus and systemd user units.
-spawn-sh-at-startup "systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_DATA_DIRS PATH"
+// GDM starts niri-session, which exports the environment to systemd and D-Bus.
 // One text watcher and one PNG watcher feed the local SQLite history.
 spawn-sh-at-startup "wl-paste --no-newline --type text --watch \"${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/clipboard-history\" store text"
 spawn-sh-at-startup "wl-paste --type image/png --watch \"${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/clipboard-history\" store image/png"

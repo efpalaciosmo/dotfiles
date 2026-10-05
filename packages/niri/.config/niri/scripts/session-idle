@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# swayidle waits for the locker to present its surface before suspending.
+set -euo pipefail
+
+lock_path="${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/lock-screen"
+# swayidle executes commands through the shell; quote paths containing spaces.
+printf -v lock_command '%q' "$lock_path"
+
+exec swayidle -w \
+    timeout 300 "$lock_command" \
+    timeout 600 'niri msg action power-off-monitors' \
+        resume 'niri msg action power-on-monitors' \
+    before-sleep "$lock_command" \
+    lock "$lock_command"

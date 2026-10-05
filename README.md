@@ -1,15 +1,17 @@
-# Fedora Silverblue laptop dotfiles
+# CachyOS laptop dotfiles (Niri + componentes GNOME)
 
 This repository does exactly three things:
 
 1. Downloads and installs the configured fonts under the user data directory.
-2. Uses the GNU Stow already installed by Fedora.
+2. Uses GNU Stow installed by the user.
 3. Links and validates the dotfiles for Niri, Waybar, Fuzzel, Kitty, Mako,
-   vi, Git, and Bash.
+   Vim, Git, and Bash.
 
 It does not install system packages, graphical applications, language runtimes,
-shell plugins, or developer tools. Install all required software from Fedora
-before running the setup.
+shell plugins, or developer tools. **For package installation, the minimal GNOME
+scope, x86-64-v4 eligibility and security checklist, see
+[docs/cachyos.md](docs/cachyos.md) before running the setup.** This is a Niri
+session with selected GNOME components, not a full GNOME Shell session.
 
 ## Usage
 
@@ -40,14 +42,14 @@ unrelated Rofi files and settings are not touched.
 
 The setup itself needs `git`, `make`, `stow`, `curl`, `tar`, `unzip`, `find`,
 `install`, `mktemp`, `python3`, and `fc-cache`. Install Niri, Waybar, Fuzzel,
-Kitty, vi, Mako and every graphical-session helper beforehand
-from Fedora; this repository only configures and validates them. `make doctor`
+Kitty, Vim, Mako and every graphical-session helper beforehand
+from CachyOS; this repository only configures and validates them. `make doctor`
 checks the complete runtime, including audio, networking, clipboard,
 brightness, locking, and D-Bus helpers.
 
-On Fedora Silverblue, Kitty can be
-layered with `sudo rpm-ostree install kitty` followed by a
-reboot. Then run `make dotfiles` and `make doctor`.
+Install the dependencies from the [CachyOS guide](docs/cachyos.md), select
+**Niri** at GDM (not a plain `niri` TTY invocation), then run `make dotfiles`
+and `make doctor`.
 
 Static checks cannot prove hardware or graphical integration. After applying
 the dotfiles, log into Niri on the laptop and run:
@@ -65,9 +67,9 @@ workspaces and restrained status accents. Its 34-pixel height is a little smalle
 than the first plum design. Urgent workspaces use rose.
 `Super+Return`, Fuzzel and Waybar actions open Kitty. Mako notifications use a
 raised plum surface with lilac, peach and rose accents. Kitty keeps its
-existing colors. Bash keeps a compact, colored prompt; vi inherits the editing
+existing colors. Bash keeps a compact, colored prompt; Vim inherits the editing
 essentials (relative numbers, four-space indentation, search and a matching
-bracket indicator) in `packages/vi/.virc`.
+bracket indicator) in `packages/vi/.vimrc`.
 
 The [desktop](docs/screenshots/desktop-adwaita-orange.png) and
 [launcher](docs/screenshots/launcher-adwaita-orange.png) screenshots show the
@@ -92,7 +94,14 @@ search, file browsing, commands, clipboard, screenshots, connections, system
 monitoring, disk usage and power.
 `Super+Shift+Y` opens clipboard history, `Super+Shift+S` screenshots,
 `Super+Shift+P` power and `Super+Alt+L`
-locks the session. Fuzzel does not support Rofi's in-launcher `?` and
+locks the session through `~/.config/niri/scripts/lock-screen`. In Niri,
+`swayidle` locks after 5 minutes, powers off monitors after 10 minutes and
+locks before sleep. Install both `swaylock` and `swayidle`, run `make dotfiles`,
+then **log out and back in** to start the idle daemon. `make doctor` checks the
+script links, wallpaper and running idle daemon. The wallpaper is the
+repository's `packages/niri/.config/niri/backgrounds/bluesky.png`, linked at
+`~/.config/niri/backgrounds/bluesky.png`; no absolute repository path is used.
+Fuzzel does not support Rofi's in-launcher `?` and
 `Control+Tab` mode switching: use `Super+Shift+D` for file search
 under home, file browsing, windows and commands instead. Search lists only
 files inside home; it skips hidden directory trees (except `~/.config`), caches,
@@ -100,9 +109,13 @@ dependencies and generated build files for responsiveness. The file browser
 can navigate hidden folders, but cannot leave home. Clipboard history
 uses `wl-paste`, `wl-copy` and the
 system Python/SQLite; it keeps at most 60 text or PNG entries (4 MiB each) in
-`~/.local/share/dotfiles/clipboard/history.sqlite3`. Clear it in the menu or
+`$XDG_RUNTIME_DIR/dotfiles/clipboard/history.sqlite3` (normally discarded
+after full logout, unless user lingering is enabled).
+Clipboard content can include passwords: clear it in the menu or
 with `~/.config/fuzzel/scripts/clipboard --clear`. Start a new Niri session after
-linking the dotfiles to activate its clipboard watchers.
+linking the dotfiles to activate its clipboard watchers. The former persistent
+`~/.local/share/dotfiles/clipboard/` directory is **not deleted automatically**;
+remove it yourself after verifying that it contains no data you need.
 
 `Super+Shift+N` opens a Wi-Fi menu in Fuzzel, also available under quick actions.
 It lists nearby networks and signal strength, connects with a password prompt
@@ -112,7 +125,7 @@ NetworkManager `nmcli` and Python's standard library.
 `Ctrl+B` opens the Bluetooth menu in Fuzzel (also available under quick actions
 with `Super+Shift+D`). It can power on a soft-blocked
 adapter, search for nearby devices, pair/connect, disconnect, and forget them.
-It uses Fedora's `bluetoothctl` (BlueZ) and `rfkill`; no additional Bluetooth
+It uses `bluetoothctl` (BlueZ) and `rfkill`; no additional Bluetooth
 interface is needed. Pairing that requires a PIN may need an interactive
 Bluetooth agent. This menu is part of the `fuzzel` Stow package and is linked
 automatically by `make dotfiles`.
@@ -125,7 +138,7 @@ Inter into `${XDG_DATA_HOME:-$HOME/.local/share}/fonts`. Archives are cached in
 
 ## Bootstrap
 
-The bootstrap script installs no dependencies. On a prepared Fedora system:
+The bootstrap script installs no dependencies. On a prepared CachyOS system:
 
 ```sh
 DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \

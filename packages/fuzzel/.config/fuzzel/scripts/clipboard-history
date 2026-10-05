@@ -8,7 +8,12 @@ from pathlib import Path
 
 
 def database_path():
-    root = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
+    # Keep potentially sensitive clipboard content in the session's private tmpfs.
+    # Never silently fall back to persistent storage when no graphical session exists.
+    runtime = os.environ.get("XDG_RUNTIME_DIR")
+    if not runtime:
+        sys.exit("XDG_RUNTIME_DIR is required for clipboard history")
+    root = Path(runtime)
     folder = root / "dotfiles" / "clipboard"
     folder.mkdir(mode=0o700, parents=True, exist_ok=True)
     return folder / "history.sqlite3"
@@ -27,6 +32,7 @@ def main():
     if path.exists():
         path.chmod(0o600)
     with sqlite3.connect(path, timeout=5) as db:
+        db.execute("PRAGMA secure_delete=ON")
         db.execute("CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, mime TEXT NOT NULL, data BLOB NOT NULL)")
         if action == "store":
             mime = "text/plain;charset=utf-8" if sys.argv[2] == "text" else "image/png"
