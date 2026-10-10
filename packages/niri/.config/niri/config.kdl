@@ -11,6 +11,6 @@ include "appearance.kdl"
 include "layout.kdl"
 include "rules.kdl"
 include "monitors.kdl"
-
-prefer-no-csd
+include "animation.kdl"
+include "misc.kdl"
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"

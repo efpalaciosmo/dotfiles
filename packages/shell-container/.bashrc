@@ -83,7 +83,7 @@ alias ll='ls -lh'
 alias la='ls -A'
 alias l='ls -CF'
 alias getaudio='read -p "Enter YouTube URL: " url; yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "$HOME/Music/%(title)s.%(ext)s" "$url"'
-alias fedora='distrobox enter fedora'
+alias dev='distrobox enter fedora'
 
 # Programmable completion definitions when installed.
 if [[ -z ${BASH_COMPLETION_VERSINFO:-} && -r /usr/share/bash-completion/bash_completion ]]; then
