@@ -63,7 +63,6 @@ xdg-desktop-portal-gtk
 xwayland-satellite
 
 # Applications and user Flatpak support
-epiphany
 flatpak
 zathura
 zathura-djvu
