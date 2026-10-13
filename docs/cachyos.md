@@ -83,7 +83,7 @@ ni instala Oh My Zsh; los ajustes específicos del contenedor Fedora solo se
 activan dentro de ese contenedor.
 
 Los paquetes auxiliares satisfacen comandos usados por estos dotfiles: fondo,
-reproducción, brillo, notificaciones, Wi-Fi, ajustes de conexiones,
+reproducción, notificaciones, Wi-Fi, ajustes de conexiones,
 Bluetooth, utilidades de red y compilación de fuentes. `cal` y `rfkill` los
 proporciona `util-linux` en Arch (no existe paquete separado `rfkill`). Si el instalador
 ya incluyó algunos paquetes, `--needed` no los reinstalará. No uses AUR para estos
@@ -136,16 +136,15 @@ Para VMs de sistema, usa `qemu:///system` en virt-manager:
 virsh -c qemu:///system list --all
 ```
 
-No añadas tu usuario al grupo `libvirt` automáticamente: concede control
-elevado sobre el host; polkit puede autorizar bajo demanda. Activa la red NAT
-`default` **solo si la necesitas**, y comprueba el firewall antes de abrir
-tráfico hacia otras redes:
+El workflow añade el usuario normal al grupo `libvirt` conservando los demás
+grupos y verifica la regla polkit suministrada por el paquete. **Cierra toda la
+sesión y vuelve a entrar** para aplicar la pertenencia efectiva. `make doctor`
+comprueba autorización sin diálogo mediante `pkcheck` y después consultas con
+conexión de lectura/escritura limitadas por tiempo.
 
-```sh
-sudo virsh net-list --all
-sudo virsh net-start default
-sudo virsh net-autostart default
-```
+La red NAT empaquetada `default` se define solo si falta, se arranca y se activa
+para el próximo inicio. Se conservan las demás definiciones. Los conflictos de
+subred y fallos del firewall se notifican sin reescribir configuración ajena.
 
 La transición sigue la [guía oficial de daemons de libvirt](https://libvirt.org/daemons.html#switching-to-modular-daemons).
 No cambies el firewall a `iptables` ni
@@ -160,8 +159,8 @@ systemctl --user status pipewire pipewire-pulse wireplumber xdg-desktop-portal
 systemctl status gdm NetworkManager bluetooth
 ```
 
-El fondo de Niri usa `~/.config/niri/backgrounds/bluesky.png`, enlazado por
-Stow desde `packages/niri/.config/niri/backgrounds/bluesky.png`. No hace falta
+El fondo de Niri usa `~/.config/niri/backgrounds/adwaita-dark.png`, enlazado por
+Stow desde `packages/niri/.config/niri/backgrounds/adwaita-dark.png`. No hace falta
 copiarlo fuera del repositorio. Tras instalar `swayidle` y ejecutar
 el playbook con `--tags dotfiles`, **cierra sesión y vuelve a entrar en Niri**:
 `spawn-at-startup`
@@ -184,3 +183,21 @@ de instalación y comprueba su estado: este repositorio no los configura.
 Referencias: [Niri: Getting Started](https://github.com/niri-wm/niri/wiki/Getting-Started),
 [Niri: Important Software](https://github.com/niri-wm/niri/wiki/Important-Software),
 [ArchWiki: Niri](https://wiki.archlinux.org/title/Niri).
+
+## Desktop Ryzen 5 7600
+
+El objetivo actual es el desktop Ryzen 5 7600. Los monitores se
+detectan automáticamente, el cursor es Adwaita 24 y se han retirado los controles
+de brillo/batería del portátil. Se mantienen GDM, Nautilus, Ajustes, keyring,
+portales, PipeWire/WirePlumber y las aplicaciones existentes. GVfs añade acceso
+MTP, AFC y SMB. Ajustes usa una excepción de entorno solo para su proceso;
+los paneles específicos de GNOME no configuran Niri.
+
+Ejecuta `make audit` antes de cambios para inspeccionar hardware, paquetes,
+servicios y sesión. Se mantienen los kernels y el cargador existentes; no se
+configuran controladores de GPU. No hay eliminación automática de apps.
+
+Consulta [aceptación y recuperación](desktop-recovery.md) para pruebas reales,
+restauración de configuración y recuperación desde TTY. `make doctor` distingue requisitos
+faltantes (salida 1) de reentrada/sesión pendientes (salida 2) y hardware opcional.
+Ansible 14 se instala en el venv y este se refresca si cambian requisitos o Python.

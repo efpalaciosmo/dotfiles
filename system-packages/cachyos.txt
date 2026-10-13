@@ -18,6 +18,12 @@ xdg-utils
 zsh
 zsh-completions
 
+# Hardware and firmware
+amd-ucode
+chwd
+linux-firmware
+pciutils
+
 # Networking and Bluetooth
 bluez
 bluez-utils
@@ -26,7 +32,6 @@ networkmanager
 tailscale
 
 # Audio and media controls
-brightnessctl
 pipewire
 pipewire-alsa
 pipewire-pulse
@@ -40,6 +45,9 @@ fuzzel
 gdm
 gnome-control-center
 gnome-keyring
+gvfs-afc
+gvfs-mtp
+gvfs-smb
 kitty
 mako
 nautilus

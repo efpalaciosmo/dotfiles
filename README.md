@@ -1,10 +1,10 @@
-# CachyOS laptop dotfiles (Niri + componentes GNOME)
+# CachyOS desktop dotfiles (Niri + minimal GNOME)
 
 The Ansible playbook `setup.yml` configures CachyOS, ordered to catch
 cheap failures before changing the machine:
 
 1. Validates the repository configuration and tests.
-2. Runs a full system upgrade and installs the packages in
+2. Audits hardware and system configuration, then runs a full system upgrade and installs the packages in
    [system-packages/cachyos.txt](system-packages/cachyos.txt) one at a time, with
    numbered progress. Packages are grouped by purpose and alphabetized within
    each group, including `stow`, `podman`, `distrobox` and `epiphany` (GNOME Web).
@@ -46,7 +46,8 @@ On other distributions, `make setup` **stops before making changes**; use
 ```sh
 make packages   # CachyOS upgrade/install, user Flathub and services
 make services   # reapply service setup; install packages first
-make libvirt    # repair libvirt sockets and verify QEMU/network/storage access
+make libvirt    # group authorization, modular sockets and default NAT
+make audit      # read-only hardware, boot, packages, dependencies and session
 make local      # fonts, links, checks; no system packages
 make fonts      # only fonts
 make dotfiles   # only Stow links
@@ -57,7 +58,8 @@ make verify     # static checks plus doctor
 ```
 
 Every installation target reuses the same virtual environment and creates it
-if missing. `setup`, `packages`, `services` and `libvirt` use sudo. Plain `make` only lists targets.
+if missing. Changes to the requirements or Python interpreter/version/ABI refresh
+the environment. The requirements select Ansible 14, supporting Python 3.14. `setup`, `packages`, `services` and `libvirt` use sudo. Plain `make` only lists targets.
 To run the complete playbook directly, run `source .venv/bin/activate` first
 and pass `--ask-become-pass` (or `-K`) to `ansible-playbook`.
 `--check` validates the preconditions but **skips** pacman, service setup,
@@ -82,13 +84,15 @@ The playbook installs `stow`, `curl`, `fontconfig`, desktop applications and
 the other declared dependencies before using them. Bootstrap also needs `git`.
 `make doctor` checks commands, enabled/active service units, Flatpak remote
 scopes and Bluetooth adapter/radio state, as well as audio, networking,
-clipboard, brightness, locking, and D-Bus helpers.
+clipboard, locking, and D-Bus helpers. Optional Bluetooth, battery and backlight
+hardware are reported separately. Missing requirements exit with status 1; pending
+re-login/session checks exit with status 2.
 
 Select **Niri** at GDM (not a plain `niri` TTY invocation) after running
 the playbook, then run `make doctor`.
 
 Static checks cannot prove hardware or graphical integration. After applying
-the dotfiles, log into Niri on the laptop and run:
+the dotfiles, log into Niri on the desktop and run:
 
 ```sh
 make doctor
@@ -112,8 +116,27 @@ compatibility proxy. The workflow disables the conflicting legacy
 `libvirtd.service` and sockets, then starts the driver sockets (including their
 read-only/admin variants) and the logging/locking sockets. It verifies
 `qemu:///system` access to VM, network and storage lists as the normal user.
-`make libvirt` repeats only this repair and verification. `make doctor` also
-checks the connections. No VM NAT network is started automatically.
+`make libvirt` repeats this setup and verification, appends your user to `libvirt`
+without replacing other memberships, and verifies the packaged polkit grant.
+Fully log out and back in before checking effective management access. The check
+uses `pkcheck` without interactive authentication, then bounded read-write queries.
+Setup starts/autostarts the packaged `default` NAT network, preserves other
+definitions, and reports subnet conflicts or firewall failures for manual repair.
+
+## Desktop integration
+
+GDM retains its GNOME Shell/Session dependencies. The launcher exposes **Settings**
+in Niri through a process-local GNOME desktop override with D-Bus activation
+disabled. The session remains Niri; GNOME-specific display, keyboard and workspace
+panels cannot configure it. Use Niri's configuration for those controls. Nautilus
+retains the GNOME portal file chooser, and GVfs adds Android, Apple device and SMB
+access. Keep the NetworkManager connection editor used by the menus.
+
+Follow [desktop acceptance and recovery](docs/desktop-recovery.md) for the
+hardware/session checks, TTY recovery and restoring configuration backups.
+Applications and optional `make flatpak` remain unchanged. `make audit` reports
+installed removal candidates with dependency information; setup does not remove
+applications automatically.
 
 ## Tailscale
 
@@ -160,13 +183,13 @@ See the [research and palette](docs/adwaita-theme.md),
 [launcher](docs/screenshots/launcher-adwaita-orange.png) and
 [notifications](docs/screenshots/notifications-adwaita-orange.png).
 
-Niri opens windows at half width so two fit on the
-1920×1200 laptop screen; `Super+F` maximizes a column. The slim bar sits at the
-bottom and keeps playback, download/upload speed in Mb/s, brightness, audio,
-load, battery and clock visible. Hover for details; click the network indicator
+Niri detects desktop monitors automatically and opens windows at half width so two
+fit side by side; `Super+F` maximizes a column. The slim bar sits at the
+bottom and keeps playback, download/upload speed in Mb/s, audio,
+load and clock visible. Hover for details; click the network indicator
 for the Wi-Fi menu (right click for connection settings), the clock for
 a calendar, and CPU or memory for a system monitor (`btop` if installed, `top`
-otherwise). Scroll over the brightness indicator to adjust the screen in 5% steps.
+otherwise).
 
 `Super+V` toggles the focused window between tiled and floating; `Super+Shift+V`
 switches focus between those layouts. Niri floats parented dialogs and fixed-size

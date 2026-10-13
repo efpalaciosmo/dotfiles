@@ -8,7 +8,7 @@
     "margin-right": 12,
     "modules-left": ["niri/workspaces", "niri/window"],
     "modules-center": ["custom/media"],
-    "modules-right": ["tray", "privacy", "idle_inhibitor", "custom/network-speed", "backlight", "pulseaudio", "custom/cpu", "memory", "custom/battery", "clock", "custom/power"],
+    "modules-right": ["tray", "privacy", "idle_inhibitor", "custom/network-speed", "pulseaudio", "custom/cpu", "memory", "clock", "custom/power"],
 
     "niri/workspaces": {
         "format": "{index}",
@@ -54,13 +54,6 @@
         "on-click": "~/.config/fuzzel/scripts/wifi",
         "on-click-right": "nm-connection-editor"
     },
-    "backlight": {
-        "format": "{icon}  {percent}%",
-        "format-icons": ["󰃞", "󰃟", "󰃠"],
-        "tooltip-format": "Brillo: {percent}%",
-        "on-scroll-up": "brightnessctl --class=backlight set +5%",
-        "on-scroll-down": "brightnessctl --class=backlight set 5%-"
-    },
     "pulseaudio": {
         "format": "{icon}  {volume}%",
         "format-bluetooth": "{icon}  {volume}%",
@@ -83,12 +76,6 @@
         "states": { "critical": 85 },
         "on-click": "~/.config/waybar/scripts/terminal-tool monitor",
         "tooltip-format": "Memoria: {used:0.1f} / {total:0.1f} GiB"
-    },
-    "custom/battery": {
-        "exec": "~/.config/waybar/scripts/battery-status",
-        "exec-if": "~/.config/waybar/scripts/battery-status --available",
-        "return-type": "json",
-        "interval": 30
     },
     "clock": {
         "format": "  {:%a %d · %H:%M}",

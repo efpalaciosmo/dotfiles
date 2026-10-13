@@ -10,9 +10,9 @@ SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	packages/desktop/.local/bin/dotfiles-appearance \
 	$(filter-out packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker,$(shell find packages/fuzzel/.config/fuzzel/scripts -maxdepth 1 -type f)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
-PYTHON_FILES := packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
+PYTHON_FILES := $(wildcard scripts/*.py) packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
 
-.PHONY: help setup local packages services libvirt fonts dotfiles stow flatpak check doctor verify
+.PHONY: help setup local packages services libvirt audit fonts dotfiles stow flatpak check doctor verify
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
@@ -33,9 +33,12 @@ services: ## Enable required system and user units (run make packages first)
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
 	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml --tags services
 
-libvirt: ## Repair modular libvirt sockets and verify the system connection
+libvirt: ## Configure libvirt access, modular sockets and default NAT
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
 	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml --tags libvirt
+
+audit: ## Read-only package, dependency, hardware, boot and session inspection
+	@bash scripts/audit.sh
 
 fonts: ## Install the configured user-local fonts with Ansible
 	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh

@@ -1,5 +1,5 @@
 ---
-- name: Configure CachyOS laptop
+- name: Configure CachyOS Ryzen desktop
   hosts: localhost
   connection: local
   gather_facts: true
@@ -57,6 +57,20 @@
       changed_when: false
       when: not ansible_check_mode
       tags: [always, check, local]
+
+    - name: Inspect the machine before system changes
+      ansible.builtin.command:
+        argv: [bash, "{{ playbook_dir }}/scripts/audit.sh"]
+      register: desktop_audit
+      changed_when: false
+      when: not ansible_check_mode
+      tags: packages
+
+    - name: Show the machine audit and installed removal candidates
+      ansible.builtin.debug:
+        var: desktop_audit.stdout_lines
+      when: not ansible_check_mode
+      tags: packages
 
     # Pacman does not support partial upgrades. Complete -Syu first; the module
     # intentionally makes `upgrade` and `name` mutually exclusive.

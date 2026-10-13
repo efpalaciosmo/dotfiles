@@ -3,13 +3,14 @@ set -Eeuo pipefail
 
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 failures=0
+pending=0
 
 check_command() {
     if command -v "$1" >/dev/null 2>&1; then printf 'OK   command %s -> %s\n' "$1" "$(command -v "$1")"
     else printf 'MISS command %s\n' "$1" >&2; failures=$((failures + 1)); fi
 }
 
-for command in stow niri waybar fuzzel kitty vim zsh starship mako swaybg swaylock swayidle wl-copy wl-paste playerctl brightnessctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk pgrep systemctl loginctl python3 xdg-open podman distrobox epiphany flatpak virsh timeout tailscale tailscaled gsettings; do
+for command in stow niri waybar fuzzel kitty vim zsh starship mako swaybg swaylock swayidle wl-copy wl-paste playerctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk pgrep systemctl loginctl python3 xdg-open xdg-mime podman distrobox epiphany flatpak virsh timeout tailscale tailscaled gsettings pkcheck busctl; do
     check_command "$command"
 done
 
@@ -53,10 +54,26 @@ if command -v systemctl >/dev/null 2>&1; then
                 printf 'INFO Bluetooth adapter powered off (enable it in the Bluetooth menu)\n'
             fi
         else
-            printf 'MISS Bluetooth adapter (inspect rfkill list bluetooth and journalctl -b -u bluetooth)\n' >&2
-            failures=$((failures + 1))
+            printf 'INFO optional Bluetooth adapter absent\n'
         fi
     fi
+fi
+if command -v python3 >/dev/null 2>&1; then
+    result=0
+    python3 "$repo_root/scripts/libvirt-check.py" || result=$?
+    case $result in
+        2) pending=$((pending + 1)) ;;
+        0) ;;
+        *) failures=$((failures + 1)) ;;
+    esac
+    result=0
+    python3 "$repo_root/scripts/desktop-check.py" || result=$?
+    case $result in
+        3) failures=$((failures + 1)); pending=$((pending + 1)) ;;
+        2) pending=$((pending + 1)) ;;
+        0) ;;
+        *) failures=$((failures + 1)) ;;
+    esac
 fi
 if command -v virsh >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
     for query in list net-list pool-list; do
@@ -153,5 +170,6 @@ for package in "$@"; do
     done < <(find "$repo_root/packages/$package" -type f ! -iname 'README' ! -iname 'README.*' -print0)
 done
 
-if ((failures > 0)); then printf 'doctor: %d problem(s) found\n' "$failures" >&2; exit 1; fi
+if ((failures > 0)); then printf 'doctor: %d missing/failed requirement(s), %d pending check group(s)\n' "$failures" "$pending" >&2; exit 1; fi
+if ((pending > 0)); then printf 'doctor: %d pending re-login/session check group(s)\n' "$pending"; exit 2; fi
 printf 'doctor: OK\n'

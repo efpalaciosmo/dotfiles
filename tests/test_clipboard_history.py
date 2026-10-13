@@ -35,6 +35,22 @@ class ClipboardHistoryTests(unittest.TestCase):
             self.assertIn(b"XDG_RUNTIME_DIR", result.stderr)
             self.assertEqual(list(Path(directory).iterdir()), [])
 
+    def test_repairs_existing_directory_and_database_permissions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = Path(directory)
+            folder = runtime / 'dotfiles/clipboard'
+            folder.mkdir(parents=True)
+            env = {**os.environ, 'XDG_RUNTIME_DIR': directory}
+            subprocess.run([str(SCRIPT), 'store', 'text'], input=b'secret', env=env, check=True)
+            database = folder / 'history.sqlite3'
+            for path in (folder.parent, folder):
+                path.chmod(0o755)
+            database.chmod(0o644)
+            subprocess.run([str(SCRIPT), 'list'], env=env, check=True, capture_output=True)
+            self.assertEqual(folder.parent.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(folder.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(database.stat().st_mode & 0o777, 0o600)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,2 @@
-// Laptop panel. Other outputs are left to niri's automatic configuration.
-output "eDP-1" {
-    scale 1.0
-    focus-at-startup
-    variable-refresh-rate
-}
+// Let Niri detect connected desktop monitors and choose their preferred modes.
+// Add output blocks here only for deliberate per-monitor overrides.

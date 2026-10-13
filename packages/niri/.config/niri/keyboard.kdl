@@ -128,7 +128,7 @@ binds {
     Mod+Ctrl+WheelScrollRight { move-column-right; }
     Mod+Ctrl+WheelScrollLeft  { move-column-left; }
 
-    // Capturas / audio / brillo
+    // Capturas / audio
     Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
@@ -142,9 +142,6 @@ binds {
     XF86AudioStop allow-when-locked=true { spawn-sh "playerctl stop"; }
     XF86AudioPrev allow-when-locked=true { spawn-sh "playerctl previous"; }
     XF86AudioNext allow-when-locked=true { spawn-sh "playerctl next"; }
-
-    XF86MonBrightnessUp   allow-when-locked=true { spawn-sh "brightnessctl --class=backlight set +10%"; }
-    XF86MonBrightnessDown allow-when-locked=true { spawn-sh "brightnessctl --class=backlight set 10%-"; }
 
     Mod+Escape allow-inhibiting=false repeat=false { toggle-keyboard-shortcuts-inhibit; }
 }

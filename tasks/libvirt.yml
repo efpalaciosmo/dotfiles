@@ -1,7 +1,63 @@
 ---
+- name: Append the setup user to the libvirt management group
+  ansible.builtin.user:
+    name: "{{ ansible_facts['user_id'] }}"
+    groups: libvirt
+    append: true
+  become: true
+
+- name: Locate package-provided libvirt polkit rules
+  ansible.builtin.command:
+    argv: [pacman, -Qlq, libvirt]
+  register: libvirt_package_files
+  changed_when: false
+
+- name: Select the packaged management authorization rule
+  ansible.builtin.set_fact:
+    libvirt_rules: "{{ libvirt_package_files.stdout_lines | select('search', '/rules.d/.*libvirt.*\\.rules$') | list }}"
+
+- name: Require a single package-provided libvirt authorization rule
+  ansible.builtin.assert:
+    that: libvirt_rules | length == 1
+    fail_msg: Inspect the installed libvirt polkit package rules; no broad replacement rule will be written.
+
+- name: Read the packaged libvirt authorization rule
+  ansible.builtin.slurp:
+    src: "{{ libvirt_rules[0] }}"
+  register: libvirt_rule
+
+- name: Verify the packaged libvirt group management grant
+  ansible.builtin.assert:
+    that:
+      - "'org.libvirt.unix.manage' in (libvirt_rule.content | b64decode)"
+      - "(libvirt_rule.content | b64decode) is search('isInGroup[(].libvirt.[)]')"
+      - "'polkit.Result.YES' in (libvirt_rule.content | b64decode)"
+    fail_msg: The package rule does not grant libvirt management to this group; inspect it before continuing.
+
+- name: Require AMD virtualization support enabled in firmware
+  ansible.builtin.command:
+    argv: [grep, -qw, svm, /proc/cpuinfo]
+  changed_when: false
+
+- name: Load the AMD KVM module
+  community.general.modprobe:
+    name: kvm_amd
+    state: present
+  become: true
+
+- name: Inspect the KVM device
+  ansible.builtin.stat:
+    path: /dev/kvm
+  register: kvm_device
+
+- name: Require the KVM character device
+  ansible.builtin.assert:
+    that: kvm_device.stat.ischr | default(false)
+    fail_msg: /dev/kvm is missing; enable AMD SVM in firmware and inspect the kvm_amd kernel log.
+
 # The modular daemons conflict with the old monolithic daemon and its sockets.
 # Stopping the daemon does not stop QEMU guests (the packaged units use
-# KillMode=process); no domains, networks or storage pools are modified here.
+# KillMode=process); domains and storage pools are preserved.
 - name: Disable and stop legacy libvirt sockets
   ansible.builtin.systemd_service:
     name: "{{ item }}"
@@ -54,8 +110,7 @@
       - virtproxyd
   become: true
 
-# Exercise QEMU, network and storage driver connections with bounded reads.
-# --readonly lets the check run as the normal user without a polkit prompt.
+# Read-only queries also diagnose driver activation before effective membership.
 - name: Verify system libvirt connections
   ansible.builtin.command:
     argv: [timeout, "15", virsh, --readonly, --connect, qemu:///system, "{{ item }}", --all]
@@ -64,3 +119,21 @@
     - net-list
     - pool-list
   changed_when: false
+
+- name: Start and autostart the packaged default NAT network
+  ansible.builtin.command:
+    argv: [python3, "{{ playbook_dir }}/scripts/libvirt-network.py"]
+  become: true
+  register: libvirt_network
+  changed_when: "'CHANGED' in libvirt_network.stdout"
+
+- name: Check effective management authorization without prompting
+  ansible.builtin.command:
+    argv: [python3, "{{ playbook_dir }}/scripts/libvirt-check.py"]
+  register: libvirt_authorization
+  changed_when: false
+  failed_when: libvirt_authorization.rc not in [0, 2]
+
+- name: Report libvirt authorization or required re-login
+  ansible.builtin.debug:
+    var: libvirt_authorization.stdout

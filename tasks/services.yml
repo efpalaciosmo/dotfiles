@@ -1,4 +1,9 @@
 ---
+- name: Validate installed desktop binaries before enabling graphical startup
+  ansible.builtin.command:
+    argv: [bash, "{{ playbook_dir }}/scripts/validate-configs.sh", niri, fuzzel]
+  changed_when: false
+
 - name: Check the configured display manager
   ansible.builtin.stat:
     path: /etc/systemd/system/display-manager.service

@@ -4,7 +4,7 @@ layout {
     center-focused-column "on-overflow"
     always-center-single-column
 
-    // Two useful columns on the laptop; Mod+F still maximizes when needed.
+    // Two useful columns on desktop monitors; Mod+F still maximizes when needed.
     default-column-width { proportion 0.5; }
     gaps 12
 

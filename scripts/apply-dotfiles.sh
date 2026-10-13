@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 
+bash "$repo_root/scripts/validate-configs.sh" "$@"
+
 command -v stow >/dev/null 2>&1 || {
     printf 'dotfiles: GNU Stow is required but is not installed; install it from CachyOS first\n' >&2
     exit 1

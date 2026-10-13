@@ -16,6 +16,8 @@ def database_path():
     root = Path(runtime)
     folder = root / "dotfiles" / "clipboard"
     folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+    (root / "dotfiles").chmod(0o700)
+    folder.chmod(0o700)
     return folder / "history.sqlite3"
 
 
@@ -29,8 +31,12 @@ def main():
         sys.exit("store requires text or image/png")
 
     path = database_path()
-    if path.exists():
-        path.chmod(0o600)
+    # Pre-create and chmod explicitly: default ACLs can override umask.
+    fd = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        os.fchmod(fd, 0o600)
+    finally:
+        os.close(fd)
     with sqlite3.connect(path, timeout=5) as db:
         db.execute("PRAGMA secure_delete=ON")
         db.execute("CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, mime TEXT NOT NULL, data BLOB NOT NULL)")
