@@ -51,7 +51,7 @@ Ansible ejecuta primero las validaciones que no modifican el equipo. Luego usa
 el módulo de Pacman en dos tareas: primero actualiza el sistema completo y
 después instala en un bucle, mostrando `n/total paquete`, **todos** los paquetes de
 [system-packages/cachyos.txt](../system-packages/cachyos.txt), incluyendo los
-solicitados (`podman`, `distrobox`, `epiphany`), los auxiliares y `stow`.
+solicitados (`podman`, `distrobox`), los auxiliares y `stow`.
 La lista está agrupada por función y ordenada alfabéticamente dentro de cada grupo.
 Después configura Flathub y servicios, instala fuentes y enlaza los
 dotfiles. No uses `sudo make`: `make setup` pide una vez la contraseña de sudo
@@ -95,7 +95,7 @@ archivos; `gnome-keyring` proporciona el portal Secret.
 y `bluetooth.service`, junto con `tailscaled.service`, y habilitan GDM para el próximo arranque. También
 habilitan y arrancan los sockets de usuario `pipewire.socket`,
 `pipewire-pulse.socket` y `podman.socket`, junto con `wireplumber.service`.
-Distrobox y Epiphany no necesitan un servicio propio. Para repetir solo
+Distrobox no necesita un servicio propio. Para repetir solo
 esta configuración después de instalar los paquetes, usa `make services`.
 `make doctor` comprueba los servicios, el adaptador Bluetooth, sus bloqueos
 de radio y el alcance de los remotos Flatpak.

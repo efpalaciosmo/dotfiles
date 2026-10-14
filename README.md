@@ -7,7 +7,7 @@ cheap failures before changing the machine:
 2. Audits hardware and system configuration, then runs a full system upgrade and installs the packages in
    [system-packages/cachyos.txt](system-packages/cachyos.txt) one at a time, with
    numbered progress. Packages are grouped by purpose and alphabetized within
-   each group, including `stow`, `podman`, `distrobox` and `epiphany` (GNOME Web).
+   each group, including `stow`, `podman` and `distrobox`.
 3. Adds user Flathub and removes the system Flathub remote.
 4. Enables the required system and user services.
 5. Downloads and installs the configured fonts under the user data directory.
@@ -106,7 +106,7 @@ next boot and stop with an explanation if another display manager is enabled.
 User units `pipewire.socket`, `pipewire-pulse.socket`, `wireplumber.service`
 and `podman.socket` are enabled and started as your normal user.
 The [Podman API uses socket activation](https://docs.podman.io/en/latest/markdown/podman-system-service.1.html).
-Distrobox and Epiphany need no dedicated service. Portals and keyring use
+Distrobox needs no dedicated service. Portals and keyring use
 D-Bus/session activation; Niri starts polkit and the idle daemon.
 
 Run `make services` to reapply these units after packages are installed.

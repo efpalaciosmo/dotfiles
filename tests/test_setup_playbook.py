@@ -30,7 +30,7 @@ class SetupPlaybookTests(unittest.TestCase):
             "zathura", "zathura-pdf-mupdf", "zathura-djvu", "qemu-desktop",
             "libvirt", "virt-manager", "dnsmasq", "edk2-ovmf", "swtpm",
             "stow", "swaybg", "zsh", "zsh-completions", "starship", "fontconfig", "make",
-            "podman", "distrobox", "epiphany", "bluez", "bluez-utils", "networkmanager", "tailscale",
+            "podman", "distrobox", "bluez", "bluez-utils", "networkmanager", "tailscale",
         ):
             self.assertIn(name, names)
         self.assertNotIn("ansible-core", names)
