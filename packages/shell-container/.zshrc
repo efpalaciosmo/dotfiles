@@ -1,4 +1,4 @@
-# ~/.zshrc - user shell on CachyOS and in the Fedora Distrobox.
+# ~/.zshrc - user shell on the host and in the Fedora Distrobox.
 # Shared PATH and environment live in ~/.profile.
 
 if [ -f "$HOME/.profile" ]; then

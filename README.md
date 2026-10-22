@@ -1,159 +1,82 @@
-# CachyOS desktop dotfiles (Niri + minimal GNOME)
+# Niri desktop dotfiles
 
-The Ansible playbook `setup.yml` configures CachyOS, ordered to catch
-cheap failures before changing the machine:
-
-1. Validates the repository configuration and tests.
-2. Audits hardware and system configuration, then runs a full system upgrade and installs the packages in
-   [system-packages/cachyos.txt](system-packages/cachyos.txt) one at a time, with
-   numbered progress. Packages are grouped by purpose and alphabetized within
-   each group, including `stow`, `podman` and `distrobox`.
-3. Adds user Flathub and removes the system Flathub remote.
-4. Enables the required system and user services.
-5. Downloads and installs the configured fonts under the user data directory.
-6. Links dotfiles with GNU Stow, backing up conflicts first.
-
-**The full playbook requires sudo access and only installs packages on CachyOS.**
-It uses your existing pacman repositories and v4 CPU/repository selection.
-For the minimal GNOME scope, x86-64-v4
-eligibility and security checklist, read [docs/cachyos.md](docs/cachyos.md).
-This is a Niri
-session with selected GNOME components, not a full GNOME Shell session.
+User configuration for a custom bootc distribution with GNOME and Niri.
+The bootc image owns packages, fonts, system services and desktop sessions.
+This repository manages the configuration of Niri, Fuzzel, Waybar, Mako,
+Kitty, GTK, Swaylock and Zathura, plus the existing shell, Starship, Vim and Git
+settings. It does not install software, download fonts or configure Flatpak
+remotes.
 
 ## Usage
+
+Run from your clone as your normal user:
 
 ```sh
 make setup
 ```
 
-Run as your normal user, **not** with `sudo make`. `make setup` verifies CachyOS
-and that Python is available, then creates a user-owned Python virtual
-environment at `.venv`, activates it for the playbook command, and installs the
-complete `ansible` distribution from `requirements-ansible.txt` there with pip.
-That distribution supplies the `community.general.pacman` module used for
-package management. Ansible asks for the sudo password once at startup and
-keeps it only in memory for privileged package, service and remote-removal tasks. Ansible then checks
-the user, operating system and package manifest, runs the non-mutating static
-checks, and only then asks the Pacman module to perform a full system upgrade.
-A second Pacman task loops over the manifest and shows `n/total package` for
-each item. The module deliberately separates `upgrade` and `name`; afterward
-the workflow configures Flathub and services, installs fonts and links dotfiles.
-Python is assumed to be
-part of the base installation and is **not** installed by this repository.
-On other distributions, `make setup` **stops before making changes**; use
-`make local` to install only fonts and dotfiles (requires their tools).
+This runs the repository checks, validates Niri and Fuzzel, backs up conflicting
+user files and links the configuration with GNU Stow. It requires no sudo,
+Ansible, virtual environment or package manager.
 
 ```sh
-make packages   # CachyOS upgrade/install, user Flathub and services
-make services   # reapply service setup; install packages first
-make libvirt    # group authorization, modular sockets and default NAT
-make audit      # read-only hardware, boot, packages, dependencies and session
-make local      # fonts, links, checks; no system packages
-make fonts      # only fonts
-make dotfiles   # only Stow links
-make flatpak    # user Flathub remote and apps; NEVER part of setup
-make check      # static Bash/JSON/residue checks
-make doctor     # machine commands, app configs, and every managed symlink
+make local      # alias for setup
+make dotfiles   # validate and link configuration without the full test suite
+make stow       # alias for dotfiles
+make check      # static checks and tests; no configuration changes
+make doctor     # desktop commands, runtime integration and managed symlinks
 make verify     # static checks plus doctor
 ```
 
-Every installation target reuses the same virtual environment and creates it
-if missing. Changes to the requirements or Python interpreter/version/ABI refresh
-the environment. The requirements select Ansible 14, supporting Python 3.14. `setup`, `packages`, `services` and `libvirt` use sudo. Plain `make` only lists targets.
-To run the complete playbook directly, run `source .venv/bin/activate` first
-and pass `--ask-become-pass` (or `-K`) to `ansible-playbook`.
-`--check` validates the preconditions but **skips** pacman, service setup,
-Flatpak remote configuration, fonts, Stow and checks: it is not a simulation
-of the installation or its backups.
-
-Before invoking GNU Stow, the dotfiles task moves every unmanaged conflicting
-file or link to a sibling backup named `.bak` (or `.bak.N` when that name is
-already occupied). It never deletes existing data and reports every backup it
-creates. Files already linked to this repository are left untouched.
-When migrating, only old Rofi symlinks pointing to this repository are removed;
-unrelated Rofi files and settings are not touched.
-
-## Prerequisites
-
-On CachyOS, an existing clone needs `make`, `bash`, `python3`, `pacman` and `sudo` to run
-`make setup`. For a fresh clone, install `git` and `make` first:
-`sudo pacman -Syu --needed git make`. Ansible is written in Python, but
-Python alone does not include `ansible-playbook`; `make setup` installs it
-into the virtual environment, never as a system package.
-The playbook installs `stow`, `curl`, `fontconfig`, desktop applications and
-the other declared dependencies before using them. Bootstrap also needs `git`.
-`make doctor` checks commands, enabled/active service units, Flatpak remote
-scopes and Bluetooth adapter/radio state, as well as audio, networking,
-clipboard, locking, and D-Bus helpers. Optional Bluetooth, battery and backlight
-hardware are reported separately. Missing requirements exit with status 1; pending
-re-login/session checks exit with status 2.
-
-Select **Niri** at GDM (not a plain `niri` TTY invocation) after running
-the playbook, then run `make doctor`.
-
-Static checks cannot prove hardware or graphical integration. After applying
-the dotfiles, log into Niri on the desktop and run:
+Plain `make` lists the available targets. To apply only selected configurations:
 
 ```sh
-make doctor
+make setup PACKAGES="niri fuzzel waybar mako kitty desktop"
 ```
 
-## Services
+The default Stow packages are `git shell-container starship vi kitty niri waybar
+mako fuzzel desktop`. These are configuration directories under `packages/`,
+not software packages to install.
 
-`make setup` and `make packages` enable and start `NetworkManager.service`,
-`bluetooth.service` and `tailscaled.service`. They enable `gdm.service` for the
-next boot and stop with an explanation if another display manager is enabled.
-User units `pipewire.socket`, `pipewire-pulse.socket`, `wireplumber.service`
-and `podman.socket` are enabled and started as your normal user.
-The [Podman API uses socket activation](https://docs.podman.io/en/latest/markdown/podman-system-service.1.html).
-Distrobox needs no dedicated service. Portals and keyring use
-D-Bus/session activation; Niri starts polkit and the idle daemon.
+Before invoking Stow, the helper moves unmanaged conflicting files or links to
+sibling backups named `.bak` or `.bak.N`. Existing links into this repository
+are preserved. Only legacy Rofi and Vim links owned by this repository are
+removed during migration.
 
-Run `make services` to reapply these units after packages are installed.
-Libvirt uses the [modular daemons](https://libvirt.org/daemons.html#switching-to-modular-daemons):
-QEMU, network, storage, host devices, filters, secrets, interfaces and the local
-compatibility proxy. The workflow disables the conflicting legacy
-`libvirtd.service` and sockets, then starts the driver sockets (including their
-read-only/admin variants) and the logging/locking sockets. It verifies
-`qemu:///system` access to VM, network and storage lists as the normal user.
-`make libvirt` repeats this setup and verification, appends your user to `libvirt`
-without replacing other memberships, and verifies the packaged polkit grant.
-Fully log out and back in before checking effective management access. The check
-uses `pkcheck` without interactive authentication, then bounded read-write queries.
-Setup starts/autostarts the packaged `default` NAT network, preserves other
-definitions, and reports subnet conflicts or firewall failures for manual repair.
+## Prerequisites and sessions
 
-## Desktop integration
+Provide Bash, Make, Python 3.11 or newer, GNU Stow and the configured desktop
+tools in the bootc image. Cloning/updating also requires Git. `make check` uses
+only Python's standard library; optional validators run when available.
+Applying the `niri` or `fuzzel` configuration requires the corresponding binary
+so its configuration can be validated before files are changed.
 
-GDM retains its GNOME Shell/Session dependencies. The launcher exposes **Settings**
-in Niri through a process-local GNOME desktop override with D-Bus activation
-disabled. The session remains Niri; GNOME-specific display, keyboard and workspace
-panels cannot configure it. Use Niri's configuration for those controls. Nautilus
-retains the GNOME portal file chooser, and GVfs adds Android, Apple device and SMB
-access. Keep the NetworkManager connection editor used by the menus.
+The desktop uses Niri, Waybar, Fuzzel, Mako, Kitty, Swaybg, Swaylock, Swayidle,
+wl-clipboard, Playerctl, PipeWire/WirePlumber, NetworkManager, BlueZ, a polkit
+agent and the GNOME/GTK portals. GNOME Settings and Nautilus provide desktop
+integration. These tools and their services remain the distribution's
+responsibility. Adwaita Sans, Adwaita Mono and a Nerd Font for symbols should
+already be available; the configuration retains its font selections.
 
-Follow [desktop acceptance and recovery](docs/desktop-recovery.md) for the
-hardware/session checks, TTY recovery and restoring configuration backups.
-Applications and optional `make flatpak` remain unchanged. `make audit` reports
-installed removal candidates with dependency information; setup does not remove
-applications automatically.
+Select **Niri** at the login screen after applying the configuration, then run
+`make doctor`. The diagnostic checks desktop runtime availability without
+requiring services to be explicitly enabled. Missing requirements exit with
+status 1; session checks pending a Niri login exit with status 2.
 
-## Tailscale
+Menus, shortcut descriptions, Waybar tooltips and notifications generated by
+these scripts use English. Niri sets English message and time locales for the
+applications it launches, and Waybar's calendar uses `en_US.UTF-8`. Provide that
+locale in the image. Log out and back into Niri after changing the language
+environment. Notifications from other applications use those applications'
+language settings; Mako displays the text it receives.
 
-`make setup`/`make packages` install `tailscale` through the numbered Pacman
-loop and enable/start `tailscaled.service`. This is the same installation
-method that the [official installer](https://tailscale.com/install.sh) selects
-for CachyOS. `make services` reapplies the service configuration, and
-`make doctor` checks the commands and enabled/running daemon.
+The `desktop` configuration applies user appearance preferences through
+GSettings, including dark mode, orange accent and font names. These preferences
+also affect GNOME when using the same account. GNOME display, keyboard and
+workspace panels do not configure Niri; use Niri's configuration for them.
 
-After installation, [sign in to your tailnet](https://tailscale.com/docs/install/linux):
-
-```sh
-sudo tailscale up
-```
-
-Follow the authentication URL displayed in your terminal. Setup does not
-store credentials or perform account authentication.
+Follow [desktop acceptance and recovery](docs/desktop-recovery.md) for manual
+session checks and restoring configuration backups.
 
 ## Desktop controls
 
@@ -208,7 +131,7 @@ locks before sleep. Swaylock shows the Adwaita wallpaper and a visible orange
 unlock indicator; type your password and press Enter. Caps Lock and the keyboard
 layout are shown while typing. The display wakes on activity and after suspend.
 Missing wallpaper or appearance settings fall back to a solid dark lock screen.
-Install both `swaylock` and `swayidle`, run the dotfiles task,
+With `swaylock` and `swayidle` provided by the image, apply the dotfiles,
 then **log out and back in** to start the idle daemon. `make doctor` checks the
 script links, wallpaper and running idle daemon. The wallpaper is the
 official GNOME Adwaita Dark wallpaper at
@@ -236,25 +159,17 @@ when needed, and can refresh, disconnect, or toggle Wi-Fi. It uses the installed
 NetworkManager `nmcli` and Python's standard library.
 
 `Ctrl+B` opens the Bluetooth menu in Fuzzel (also available under quick actions
-with `Super+Shift+D`). It reports an inactive Bluetooth service with the repair
-command `make services`, detects hardware blocks and can power on a soft-blocked
+with `Super+Shift+D`). It reports an inactive Bluetooth service and points to
+`systemctl status bluetooth.service` for diagnosis, detects hardware blocks and can power on a soft-blocked
 adapter, search for nearby devices, pair/connect, disconnect, and forget them.
 It uses `bluetoothctl` (BlueZ) and `rfkill`; no additional Bluetooth
 interface is needed. Pairing that requires a PIN may need an interactive
 Bluetooth agent. This menu is part of the `fuzzel` Stow package and is linked
 automatically by the dotfiles task.
 
-## Fonts
-
-The fonts task installs IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font, and
-Inter into `${XDG_DATA_HOME:-$HOME/.local/share}/fonts`. Archives are cached in
-`${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/fonts` and `fc-cache` is refreshed.
-The system manifest installs `adwaita-fonts` and `adwaita-icon-theme` for the
-desktop's native typography and icons. Nerd Fonts remain available for symbols.
-
 ## Shell
 
-`make setup` installs `zsh`, `zsh-completions`, and `starship`. Stow links
+With Zsh and Starship already available in the image, Stow links
 `~/.zshrc`, `~/.bashrc`, `~/.profile`,
 `~/.config/starship.toml` and the optional `~/.local/bin/fedora-terminal`.
 Zsh loads Starship and standard completions; Oh My Zsh, its plugins, fnm,
@@ -262,29 +177,10 @@ uv, pnpm, and zoxide are only used if already installed. The Fedora Distrobox
 aliases and tmux hook activate only in that container. No login shell is
 changed automatically; start `zsh` manually if you want to use it.
 
-## Flatpak apps (separate opt-in)
-
-Run `make flatpak` **only when you want the applications**. It does not run in
-`make setup`. The apps and extensions are listed in
-[flatpak-apps/flathub.txt](flatpak-apps/flathub.txt). It adds Flathub to the
-**user** Flatpak installation (`flatpak remote-add --user --if-not-exists`)
-and installs each ID with `flatpak install --user`; it does not use sudo or
-add a system remote. `make setup`/`make packages` install the `flatpak` command
-and configure user Flathub using
-`flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo`,
-then remove the system Flathub remote with sudo. The user remote is created
-first so a download failure leaves the system remote available. Removal uses
-no `--force`: if installed system apps/runtimes still depend on Flathub,
-Flatpak refuses removal; migrate those installations before rerunning.
-The `flatpak run com.valvesoftware.Steam` entry in the
-original list is treated as an **installation** of Steam; nothing is launched.
-If any app/extension is unavailable, the command reports the failing ID;
-rerun after resolving it. Existing user installations are skipped.
-
 ## Bootstrap
 
-The bootstrap script invokes `make setup`, including Ansible bootstrapping and
-system package installation. On CachyOS with `git` and `make` already installed:
+With the prerequisites already present, the bootstrap script clones or updates
+the repository and runs `make setup`:
 
 ```sh
 DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \

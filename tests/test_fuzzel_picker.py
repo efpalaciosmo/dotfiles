@@ -55,7 +55,7 @@ class PickerTests(unittest.TestCase):
                 self.assertEqual(picker.browse(), 0)
                 self.assertEqual(choose.call_args_list[0].args[1], ["folder/"])
                 self.assertEqual(choose.call_args_list[1].args[1],
-                                 ["..  Volver"])
+                                 ["..  Back"])
                 open_path.assert_not_called()
 
 

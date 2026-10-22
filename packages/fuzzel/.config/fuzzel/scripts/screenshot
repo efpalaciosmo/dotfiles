@@ -7,13 +7,13 @@ script_dir=${BASH_SOURCE[0]%/*}
 
 missing_commands niri || exit 1
 
-choice=$(menu "Capturas" \
-    "Seleccionar área" \
-    "Pantalla actual" \
-    "Ventana actual" || true)
+choice=$(menu "Screenshots" \
+    "Select area" \
+    "Current screen" \
+    "Current window" || true)
 
 case "$choice" in
-    "Seleccionar área") niri msg action screenshot ;;
-    "Pantalla actual") niri msg action screenshot-screen ;;
-    "Ventana actual") niri msg action screenshot-window ;;
+    "Select area") niri msg action screenshot ;;
+    "Current screen") niri msg action screenshot-screen ;;
+    "Current window") niri msg action screenshot-window ;;
 esac

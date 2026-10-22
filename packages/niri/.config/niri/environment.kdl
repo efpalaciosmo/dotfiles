@@ -1,5 +1,11 @@
 // Session identity is supplied by niri-session; toolkit backends auto-detect.
 environment {
+    // English UI and calendar text for applications launched by Niri.
+    LANG "en_US.UTF-8"
+    LANGUAGE "en_US:en"
+    LC_ALL null
+    LC_MESSAGES "en_US.UTF-8"
+    LC_TIME "en_US.UTF-8"
     EDITOR "vim"
     VISUAL "vim"
     XCURSOR_THEME "Adwaita"

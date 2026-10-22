@@ -1,4 +1,4 @@
-" Minimal Vim configuration for CachyOS.
+" Minimal Vim configuration for the desktop.
 set nocompatible
 set number relativenumber
 set scrolloff=10 sidescrolloff=10 nowrap

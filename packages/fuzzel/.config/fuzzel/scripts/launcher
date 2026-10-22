@@ -7,34 +7,34 @@ mode=${1:-drun}
 . "$script_dir/common"
 
 if [[ "$mode" == actions ]]; then
-    choice=$(menu "Acciones" \
-        "Aplicaciones" \
-        "Ventanas" \
-        "Buscar archivos" \
-        "Explorar archivos" \
-        "Comandos" \
-        "Portapapeles" \
-        "Capturas" \
+    choice=$(menu "Actions" \
+        "Applications" \
+        "Windows" \
+        "Search files" \
+        "Browse files" \
+        "Commands" \
+        "Clipboard" \
+        "Screenshots" \
         "Wi-Fi" \
-        "Conexiones" \
+        "Connections" \
         "Bluetooth" \
-        "Monitor del sistema" \
-        "Espacio en disco" \
-        "Energía" || true)
+        "System monitor" \
+        "Disk usage" \
+        "Power" || true)
     case "$choice" in
-        "Aplicaciones") mode=drun ;;
-        "Ventanas") mode=window ;;
-        "Buscar archivos") mode=recursivebrowser ;;
-        "Explorar archivos") mode=filebrowser ;;
-        "Comandos") mode=run ;;
-        "Portapapeles") exec "$script_dir/clipboard" ;;
-        "Capturas") exec "$script_dir/screenshot" ;;
+        "Applications") mode=drun ;;
+        "Windows") mode=window ;;
+        "Search files") mode=recursivebrowser ;;
+        "Browse files") mode=filebrowser ;;
+        "Commands") mode=run ;;
+        "Clipboard") exec "$script_dir/clipboard" ;;
+        "Screenshots") exec "$script_dir/screenshot" ;;
         "Wi-Fi") exec "$script_dir/wifi" ;;
-        "Conexiones") missing_commands nm-connection-editor || exit 1; exec nm-connection-editor ;;
+        "Connections") missing_commands nm-connection-editor || exit 1; exec nm-connection-editor ;;
         "Bluetooth") exec "$script_dir/bluetooth" ;;
-        "Monitor del sistema") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" monitor ;;
-        "Espacio en disco") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" disk ;;
-        "Energía") exec "$script_dir/power-menu" ;;
+        "System monitor") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" monitor ;;
+        "Disk usage") exec "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool" disk ;;
+        "Power") exec "$script_dir/power-menu" ;;
         *) exit 0 ;;
     esac
 fi
@@ -51,7 +51,7 @@ case "$mode" in
         ;;
     run)
         missing_commands fuzzel || exit 1
-        exec fuzzel --list-executables-in-path --prompt='Comandos  │  '
+        exec fuzzel --list-executables-in-path --prompt='Commands  │  '
         ;;
     *) exec "$0" drun ;;
 esac

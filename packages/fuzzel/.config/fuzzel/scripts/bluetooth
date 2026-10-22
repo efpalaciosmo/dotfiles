@@ -14,43 +14,43 @@ bluetooth_error() {
 }
 
 systemctl is-active --quiet bluetooth.service ||
-    bluetooth_error "El servicio Bluetooth no está activo. Ejecuta make services en el repositorio dotfiles."
+    bluetooth_error "The Bluetooth service is inactive. Check systemctl status bluetooth.service and your distribution configuration."
 
 controller=$(bluetoothctl --timeout 5 show 2>/dev/null || true)
-[[ $controller == Controller\ * ]] || bluetooth_error "No se encontró un adaptador Bluetooth."
+[[ $controller == Controller\ * ]] || bluetooth_error "No Bluetooth adapter found."
 
 power_on() {
     if rfkill -n -o HARD list bluetooth | grep -qx blocked; then
-        bluetooth_error "Bluetooth está bloqueado por hardware. Revisa el interruptor físico o el modo avión."
+        bluetooth_error "Bluetooth is blocked by hardware. Check the physical switch or airplane mode."
     fi
     if rfkill -n -o SOFT list bluetooth | grep -qx blocked; then
         if ! rfkill unblock bluetooth >/dev/null 2>&1; then
             if ! command -v pkexec >/dev/null 2>&1 || ! pkexec rfkill unblock bluetooth; then
-                bluetooth_error "No se pudo desbloquear Bluetooth. Prueba: sudo rfkill unblock bluetooth"
+                bluetooth_error "Could not unblock Bluetooth. Try: sudo rfkill unblock bluetooth"
             fi
         fi
     fi
-    bluetoothctl power on >/dev/null 2>&1 || bluetooth_error "No se pudo encender el adaptador Bluetooth."
+    bluetoothctl power on >/dev/null 2>&1 || bluetooth_error "Could not turn on the Bluetooth adapter."
 }
 
 run_device_action() {
     local action=$1 mac=$2 label=$3
     if ! bluetoothctl --timeout 30 "$action" "$mac" >/dev/null 2>&1; then
-        bluetooth_error "No se pudo $label. Comprueba que el dispositivo esté encendido y cerca."
+        bluetooth_error "Could not $label. Check that the device is turned on and nearby."
     fi
 }
 
 while :; do
     controller=$(bluetoothctl --timeout 5 show 2>/dev/null || true)
-    [[ $controller == Controller\ * ]] || bluetooth_error "No se encontró un adaptador Bluetooth."
+    [[ $controller == Controller\ * ]] || bluetooth_error "No Bluetooth adapter found."
     if [[ $controller != *'Powered: yes'* ]]; then
-        choice=$(menu "Bluetooth" "Activar Bluetooth" || true)
-        [[ $choice == "Activar Bluetooth" ]] || exit 0
+        choice=$(menu "Bluetooth" "Turn on Bluetooth" || true)
+        [[ $choice == "Turn on Bluetooth" ]] || exit 0
         power_on
         continue
     fi
 
-    options=("Buscar dispositivos (10 s)" "Apagar Bluetooth")
+    options=("Scan for devices (10 s)" "Turn off Bluetooth")
     macs=() labels=()
     while IFS= read -r line; do
         if [[ $line =~ ^Device[[:space:]]+(([[:xdigit:]]{2}:){5}[[:xdigit:]]{2})[[:space:]]+(.+)$ ]]; then
@@ -58,11 +58,11 @@ while :; do
             name=${BASH_REMATCH[3]}
             info=$(bluetoothctl info "$mac" 2>/dev/null || true)
             if [[ $info == *'Connected: yes'* ]]; then
-                state="conectado"
+                state="connected"
             elif [[ $info == *'Paired: yes'* ]]; then
-                state="vinculado"
+                state="paired"
             else
-                state="nuevo"
+                state="new"
             fi
             labels+=("$name · $state · $mac")
             macs+=("$mac")
@@ -72,13 +72,13 @@ while :; do
 
     choice=$(menu "Bluetooth" "${options[@]}" || true)
     case "$choice" in
-        "Buscar dispositivos (10 s)")
+        "Scan for devices (10 s)")
             bluetoothctl --timeout 10 scan on >/dev/null 2>&1 || true
             bluetoothctl scan off >/dev/null 2>&1 || true
             continue
             ;;
-        "Apagar Bluetooth")
-            bluetoothctl power off >/dev/null 2>&1 || bluetooth_error "No se pudo apagar Bluetooth."
+        "Turn off Bluetooth")
+            bluetoothctl power off >/dev/null 2>&1 || bluetooth_error "Could not turn off Bluetooth."
             exit 0
             ;;
         "") exit 0 ;;
@@ -95,33 +95,33 @@ while :; do
 
     info=$(bluetoothctl info "$selected" 2>/dev/null || true)
     if [[ $info == *'Connected: yes'* ]]; then
-        action=$(menu "Conectado" "Desconectar" "Olvidar dispositivo" || true)
+        action=$(menu "Connected" "Disconnect" "Forget device" || true)
     elif [[ $info == *'Paired: yes'* ]]; then
-        action=$(menu "Vinculado" "Conectar" "Olvidar dispositivo" || true)
+        action=$(menu "Paired" "Connect" "Forget device" || true)
     else
-        action=$(menu "Nuevo" "Emparejar y conectar" || true)
+        action=$(menu "New" "Pair and connect" || true)
     fi
 
     case "$action" in
-        "Emparejar y conectar")
-            run_device_action pair "$selected" "emparejar el dispositivo"
+        "Pair and connect")
+            run_device_action pair "$selected" "pair the device"
             bluetoothctl trust "$selected" >/dev/null 2>&1 || true
-            run_device_action connect "$selected" "conectar el dispositivo"
-            notify_user "Bluetooth" "Dispositivo conectado."
+            run_device_action connect "$selected" "connect the device"
+            notify_user "Bluetooth" "Device connected."
             ;;
-        "Conectar")
-            run_device_action connect "$selected" "conectar el dispositivo"
-            notify_user "Bluetooth" "Dispositivo conectado."
+        "Connect")
+            run_device_action connect "$selected" "connect the device"
+            notify_user "Bluetooth" "Device connected."
             ;;
-        "Desconectar")
-            run_device_action disconnect "$selected" "desconectar el dispositivo"
-            notify_user "Bluetooth" "Dispositivo desconectado."
+        "Disconnect")
+            run_device_action disconnect "$selected" "disconnect the device"
+            notify_user "Bluetooth" "Device disconnected."
             ;;
-        "Olvidar dispositivo")
-            confirm=$(menu "¿Olvidar dispositivo?" "Cancelar" "Olvidar" || true)
-            [[ $confirm == Olvidar ]] || exit 0
-            run_device_action remove "$selected" "olvidar el dispositivo"
-            notify_user "Bluetooth" "Dispositivo olvidado."
+        "Forget device")
+            confirm=$(menu "Forget device?" "Cancel" "Forget" || true)
+            [[ $confirm == Forget ]] || exit 0
+            run_device_action remove "$selected" "forget the device"
+            notify_user "Bluetooth" "Device forgotten."
             ;;
     esac
     exit 0

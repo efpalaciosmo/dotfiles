@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validate the repository configuration before linking it or enabling GDM.
+# Validate the repository configuration before linking it.
 set -Eeuo pipefail
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 for package in "$@"; do

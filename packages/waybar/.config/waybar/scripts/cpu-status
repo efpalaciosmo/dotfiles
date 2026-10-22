@@ -96,11 +96,11 @@ text="  ${usage}%"
 
 tooltip="CPU: ${usage}%"
 if [[ -n "${temp:-}" ]]; then
-    tooltip+=$'\n'"Temperatura: ${temp}°C"
+    tooltip+=$'\n'"Temperature: ${temp}°C"
 fi
-tooltip+=$'\n'"Carga: ${load}"$'\n'"Encendido: ${uptime_text}"
+tooltip+=$'\n'"Load: ${load}"$'\n'"Uptime: ${uptime_text}"
 if [[ -n "$top_processes" ]]; then
-    tooltip+=$'\n\n'"Procesos con más CPU:"$'\n'"${top_processes}"
+    tooltip+=$'\n\n'"Top CPU processes:"$'\n'"${top_processes}"
 fi
 
 printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \

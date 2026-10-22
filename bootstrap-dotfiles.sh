@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Clone or update this repo, then run the Ansible setup.
+# Clone or update this repo, then validate and link user dotfiles.
 set -Eeuo pipefail
 
 DOTFILES_REPO_URL=${DOTFILES_REPO_URL:-}
@@ -9,12 +9,10 @@ log() { printf '[bootstrap] %s\n' "$*"; }
 die() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
 
 for command in git make; do
-    command -v "$command" >/dev/null 2>&1 || die "$command is required for bootstrapping; install it first with sudo pacman -Syu --needed git make"
+    command -v "$command" >/dev/null 2>&1 || die "$command is required for bootstrapping; provide it in the distribution before running bootstrap"
 done
 
 ((EUID != 0)) || die 'run bootstrap as your normal user, not root'
-[[ -r /etc/os-release ]] && grep -Eq '^ID="?cachyos"?$' /etc/os-release ||
-    die 'bootstrap installs system packages only on CachyOS; for local-only setup run the playbook with --tags local'
 
 if [[ -d "$DOTFILES_DIR/.git" ]]; then
     log "Updating $DOTFILES_DIR"
@@ -27,5 +25,5 @@ else
     git clone "$DOTFILES_REPO_URL" "$DOTFILES_DIR"
 fi
 
-log "Installing CachyOS packages, fonts and dotfiles"
+log "Validating and linking user dotfiles"
 make -C "$DOTFILES_DIR" setup

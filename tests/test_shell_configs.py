@@ -1,10 +1,8 @@
-"""The CachyOS shell package includes the opt-in Fedora container helpers."""
+"""The shell package includes the opt-in Fedora container helpers."""
 
 import tomllib
 import unittest
 from pathlib import Path
-
-import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,8 +26,8 @@ class ShellConfigTests(unittest.TestCase):
         self.assertTrue(fedora_terminal.stat().st_mode & 0o111)
 
     def test_shell_and_theme_are_both_linked_by_setup(self):
-        play = yaml.safe_load((ROOT / "setup.yml").read_text())[0]
-        packages = play["vars"]["dotfile_packages"]
+        makefile = (ROOT / "Makefile").read_text()
+        packages = makefile.split("PACKAGES :=", 1)[1].splitlines()[0].split()
         self.assertIn("shell-container", packages)
         self.assertIn("starship", packages)
         self.assertIn("starship", (ROOT / "Makefile").read_text())

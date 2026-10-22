@@ -1,4 +1,4 @@
-# ~/.bashrc - interactive Bash on CachyOS and in the Fedora Distrobox.
+# ~/.bashrc - interactive Bash on the host and in the Fedora Distrobox.
 # Interactive Bash configuration. Shared PATH and environment live in ~/.profile.
 
 [[ $- != *i* ]] && return

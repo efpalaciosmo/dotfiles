@@ -8,7 +8,7 @@ layout {
     default-column-width { proportion 0.5; }
     gaps 12
 
-    // Mod+R / Mod+Shift+R: 2/5, 1/2, 3/5, 2/3, completo.
+    // Mod+R / Mod+Shift+R: 2/5, 1/2, 3/5, 2/3, full width.
     preset-column-widths {
         proportion 0.4
         proportion 0.5

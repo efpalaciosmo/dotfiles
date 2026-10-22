@@ -25,7 +25,7 @@ album=$(playerctl metadata album 2>/dev/null || true)
 player=$(playerctl metadata --format '{{playerName}}' 2>/dev/null || true)
 
 if [[ -z "$title" ]]; then
-    printf '{"text":"","tooltip":"Sin reproducción","class":"stopped"}\n'
+    printf '{"text":"","tooltip":"Nothing playing","class":"stopped"}\n'
     exit 0
 fi
 
@@ -33,17 +33,17 @@ case "$status" in
     Playing)
         icon=""
         class="playing"
-        state="Reproduciendo"
+        state="Playing"
         ;;
     Paused)
         icon=""
         class="paused"
-        state="En pausa"
+        state="Paused"
         ;;
     *)
         icon=""
         class="stopped"
-        state="Detenido"
+        state="Stopped"
         ;;
 esac
 
@@ -57,7 +57,7 @@ tooltip="$state"
 [[ -n "$player" ]] && tooltip+=" · ${player}"
 tooltip+=$'\n'"${label}"
 [[ -n "$album" ]] && tooltip+=$'\n'"${album}"
-tooltip+=$'\n\n'"Clic: reproducir/pausar · clic derecho: siguiente"$'\n'"Rueda: anterior/siguiente"
+tooltip+=$'\n\n'"Click: play/pause · right-click: next"$'\n'"Scroll: previous/next"
 
 printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \
     "$(json_escape "${icon} ${label}")" \

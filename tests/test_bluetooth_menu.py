@@ -17,7 +17,7 @@ class BluetoothMenuTests(unittest.TestCase):
             stubs = {
                 "systemctl": 'exit "$SERVICE_STATUS"',
                 "notify-send": "exit 0",
-                "fuzzel": 'cat >/dev/null\nif [ ! -f "$STATE" ]; then printf "Activar Bluetooth\\n"; fi',
+                "fuzzel": 'cat >/dev/null\nif [ ! -f "$STATE" ]; then printf "Turn on Bluetooth\\n"; fi',
                 "rfkill": 'printf "%s\\n" "$*" >>"$LOG"\ncase "$*" in *HARD*) echo "$HARD";; *SOFT*) echo "$SOFT";; esac',
                 "bluetoothctl": 'printf "%s\\n" "$*" >>"$LOG"\ncase "$*" in *show*) echo "Controller 00:11:22:33:44:55"; if [ -f "$STATE" ]; then echo "Powered: yes"; else echo "Powered: no"; fi;; *"power on"*) touch "$STATE";; esac',
             }
@@ -46,11 +46,11 @@ class BluetoothMenuTests(unittest.TestCase):
     def test_hard_block_has_actionable_error(self):
         result, calls = self.run_menu(hard="blocked")
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("bloqueado por hardware", result.stderr)
+        self.assertIn("blocked by hardware", result.stderr)
         self.assertNotIn("power on", calls)
 
-    def test_inactive_service_reports_workflow_repair_before_dbus_calls(self):
+    def test_inactive_service_reports_distribution_diagnostic_before_dbus_calls(self):
         result, calls = self.run_menu(service="3")
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("make services", result.stderr)
+        self.assertIn("systemctl status bluetooth.service", result.stderr)
         self.assertEqual(calls, "")

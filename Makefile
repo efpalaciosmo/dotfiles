@@ -1,8 +1,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-ANSIBLE_VENV ?= $(CURDIR)/.venv
-TEST_PYTHON = $(if $(wildcard $(ANSIBLE_VENV)/bin/python),$(ANSIBLE_VENV)/bin/python,python3)
+TEST_PYTHON ?= python3
 
 PACKAGES := git shell-container starship vi kitty niri waybar mako fuzzel desktop
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
@@ -12,47 +11,20 @@ SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
 PYTHON_FILES := $(wildcard scripts/*.py) packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
 
-.PHONY: help setup local packages services libvirt audit fonts dotfiles stow flatpak check doctor verify
+.PHONY: help setup local dotfiles stow check doctor verify
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-setup: ## Run the full Ansible playbook (CachyOS only)
-	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml
+setup: check ## Validate and link dotfiles for the current user
+	@$(MAKE) --no-print-directory dotfiles
 
-local: ## Run Ansible fonts, dotfiles and checks without system packages
-	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook -i localhost, setup.yml --tags local
+local: setup ## Alias for setup
 
-packages: ## Upgrade/install packages, configure Flathub and services (CachyOS only)
-	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml --tags packages
-
-services: ## Enable required system and user units (run make packages first)
-	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml --tags services
-
-libvirt: ## Configure libvirt access, modular sockets and default NAT
-	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh system
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook --ask-become-pass -i localhost, setup.yml --tags libvirt
-
-audit: ## Read-only package, dependency, hardware, boot and session inspection
-	@bash scripts/audit.sh
-
-fonts: ## Install the configured user-local fonts with Ansible
-	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook -i localhost, setup.yml --tags fonts
-
-dotfiles: ## Link every dotfile package with Ansible and GNU Stow
-	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook -i localhost, setup.yml --tags dotfiles
+dotfiles: ## Link selected dotfile packages with GNU Stow and back up conflicts
+	@bash scripts/apply-dotfiles.sh $(PACKAGES)
 
 stow: dotfiles ## Alias for dotfiles
-
-flatpak: ## Install Flathub apps for this user (not part of setup)
-	@ANSIBLE_VENV="$(ANSIBLE_VENV)" bash scripts/ensure-ansible.sh
-	@source "$(ANSIBLE_VENV)/bin/activate" && ansible-playbook -i localhost, flatpak.yml
 
 check: ## Run non-mutating repository syntax checks
 	@for file in $(SCRIPT_FILES) packages/shell-container/.bashrc packages/shell-container/.profile packages/shell-container/.local/bin/fedora-terminal; do bash -n "$$file" || exit 1; done
@@ -65,7 +37,7 @@ check: ## Run non-mutating repository syntax checks
 	@if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config=packages/fuzzel/.config/fuzzel/fuzzel.ini; fi
 	@if command -v vim >/dev/null 2>&1; then \
 		output=$$(mktemp); \
-		vim -Nu packages/vi/.vimrc --not-a-term -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \
+		vim -Nu packages/vi/.vimrc -i NONE -es -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \
 		grep -Eq '^[[:space:]]*number[[:space:]]*$$' "$$output" && \
 		grep -Eq '^[[:space:]]*relativenumber[[:space:]]*$$' "$$output" && \
 		grep -q 'shiftwidth=4' "$$output"; result=$$?; \

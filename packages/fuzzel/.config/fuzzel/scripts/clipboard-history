@@ -55,7 +55,7 @@ def main():
         elif action == "list":
             for ident, mime, data in db.execute("SELECT id, mime, data FROM items ORDER BY id DESC"):
                 if mime == "image/png":
-                    preview = f"Imagen PNG ({(len(data) + 1023) // 1024} KiB)"
+                    preview = f"PNG image ({(len(data) + 1023) // 1024} KiB)"
                 else:
                     preview = data.decode("utf-8", "replace").replace("\n", " ").replace("\t", " ")
                     preview = "".join(ch if ch.isprintable() else " " for ch in preview)

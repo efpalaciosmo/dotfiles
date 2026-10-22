@@ -7,24 +7,24 @@ script_dir=${BASH_SOURCE[0]%/*}
 
 missing_commands fuzzel wl-copy python3 || exit 1
 history="$script_dir/clipboard-history"
-clear_label="Borrar historial"
+clear_label="Clear history"
 
 if [[ "${1:-}" == --clear ]]; then
     "$history" clear
-    notify_user "Portapapeles" "Historial borrado"
+    notify_user "Clipboard" "History cleared"
     exit 0
 fi
 
 choice=$({ printf '%s\n' "$clear_label"; "$history" list; } |
     fuzzel --dmenu --only-match --no-sort --cache=/dev/null \
-        --prompt='Portapapeles  │  ' --width=44 --lines=10 --minimal-lines || true)
+        --prompt='Clipboard  │  ' --width=44 --lines=10 --minimal-lines || true)
 [[ -n "$choice" ]] || exit 0
 
 if [[ "$choice" == "$clear_label" ]]; then
-    confirm_choice=$(menu "¿Borrar historial?" "Cancelar" "Borrar" || true)
-    [[ "$confirm_choice" == Borrar ]] || exit 0
+    confirm_choice=$(menu "Clear history?" "Cancel" "Clear" || true)
+    [[ "$confirm_choice" == Clear ]] || exit 0
     "$history" clear
-    notify_user "Portapapeles" "Historial borrado"
+    notify_user "Clipboard" "History cleared"
 elif [[ "$choice" =~ ^([0-9]+)[[:space:]] ]]; then
     id=${BASH_REMATCH[1]}
     mime=$("$history" mime "$id")
