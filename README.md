@@ -1,116 +1,119 @@
 # Fedora Distrobox Dotfiles
 
-Ansible installs packages from the official Fedora repositories, configures
-user-local tools, and links configuration files with GNU Stow.
-
-## Prerequisites
-
-Run the setup in a Fedora Distrobox with passwordless `sudo`. VS Code's
-integrated terminal can inherit `no_new_privs` from Electron, preventing
-privilege escalation even inside Distrobox. The managed VS Code terminal
-profile starts a fresh Distrobox shell through the user service manager so
-`sudo` works without disabling VS Code's sandbox. Open a **new** terminal
-after applying the dotfiles; existing terminals keep their original flag.
-Check from the terminal where you intend to run `make`:
-
-```sh
-sudo -n true
-grep NoNewPrivs /proc/self/status # must report 0
-```
-
-The local Ansible virtualenv uses Python 3.14. `make` recreates an existing
-virtualenv made with another Python version. Run the setup inside the Fedora
-Distrobox (`distrobox enter fedora`). Ansible's local modules also use Python
-3.14; dnf runs through its CLI because Fedora 45's `python3-libdnf5` bindings
-are installed for the container's default Python 3.15 instead.
+Bash installs packages from the official Fedora repositories, configures
+user-local tools and links configuration files with GNU Stow. Setup does not
+require Python or a virtual environment.
 
 ## Setup
 
-```sh
-make
-```
-
-The default setup installs missing Fedora packages with dnf (without weak dependencies),
-installs fonts, `fnm`, Node.js and pnpm, applies all Stow packages, runs syntax checks,
-and validates required commands, symbolic links, TeX resources and a LaTeX template build.
-Only DNF requires privilege escalation; Stow is installed by that DNF task.
-
-Interactive Bash sessions in the Fedora Distrobox switch to zsh, and interactive
-zsh sessions attach to the `fedora` tmux session automatically. Detach with
-`Ctrl-Space d`; shells inside tmux and non-interactive commands do not attach
-again. Neovim, tmux, Starship and btop use the Adwaita Dark palette.
-
-For a non-mutating preview:
+Run inside Fedora Workstation or a Fedora container, such as
+`distrobox enter fedora`, with working passwordless `sudo`:
 
 ```sh
-DRY_RUN=1 make
+sudo -n true
+make setup
 ```
+
+The default setup installs missing Fedora packages without weak dependencies,
+installs fnm, Node.js and pnpm, installs fonts, applies Stow packages, checks
+scripts and validates commands, links, TeX resources and a LaTeX template build.
+Syntax and lint checks run before setup changes anything. Only DNF requires
+privilege escalation. Setup stops on the first failed step;
+fix the error and rerun it.
+
+Preview without installing, downloading, backing up or linking anything:
+
+```sh
+DRY_RUN=1 make setup
+```
+
+Stow simulates packages without conflicts. For packages with conflicts, the
+preview reports the backups and linking that would occur.
 
 ## Commands
 
 ```sh
-make setup       # full Fedora setup and validation
-make packages    # install packages from Fedora repositories
+make setup       # full setup and validation (also the default target)
+make packages    # install missing Fedora packages
 make fonts       # install pinned user-local fonts
-make fnm         # install fnm, the configured Node.js LTS release and pnpm
-make dotfiles    # apply packages with GNU Stow
+make fnm         # install fnm, Node.js LTS and pnpm
+make shell-check # test interactive Bash → zsh → Starship startup
+make dotfiles    # back up conflicts and link configuration with GNU Stow
 make stow        # alias for make dotfiles
-make check       # Ansible syntax checks and ansible-lint when available
-make doctor      # validate required commands and managed links
-make verify      # checks plus obsolete-tooling guard
+make doctor      # validate commands, links and TeX resources; build LaTeX template
+make check       # Bash syntax checks and ShellCheck when installed
+make test        # offline regression and startup tests (requires installed tools)
+make verify      # syntax checks and obsolete-tooling guard
 ```
 
-## Package Policy
+Package lists, required and optional commands, upstream versions and font
+checksums live in `scripts/config.sh`. Setup functions live in
+`scripts/setup.sh`. Individual install targets assume their tools have already
+been installed with `make packages`.
 
-System packages come only from Fedora repositories. The main groups are:
+## Package policy
 
-- GCC, glibc headers, CMake, Ninja, pkg-config, GDB and clangd/clang-format for C.
-- `uv` for Python; `fnm` supplies Node.js and npm installs pnpm for JS/TS.
-- A focused TeX Live set for mathematical writing and Beamer presentations:
-  AMS packages, `mathtools`, `biblatex`/`biber`, `latexmk`, pdfLaTeX,
+System packages come from Fedora repositories, except Starship, which uses
+the `atim/starship` COPR repository recommended by its upstream Fedora guide.
+Setup enables that repository when Starship is missing, then installs it with
+DNF. Setup installs `dnf5-plugins` first if the COPR plugin is missing. The main groups are:
+
+- GCC, glibc headers, CMake, Ninja, pkg-config, GDB and clang tools for C.
+- `uv` for Python development; fnm supplies Node.js, and npm installs pnpm.
+- A focused TeX Live set for mathematical writing and Beamer presentations,
+  including AMS packages, mathtools, biblatex/biber, latexmk, pdfLaTeX,
   XeLaTeX and LuaLaTeX.
-- ShellCheck for shell scripts.
-- GNU Stow and common shell, archive, Git and terminal utilities.
-
-Fedora's `ncurses-term` provides terminfo entries for terminal applications.
+- Starship, GNU Stow, ShellCheck and common shell, archive, Git and terminal utilities.
 
 Desktop, Wayland, audio, Bluetooth and network-management packages are left to
-the host and are not installed inside the container. User fonts, MIME
-associations and VS Code settings remain managed for applications installed
-from the container.
+the host. This repository does not install a container engine or container
+tooling. Fedora's `ncurses-term` supplies terminal terminfo entries.
 
-The repository does not install a container engine or container tooling.
+Lazygit, yazi, resvg, opencode and Harlequin remain optional because
+they are not supplied by the enabled official Fedora repositories. Neovim
+requires 0.12+ (available in Fedora 45). Add document-specific TeX packages to
+`FEDORA_PACKAGES` in `scripts/config.sh`.
 
-Starship, lazygit, yazi, resvg, opencode and Harlequin remain optional because
-they are not supplied by the enabled official Fedora repositories. The
-Neovim configuration requires 0.12+ (available in Fedora 45). Add any
-thesis-specific TeX packages to `fedora_packages` in `group_vars/all.yml` if
-your document uses packages beyond the included mathematical and Beamer set.
+Upstream downloads are limited to checksum-verified font archives (IBM Plex Mono
+Nerd Font, JetBrains Mono Nerd Font and Inter), a checksum-verified fnm release,
+Node.js installed by fnm, and pnpm installed by npm. Downloads are cached under
+`${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles`; completed fonts use installation
+markers to avoid extracting the same version again.
 
-The only upstream downloads automated by Ansible are:
-
-- IBM Plex Mono Nerd Font, JetBrains Mono Nerd Font and Inter.
-- A pinned `fnm` release and the configured Node.js LTS release.
-- pnpm via npm in that Node.js installation.
-
-Neovim configures Python (basedpyright and Ruff), JS/TS (vtsls) and C (clangd).
-Mason supplies the Python and JS/TS language servers; Fedora supplies clangd.
-
-The managed MIME associations expect Zen Browser, GNOME Papers and the Claude
-URL handler to be installed separately.
-
-## Stow Packages
+## Dotfiles
 
 Configuration is linked from `packages/` with `stow --no-folding`:
 
 - `git`, `shell-container`, `starship`, `nvim-vm`
-- `btop`, `tmux`, `opencode`
-- `xdg` for `mimeapps.list`
-- `vscode` for portable VS Code settings
+- `btop`, `opencode`
+- `xdg` for MIME associations and the Papers desktop entry
 
-Existing conflicting files are moved to a timestamped directory under
-`~/.dotfiles-backup/` before Stow creates links. Generated application state,
-credentials, histories, caches, databases and package locks are not managed.
+Conflicts, including broken links, move to a timestamped directory under
+`~/.dotfiles-backup/<timestamp>-<pid>/` before Stow creates links. Backup paths
+mirror the original paths under your home directory (for example, `.bashrc`
+or `.config/nvim/init.lua`). Backup directories are private to your user, and
+an existing backup is never overwritten. These are backups of conflicts;
+files already linked to this checkout do not create redundant backups. Conflicting parent files or
+directory symlinks are backed up before creating directories. Generated state,
+credentials, caches, databases and package locks are ignored. Doctor verifies
+that managed links resolve to files in this checkout. It also tests interactive
+Bash → zsh → Starship startup in a temporary home directory and renders the
+configured prompt. Startup checks time out after 30 seconds and preserve
+diagnostics when they fail.
+
+To restore a file, remove only its managed symlink, then move the matching
+file from the backup directory to its original path. Backups are retained
+until you remove them.
+
+Interactive Bash sessions in the Fedora Distrobox switch directly to zsh.
+Non-interactive commands stay in their original shell. Open a new terminal
+or run `exec zsh -l` after updating. Neovim, Starship and btop use the Adwaita
+Dark palette. Ctrl-h/j/k/l in Neovim navigate its splits.
+
+Neovim configures Python (basedpyright and Ruff), JS/TS (vtsls) and C (clangd).
+Mason supplies the Python and JS/TS language servers; Fedora supplies clangd.
+The MIME associations expect Zen Browser, GNOME Papers and the Claude URL
+handler to be installed separately.
 
 ## Bootstrap
 
@@ -122,6 +125,6 @@ DOTFILES_DIR="$HOME/Projects/dotfiles" \
 bash bootstrap-dotfiles.sh
 ```
 
-The bootstrap installs only Git, Make and Python 3.14 when missing, clones or
-updates the repository, and runs `make`. All other Fedora packages, including
-GNU Stow, are listed once in `fedora_packages` in `group_vars/all.yml`.
+Bootstrap installs only Git and Make when missing, clones or updates the
+repository and runs `make`. All other Fedora packages, including GNU Stow,
+are listed in `scripts/config.sh`.

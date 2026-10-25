@@ -1,70 +1,50 @@
-SHELL := /bin/sh
+SHELL := /bin/bash
 .DEFAULT_GOAL := setup
+export DRY_RUN
 
-VENV := $(CURDIR)/.venv
-PYTHON := python3.14
-PIP := $(VENV)/bin/pip
-ANSIBLE_PLAYBOOK := $(VENV)/bin/ansible-playbook
-VENV_STAMP := $(VENV)/.requirements-installed
-INV := $(CURDIR)/inventory.ini
-CHECK := $(if $(filter 1,$(DRY_RUN)),--check,)
-
-.PHONY: help setup venv packages fonts fnm dotfiles stow doctor check verify
+.PHONY: help setup packages fonts fnm dotfiles stow doctor check verify test shell-check
 
 help: ## List available targets
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort \
-		| awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-setup: venv ## Install Fedora packages, apply dotfiles, and validate
-	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml $(CHECK)
-	@$(MAKE) verify
+setup: verify ## Install Fedora packages, tools, fonts and dotfiles, then validate
+	@bash scripts/setup.sh setup
 	@if [ "$(DRY_RUN)" != "1" ]; then $(MAKE) doctor; fi
 
-venv: requirements-ansible.txt ## Create the local Ansible virtualenv
-	@command -v $(PYTHON) >/dev/null 2>&1 \
-		|| { echo >&2 "[venv] $(PYTHON) is required; run bootstrap-dotfiles.sh first."; exit 1; }
-	@set -e; \
-		if ! "$(VENV)/bin/python" --version >/dev/null 2>&1 \
-			|| [ "$$("$(VENV)/bin/python" -c 'import sys; print(sys.version_info[:2])')" != "$$($(PYTHON) -c 'import sys; print(sys.version_info[:2])')" ] \
-			|| ! "$(ANSIBLE_PLAYBOOK)" --version >/dev/null 2>&1; then \
-			echo "[venv] (re)creating $(VENV)"; \
-			rm -rf "$(VENV)"; \
-			$(PYTHON) -m venv "$(VENV)"; \
-		fi
-	@if [ ! -f "$(VENV_STAMP)" ] || [ requirements-ansible.txt -nt "$(VENV_STAMP)" ]; then \
-		"$(PIP)" install --upgrade pip >/dev/null; \
-		"$(PIP)" install -r requirements-ansible.txt; \
-		touch "$(VENV_STAMP)"; \
-	fi
-	@mkdir -p "$(CURDIR)/.ansible/tmp"
-	@test -f "$(INV)" || cp inventory.ini.example "$(INV)"
+packages: ## Install missing packages from Fedora repositories
+	@bash scripts/setup.sh packages
 
-packages: venv ## Install packages from Fedora repositories with dnf
-	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags packages $(CHECK)
+fonts: ## Install pinned user-local fonts
+	@bash scripts/setup.sh fonts
 
-fonts: venv ## Install user-local fonts
-	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags fonts $(CHECK)
+fnm: ## Install fnm, Node.js LTS and pnpm
+	@bash scripts/setup.sh fnm
 
-fnm: venv ## Install fnm and the configured Node.js LTS release
-	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags fnm $(CHECK)
-
-dotfiles: venv ## Apply dotfiles with the preinstalled GNU Stow
-	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --tags dotfiles $(CHECK)
+dotfiles: ## Back up conflicts and link dotfiles with GNU Stow
+	@bash scripts/setup.sh dotfiles
 
 stow: dotfiles ## Alias for make dotfiles
 
-doctor: venv ## Show command and dotfile diagnostics
-	@"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook-doctor.yml
+doctor: ## Validate commands, managed links and LaTeX resources
+	@bash scripts/setup.sh doctor
 
-check: venv ## Ansible syntax-check (+ ansible-lint if installed)
-	@set -e; \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook.yml --syntax-check; \
-		"$(ANSIBLE_PLAYBOOK)" -i "$(INV)" playbook-doctor.yml --syntax-check; \
-		if command -v ansible-lint >/dev/null 2>&1; then ansible-lint -q .; fi
+check: ## Check Bash syntax and run ShellCheck when installed
+	@bash -n packages/shell-container/.profile
+	@bash -n packages/shell-container/.bashrc
+	@if command -v zsh >/dev/null 2>&1; then zsh -n packages/shell-container/.zshrc; fi
+	@bash -n bootstrap-dotfiles.sh
+	@for script in scripts/*.sh tests/*.sh; do bash -n "$$script" || exit; done
+	@if command -v shellcheck >/dev/null 2>&1; then shellcheck -x bootstrap-dotfiles.sh packages/shell-container/.profile scripts/*.sh tests/*.sh; fi
+
+shell-check: ## Test interactive Bash, zsh and Starship startup
+	@bash scripts/check-shell.sh
+
+test: check ## Run isolated Bash regression and shell startup tests
+	@bash tests/setup-test.sh
+	@bash scripts/check-shell.sh
 
 verify: check ## Check syntax and guard against obsolete tooling
-	@old='br''ew|st''own'; \
-		files='Makefile playbook.yml playbook-doctor.yml bootstrap-dotfiles.sh tasks roles group_vars packages README.md'; \
-		! grep -R -n -I -i -E "(^|[^[:alnum:]_-])($$old)([^[:alnum:]_-]|$$)" $$files \
-		|| (echo >&2 "verify: obsolete tooling reference found"; exit 1)
+	@old='br''ew|st''own|an''sible'; \
+		! grep -R -n -I -i -E "(^|[^[:alnum:]_-])($$old)([^[:alnum:]_-]|$$)" Makefile bootstrap-dotfiles.sh scripts packages README.md \
+		|| { echo >&2 "verify: obsolete tooling reference found"; exit 1; }
 	@echo "verify: OK"

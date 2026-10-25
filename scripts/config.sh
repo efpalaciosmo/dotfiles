@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+# Package policy and pinned upstream assets. Sourced by setup.sh.
+STOW_PACKAGES=(
+  git
+  shell-container
+  starship
+  nvim-vm
+  btop
+  opencode
+  xdg
+)
+
+FEDORA_PACKAGES=(
+  dnf5-plugins
+  util-linux
+  starship
+  git
+  gh
+  curl
+  make
+  stow
+  unzip
+  xz
+  7zip
+  neovim
+  bash-completion
+  zsh
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+  jq
+  cmake
+  ninja-build
+  pkgconf-pkg-config
+  gcc
+  glibc-devel
+  clang-tools-extra
+  gdb
+  tree
+  fd-find
+  ripgrep
+  fzf
+  bat
+  btop
+  zoxide
+  duf
+  ncdu
+  fastfetch
+  ncurses-term
+  ShellCheck
+  uv
+  octave
+  octave-image
+  octave-statistics
+  octave-signal
+  octave-specfun
+  texlive-scheme-basic
+  texlive-beamer
+  texlive-amsmath
+  texlive-amscls
+  texlive-booktabs
+  texlive-enumitem
+  texlive-caption
+  texlive-listings
+  texlive-amsfonts
+  texlive-mathtools
+  texlive-eepic
+  texlive-geometry
+  texlive-microtype
+  texlive-setspace
+  texlive-threeparttable
+  texlive-lm
+  texlive-biblatex
+  texlive-csquotes
+  biber
+  latexmk
+  texlive-xetex
+  texlive-luatex
+  fontconfig
+)
+
+EXPECTED_COMMANDS=(
+  script
+  timeout
+  starship
+  bash
+  zsh
+  git
+  gh
+  make
+  stow
+  nvim
+  curl
+  unzip
+  xz
+  7z
+  jq
+  cmake
+  ctest
+  ninja
+  pkg-config
+  gcc
+  clangd
+  clang-format
+  clang-tidy
+  gdb
+  tree
+  fd
+  rg
+  fzf
+  bat
+  btop
+  zoxide
+  duf
+  ncdu
+  fastfetch
+  infocmp
+  tic
+  shellcheck
+  uv
+  fnm
+  node
+  pnpm
+  pdflatex
+  xelatex
+  lualatex
+  latexmk
+  bibtex
+  biber
+  kpsewhich
+)
+
+OPTIONAL_COMMANDS=(
+  lazygit
+  yazi
+  resvg
+  opencode
+  harlequin
+)
+
+FNM_VERSION=v1.38.1
+NODE_VERSION=24
+PNPM_VERSION=10
+FONT_VERSION=v3.4.0
+# archive|subdirectory|version|sha256|url
+FONTS=(
+  'IBMPlexMono.tar.xz|IBMPlexMono|v3.4.0|95e6ecaa5dfb9a96f27a6b6edc7be396fb6df30bc311a6f7e15cad56a30051c2|https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/IBMPlexMono.tar.xz'
+  'JetBrainsMono.tar.xz|JetBrainsMono|v3.4.0|ef552a3e638f25125c6ad4c51176a6adcdce295ab1d2ffacf0db060caf8c1582|https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/JetBrainsMono.tar.xz'
+  'Inter-4.1.zip|Inter|v4.1|9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e|https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip'
+)
+DOTFILES_IGNORE='(^|/)(\.git|\.gitkeep|\.DS_Store|README\.md|README|node_modules|auth\.json|.*\.db(-.*)?|.*\.sqlite(-.*)?|.*\.log|.*\.backup.*|package-lock\.json)$'
+

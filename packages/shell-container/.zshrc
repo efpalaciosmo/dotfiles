@@ -6,8 +6,15 @@ if [ -f "$HOME/.profile" ]; then
 fi
 
 if command -v fnm >/dev/null 2>&1; then
-  eval "$(fnm env --use-on-cd --shell zsh)"
-  fnm use >/dev/null 2>&1
+  if _fnm_env=$(fnm env --use-on-cd --shell zsh 2>/dev/null); then
+    eval "$_fnm_env"
+    fnm use >/dev/null 2>&1
+  elif _fnm_node=$(fnm exec --using=default node -p 'process.execPath' 2>/dev/null); then
+    # Restricted terminals may not permit fnm's runtime symlink; use Node directly.
+    PATH="${_fnm_node%/*}:$PATH"
+    export PATH
+  fi
+  unset _fnm_env _fnm_node
 fi
 
 export HISTFILE="$HOME/.zsh_history"
@@ -61,10 +68,6 @@ if command -v pnpm >/dev/null 2>&1; then
   alias npx="pnpm dlx"
 fi
 
-if command -v starship >/dev/null 2>&1; then
-  eval "$(starship init zsh)"
-fi
-
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"
 fi
@@ -89,8 +92,14 @@ if ((!$+functions[_zsh_highlight])) && [ -r /usr/share/zsh-syntax-highlighting/z
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
-# Attach one session per container; panes already inside tmux do not reattach.
-if [[ ${CONTAINER_ID:-} == fedora && -z ${TMUX:-} && -z ${ZSH_EXECUTION_STRING:-} && -o interactive && -t 0 && -t 1 ]] \
-    && command -v tmux >/dev/null 2>&1; then
-  tmux new-session -A -s fedora
+# Initialize the prompt after other plugins have finished configuring the shell.
+if command -v starship >/dev/null 2>&1; then
+  if _starship_init=$(starship init zsh); then
+    eval "$_starship_init"
+  else
+    print -u2 -- '[dotfiles] Starship initialization failed; run starship init zsh for details.'
+  fi
+  unset _starship_init
+else
+  print -u2 -- '[dotfiles] Starship is missing from PATH; run make packages in this container.'
 fi

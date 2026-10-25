@@ -1,4 +1,5 @@
 # ~/.profile - Fedora dotfiles
+# shellcheck shell=sh
 # POSIX-compatible environment loaded by login shells and sourced from
 # .zshrc/.bashrc. Shell-specific hooks live in those rc files.
 
@@ -18,7 +19,10 @@ PNPM_HOME="$HOME/.local/share/pnpm"
 _prepend_path "$PNPM_HOME/bin"
 export PNPM_HOME
 
-export PATH="$PATH:/opt/Sidra"
+case ":$PATH:" in
+  *:/opt/Sidra:*) ;;
+  *) PATH="$PATH:/opt/Sidra" ;;
+esac
 
 export PATH
 

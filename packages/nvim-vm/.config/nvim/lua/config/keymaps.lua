@@ -42,21 +42,10 @@ end, { desc = "Delete other buffers" })
 -- ============================================================================
 -- Windows / splits
 -- ============================================================================
-local tmux_directions = { h = "L", j = "D", k = "U", l = "R" }
-
-local function navigate_window(direction)
-  local current = vim.api.nvim_get_current_win()
-  vim.cmd("wincmd " .. direction)
-
-  if current == vim.api.nvim_get_current_win() and vim.env.TMUX and vim.fn.executable("tmux") == 1 then
-    vim.fn.system({ "tmux", "select-pane", "-" .. tmux_directions[direction] })
-  end
-end
-
-map("n", "<C-h>", function() navigate_window("h") end, { desc = "Window/tmux pane left" })
-map("n", "<C-j>", function() navigate_window("j") end, { desc = "Window/tmux pane down" })
-map("n", "<C-k>", function() navigate_window("k") end, { desc = "Window/tmux pane up" })
-map("n", "<C-l>", function() navigate_window("l") end, { desc = "Window/tmux pane right" })
+map("n", "<C-h>", "<cmd>wincmd h<cr>", { desc = "Window left" })
+map("n", "<C-j>", "<cmd>wincmd j<cr>", { desc = "Window down" })
+map("n", "<C-k>", "<cmd>wincmd k<cr>", { desc = "Window up" })
+map("n", "<C-l>", "<cmd>wincmd l<cr>", { desc = "Window right" })
 
 map("n", "<leader>sv", "<cmd>vsplit<cr>", { desc = "Split vertical" })
 map("n", "<leader>sh", "<cmd>split<cr>", { desc = "Split horizontal" })

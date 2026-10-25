@@ -3,9 +3,13 @@
 
 [[ $- != *i* ]] && return
 
+if [ -f "$HOME/.profile" ]; then
+    . "$HOME/.profile"
+fi
+
 # Distrobox may launch Bash even when the container user's login shell is zsh.
-# Keep non-interactive commands and Bash inside tmux untouched.
-if [[ ${CONTAINER_ID:-} == fedora && -z ${TMUX:-} && -z ${BASH_EXECUTION_STRING:-} && -t 0 && -t 1 ]] \
+# Only switch real interactive terminals; leave scripted commands in Bash.
+if [[ ${CONTAINER_ID:-} == fedora && -z ${BASH_EXECUTION_STRING:-} && -t 0 && -t 1 ]] \
     && command -v zsh >/dev/null 2>&1; then
     exec zsh -l
 fi
@@ -14,13 +18,16 @@ if [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
 
-if [ -f "$HOME/.profile" ]; then
-    . "$HOME/.profile"
-fi
-
 if command -v fnm >/dev/null 2>&1; then
-    eval "$(fnm env --use-on-cd --shell bash)"
+  if _fnm_env=$(fnm env --use-on-cd --shell bash 2>/dev/null); then
+    eval "$_fnm_env"
     fnm use >/dev/null 2>&1
+  elif _fnm_node=$(fnm exec --using=default node -p 'process.execPath' 2>/dev/null); then
+    # Restricted terminals may not permit fnm's runtime symlink; use Node directly.
+    PATH="${_fnm_node%/*}:$PATH"
+    export PATH
+  fi
+  unset _fnm_env _fnm_node
 fi
 
 if command -v nvim >/dev/null 2>&1; then

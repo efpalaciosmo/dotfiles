@@ -33,7 +33,6 @@ ensure_bootstrap_tools() {
 	local packages=()
 	command -v git >/dev/null 2>&1 || packages+=("git")
 	command -v make >/dev/null 2>&1 || packages+=("make")
-	command -v python3.14 >/dev/null 2>&1 || packages+=("python3.14")
 
 	if ((${#packages[@]} > 0)); then
 		log "Installing bootstrap packages with dnf: ${packages[*]}"
@@ -47,7 +46,6 @@ ensure_bootstrap_tools() {
 
 	command -v git >/dev/null 2>&1 || die "git is unavailable after dnf bootstrap"
 	command -v make >/dev/null 2>&1 || die "make is unavailable after dnf bootstrap"
-	command -v python3.14 >/dev/null 2>&1 || die "python3.14 is unavailable after dnf bootstrap"
 }
 
 clone_or_update() {

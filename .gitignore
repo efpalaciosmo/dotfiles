@@ -15,9 +15,6 @@ __pycache__/
 # Markers and caches written by helpers
 .dotfiles-installed-*
 node_modules/
-.venv/
-.ansible/
-inventory.ini
 auth.json
 *.db
 *.db-*
