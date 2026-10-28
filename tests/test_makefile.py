@@ -18,8 +18,16 @@ class MakefileTests(unittest.TestCase):
             shutil.copyfile(ROOT / "Makefile", project / "Makefile")
             (project / "packages/fuzzel/.config/fuzzel/scripts").mkdir(parents=True)
             (project / "scripts").mkdir()
+            (project / "scripts/setup.sh").write_text(
+                'printf "installer: %s\\n" "$*" >> "$LOG"\n'
+            )
             (project / "scripts/apply-dotfiles.sh").write_text(
                 'printf "links: %s\\n" "$*" >> "$LOG"\n'
+            )
+            (project / "scripts/cachyos.py").write_text(
+                'import os, sys\n'
+                'with open(os.environ["LOG"], "a") as log:\n'
+                '    log.write("planner: " + " ".join(sys.argv[1:]) + "\\n")\n'
             )
             (project / "checks.mk").write_text(
                 'check:\n\t@echo checked >> "$(LOG)"\n'
@@ -33,13 +41,21 @@ class MakefileTests(unittest.TestCase):
             )
             return result, log.read_text().splitlines() if log.exists() else []
 
-    def test_setup_checks_before_linking_selected_configs(self):
+    def test_setup_dispatches_installer_not_personal_preferences(self):
         result, calls = self.run_setup()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(calls, ["checked", "links: niri fuzzel waybar"])
+        self.assertEqual(calls, ["installer: "])
+
+    def test_setup_has_no_feature_argument_variable(self):
+        self.assertNotIn("CACHYOS_ARGS", (ROOT / "Makefile").read_text())
+
+    def test_cachyos_preview_uses_the_same_argument_free_defaults(self):
+        result, calls = self.run_setup(target="cachyos-plan")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(calls, ["planner: plan"])
 
     def test_failed_checks_prevent_configuration_changes(self):
-        result, calls = self.run_setup(check_status=1)
+        result, calls = self.run_setup(target="local", check_status=1)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(calls, ["checked"])
 

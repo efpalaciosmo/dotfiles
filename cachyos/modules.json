@@ -1,0 +1,123 @@
+{
+  "profiles": {
+    "workstation": ["base", "desktop-common", "gnome-minimal", "niri", "hardware", "network", "power-memory", "flatpak-user", "containers", "virtualization-core", "virtualization-3d", "virtualization-arm", "containers-arm", "tailscale", "security-keys", "recovery"],
+    "desktop": ["base", "desktop-common", "gnome-minimal", "niri", "hardware", "network", "power-memory", "flatpak-user", "recovery"],
+    "complete": ["base", "desktop-common", "gnome-minimal", "niri", "hardware", "network", "power-memory", "flatpak-user", "containers", "virtualization-core", "tailscale", "security-keys", "recovery"],
+    "custom": ["base", "recovery"]
+  },
+  "launcher_exceptions": {},
+  "modules": {
+    "base": {
+      "dependencies": [],
+      "packages": ["btop", "curl", "fastfetch", "fontconfig", "git", "kmod", "make", "pciutils", "python", "stow", "usbutils", "tar", "traceroute", "unzip", "vim", "xz", "zsh", "starship", "zsh-completions", "ttf-jetbrains-mono-nerd"],
+      "files": {}, "system_units": [], "user_units": [], "launchers": ["btop.desktop"],
+      "checks": ["locale -a", "fc-list : family style", "Verify Regular, Bold, Italic and Bold Italic terminal font faces."],
+      "limitations": "No shell, prompt, locale.gen, bootloader or package-signature changes. Generate any required locales deliberately. Package removal is manual."
+    },
+    "desktop-common": {
+      "dependencies": ["base"],
+      "packages": ["adwaita-icon-theme", "adwaita-fonts", "dbus", "gdm", "gnome-control-center", "gnome-keyring", "gnome-software", "nautilus", "gvfs", "gvfs-afc", "gvfs-mtp", "gvfs-smb", "polkit", "xdg-desktop-portal", "xdg-desktop-portal-gtk", "xdg-user-dirs", "xdg-utils", "alsa-ucm-conf", "alsa-utils", "pipewire", "pipewire-alsa", "pipewire-pulse", "libpulse", "wireplumber"],
+      "files": {}, "system_units": ["gdm.service"],
+      "user_units": ["pipewire.socket", "pipewire-pulse.socket", "wireplumber.service"],
+      "launchers": ["org.gnome.Nautilus.desktop", "org.gnome.Settings.desktop", "org.gnome.Software.desktop"],
+      "checks": ["Test GDM offline, keyring PAM integration without changing PAM, and polkit authentication in both sessions.", "Test file chooser, screen sharing and GNOME Software Flatpak integration in both sessions.", "wpctl status", "pactl list short sinks", "pactl list short sources"],
+      "limitations": "User audio units are enabled globally in the user manager, never run as root services. GDM is enabled but not started. No theme or personal dotfiles are installed."
+    },
+    "gnome-minimal": {
+      "dependencies": ["desktop-common"],
+      "packages": ["gnome-backgrounds", "gnome-session", "gnome-settings-daemon", "gnome-shell", "xdg-desktop-portal-gnome"],
+      "files": {}, "system_units": [], "user_units": [], "launchers": [],
+      "checks": ["Test a complete GNOME login; inspect its application grid, portals and failed user units."],
+      "limitations": "No gnome/gnome-extra group, browser, extensions or application collection is requested. Existing applications are not removed or hidden."
+    },
+    "niri": {
+      "dependencies": ["desktop-common"],
+      "packages": ["brightnessctl", "fuzzel", "ghostty", "libnotify", "mako", "network-manager-applet", "niri", "playerctl", "swaybg", "swayidle", "swaylock", "util-linux", "waybar", "wl-clipboard", "xwayland-satellite", "zathura", "zathura-djvu", "zathura-pdf-mupdf", "polkit-gnome", "xdg-desktop-portal-gnome", "xdg-terminal-exec"],
+      "files": {"/etc/niri/config.kdl": "config/niri.kdl", "/etc/xdg/xdg-desktop-portal/niri-portals.conf": "config/niri-portals.conf", "/etc/xdg/xdg-terminals.list": "config/xdg-terminals.list"},
+      "system_units": [], "user_units": [],
+      "launchers": ["com.mitchellh.ghostty.desktop", "org.pwmt.zathura.desktop"],
+      "checks": ["niri validate --config /etc/niri/config.kdl", "Verify packaged niri.desktop launches niri-session; test Ghostty, Fuzzel, polkit and keyring.", "Test five-minute lock, ten-minute monitor blank, before-suspend lock and resume with no unlocked frame."],
+      "limitations": "User Niri configuration replaces the fallback entirely, including locking/startup. polkit-gnome explicitly supplies the selected agent; unexpected launchers are reported, not hidden."
+    },
+    "hardware": {
+      "dependencies": ["base"],
+      "packages": ["fwupd", "lm_sensors", "nvtop", "sof-firmware", "alsa-ucm-conf", "alsa-utils", "libheif", "libxcrypt-compat", "libcamera-tools", "gst-plugin-libcamera", "libimobiledevice", "libinput", "libwacom", "libratbag", "mesa", "libglvnd", "mesa-utils", "vulkan-tools", "libva-utils"],
+      "files": {}, "system_units": [], "user_units": [], "launchers": ["nvtop.desktop"],
+      "checks": ["lspci -k", "lsusb", "journalctl -k -b", "glxinfo -B", "eglinfo", "vulkaninfo --summary", "vainfo", "aplay -l", "arecord -l", "Test physical camera, microphone, tablet, phone and Wi-Fi/Bluetooth firmware."],
+      "limitations": "Detection is advisory, not hardware certification. Review selected firmware and Intel VA-API generation. NVIDIA, DKMS, OpenCL, gaming/udev rules and multilib need separate reviewed provisioning. No forced modules or driver switches."
+    },
+    "network": {
+      "dependencies": ["base"],
+      "packages": ["networkmanager", "networkmanager-openvpn", "bluez", "bluez-utils"],
+      "files": {}, "system_units": ["NetworkManager.service"], "user_units": [], "launchers": [],
+      "checks": ["nmcli device status", "nmcli connection show --active", "Test Wi-Fi, OpenVPN import and the selected firewall without provisioning credentials."],
+      "limitations": "Conflicting firewall/network services block application. No live network replacement, VPN credentials, global dnsmasq or wait-online changes. Bluetooth is hardware-detected or explicitly selected."
+    },
+    "power-memory": {
+      "dependencies": ["base"], "packages": ["zram-generator"],
+      "files": {"/etc/systemd/zram-generator.conf.d/99-cachyos-desktop.conf": "config/zram-generator.conf"},
+      "system_units": [], "user_units": [], "launchers": [],
+      "checks": ["zramctl", "swapon --show", "cat /sys/block/zram0/comp_algorithm", "Test GNOME power-profile switching and the chosen power daemon."],
+      "limitations": "Existing zram definitions or competing power managers require review. No live swap changes, disk writeback, hibernation or boot configuration changes."
+    },
+    "flatpak-user": {
+      "dependencies": ["desktop-common"], "packages": ["flatpak"],
+      "files": {"/usr/local/share/cachyos-desktop/flathub.flatpakrepo": "vendor/flathub.flatpakrepo", "/etc/systemd/user/cachyos-flathub.service": "config/cachyos-flathub.service", "/etc/systemd/user/cachyos-flathub.timer": "config/cachyos-flathub.timer"},
+      "system_units": [], "user_units": ["cachyos-flathub.timer"], "launchers": [],
+      "checks": ["flatpak remotes --user", "flatpak remotes --system", "Test offline login and later retry; confirm no apps or system remote were installed."],
+      "limitations": "The graphical-session timer runs only in user managers, not during installation. Existing remotes/apps are preserved; --if-not-exists does not replace a user's remote."
+    },
+    "containers": {
+      "dependencies": ["base"], "packages": ["podman", "distrobox", "passt", "slirp4netns", "fuse-overlayfs"],
+      "files": {}, "system_units": [], "user_units": [], "launchers": [],
+      "checks": ["podman info", "Verify non-overlapping /etc/subuid and /etc/subgid mappings and rootless networking for the intended account."],
+      "limitations": "No subordinate-ID edits, containers, images, volumes or daemon enablement. Existing data is never removed. Rootless use needs reviewed subordinate mappings."
+    },
+    "virtualization-core": {
+      "dependencies": ["base"],
+      "packages": ["qemu-system-x86", "qemu-img", "libvirt", "virt-install", "virt-manager", "dnsmasq", "edk2-ovmf", "swtpm"],
+      "files": {"/etc/polkit-1/rules.d/00-cachyos-libvirt-admin.rules": "config/libvirt-admin.rules"},
+      "system_units": ["virtqemud.socket", "virtnetworkd.socket", "virtnodedevd.socket", "virtnwfilterd.socket", "virtsecretd.socket", "virtstoraged.socket", "virtlogd.socket", "virtlockd.socket"],
+      "user_units": [], "launchers": ["virt-manager.desktop"],
+      "checks": ["qemu-system-x86_64 -accel help", "virsh -c qemu:///system net-list --all", "Test administrator authentication, /dev/kvm, UEFI, TPM and guest DHCP/DNS/HTTPS through the enabled firewall.", "Verify directory storage, firmware/TPM state and separate qemu:///session inventory."],
+      "limitations": "Existing monolithic libvirt or broad passwordless grants require manual upstream migration/review. No groups, polkit grants, networks, pools or guests are created. NAT activation and host-boot guest autostart are deliberate follow-up operations."
+    },
+    "virtualization-3d": {
+      "dependencies": ["virtualization-core"],
+      "packages": ["virglrenderer", "qemu-hw-display-virtio-gpu-gl", "qemu-hw-display-virtio-gpu-pci-gl", "qemu-hw-display-qxl", "qemu-ui-egl-headless", "qemu-ui-opengl", "qemu-ui-spice-core", "qemu-ui-spice-app", "qemu-audio-pipewire", "qemu-chardev-spice", "qemu-hw-usb-redirect"],
+      "files": {}, "system_units": [], "user_units": [], "launchers": [],
+      "checks": ["qemu-system-x86_64 -device help", "qemu-system-x86_64 -display help", "qemu-system-x86_64 -audio driver=help", "Test local SPICE/OpenGL, virtio GL/QXL, render-node access, PipeWire audio and USB redirection."],
+      "limitations": "Backend names/content are verified on target; no qemu-full, all-architecture emulators, remote storage backends or permissive device rules."
+    },
+    "virtualization-arm": {
+      "dependencies": ["virtualization-core"], "packages": ["qemu-system-aarch64", "qemu-system-arm", "qemu-system-arm-firmware", "edk2-aarch64"],
+      "files": {}, "system_units": [], "user_units": [], "launchers": [],
+      "checks": ["qemu-system-aarch64 -accel help", "qemu-system-arm -accel help", "Verify ARM32/AArch64 firmware contents and boot a deliberately supplied TCG guest."],
+      "limitations": "ARM guests use TCG on x86_64; no guests or disks are downloaded/created."
+    },
+    "containers-arm": {
+      "dependencies": ["containers"], "packages": ["qemu-user-static"],
+      "files": {"/etc/binfmt.d/cachyos-arm.conf": "config/arm-binfmt.conf"},
+      "system_units": [], "user_units": [], "launchers": [],
+      "checks": ["Verify /proc/sys/fs/binfmt_misc registers only the reviewed ARM/AArch64 emulators after deliberate reboot; test a user-supplied ARM image."],
+      "limitations": "Only explicit ARM magic entries are managed. Any package-supplied additional registrations block application; no live binfmt restart or image download."
+    },
+    "tailscale": {
+      "dependencies": ["base"], "packages": ["tailscale"], "files": {},
+      "system_units": ["tailscaled.service"], "user_units": [], "launchers": [],
+      "checks": ["systemctl status tailscaled.service", "Authenticate with tailscale up only when deliberately requested."],
+      "limitations": "No authentication, credentials or tailnet configuration."
+    },
+    "security-keys": {
+      "dependencies": ["base"], "packages": ["pam-u2f", "yubico-pam"], "files": {},
+      "system_units": [], "user_units": [], "launchers": [],
+      "checks": ["command -v pamu2fcfg", "Test the physical key separately without locking out a recovery account."],
+      "limitations": "No PAM changes, enrollment or keys."
+    },
+    "recovery": {
+      "dependencies": ["base"], "packages": [], "files": {}, "system_units": [], "user_units": [], "launchers": [],
+      "checks": ["Test external backup restoration, rescue boot, a fallback kernel and initramfs regeneration for the actual boot tooling.", "Test failed-upgrade recovery and Secure Boot separately. Record kernel, package versions, hardware and results."],
+      "limitations": "Application requires an external recovery record, not an assumed snapshot. No automatic snapshots, boot changes, rollback, package removal or reboot."
+    }
+  }
+}

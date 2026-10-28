@@ -1,26 +1,61 @@
-# Niri desktop dotfiles
+# Niri desktop dotfiles and CachyOS post-install
 
-User configuration for a custom bootc distribution with GNOME and Niri.
-The bootc image owns packages, fonts, system services and desktop sessions.
-This repository manages the configuration of Niri, Fuzzel, Waybar, Mako,
-Kitty, GTK, Swaylock and Zathura, plus the existing shell, Starship, Vim and Git
-settings. It does not install software, download fonts or configure Flatpak
-remotes.
+Install a minimal CachyOS base, then run **`make setup`** from this clone as your
+normal user. That is the desktop installation entry point; you do not need to
+run a separate installer command or prepare a JSON configuration file.
 
-## Usage
+## CachyOS: minimal base → `make setup`
 
-Run from your clone as your normal user:
+1. Install a supported **minimal CachyOS x86_64** system with working networking,
+   Git, Make and a regular account authorized to use sudo. Have this repository
+   available on that system. No GNOME/Niri desktop preset is needed.
+2. Run:
 
 ```sh
 make setup
 ```
 
-This runs the repository checks, validates Niri and Fuzzel, backs up conflicting
+Setup bootstraps Python if missing, runs repository checks, detects hardware,
+preserves an existing firewall/power stack where possible, shows the signed
+repository installation plan, asks for sudo and installs the fixed **workstation**
+defaults: GNOME + Niri in GDM, Ghostty, desktop/hardware/network/audio/power tools,
+per-user Flathub, Podman/Distrobox, x86 virtualization with 3D/SPICE/PipeWire/USB
+backends, ARM guests and ARM container emulation, Tailscale and security-key
+tools. These are included by default, not a feature menu. It enables the required
+services; no browser, extensions, Flatpak apps, guest images or containers are
+preinstalled.
+
+There are interactive review/safety questions, including recording actual tested
+backup/recovery evidence in the command itself. Setup does not invent passing
+tests, overwrite conflicting configuration, authenticate Tailscale, change PAM,
+link personal dotfiles or reboot. Reboot deliberately when ready, then select
+Niri or GNOME in GDM. Intel VA-API generation and unsupported/ambiguous hardware
+may require an explicit choice; hardware and recovery still need real testing.
+
+No profile, module-selection flags or Make parameters are required or accepted
+by the setup entry point. `make cachyos-plan` previews the same fixed package
+selection without installing anything. Modules are internal organization for
+review/testing, not things you need to choose. Hardware-specific drivers and
+existing firewall/power integration are still detected rather than blindly
+installing competing implementations.
+
+See [CachyOS installation and acceptance](docs/cachyos-install.md) for the exact
+defaults, safeguards, limitations and acceptance checks.
+
+## Optional personal dotfiles / other distributions
+
+Run from your clone as your normal user:
+
+```sh
+make local
+```
+
+This separate, user-only workflow runs checks, validates Niri and Fuzzel, backs up conflicting
 user files and links the configuration with GNU Stow. It requires no sudo,
 Ansible, virtual environment or package manager.
 
 ```sh
-make local      # alias for setup
+make local      # personal dotfiles only; no software installation
 make dotfiles   # validate and link configuration without the full test suite
 make stow       # alias for dotfiles
 make check      # static checks and tests; no configuration changes
@@ -31,22 +66,26 @@ make verify     # static checks plus doctor
 Plain `make` lists the available targets. To apply only selected configurations:
 
 ```sh
-make setup PACKAGES="niri fuzzel waybar mako kitty desktop"
+make local PACKAGES="niri fuzzel waybar mako kitty desktop"
 ```
 
 The default Stow packages are `git shell-container starship vi kitty niri waybar
 mako fuzzel desktop`. These are configuration directories under `packages/`,
-not software packages to install.
+not software packages to install. This opts into the personal Kitty, theme,
+shell and Starship preferences described below; it is not part of CachyOS setup.
+On non-CachyOS systems, `make setup` retains this configuration-only behavior;
+the distribution must provide its own software and services.
 
 Before invoking Stow, the helper moves unmanaged conflicting files or links to
 sibling backups named `.bak` or `.bak.N`. Existing links into this repository
 are preserved. Only legacy Rofi and Vim links owned by this repository are
 removed during migration.
 
-## Prerequisites and sessions
+## Personal dotfile prerequisites and sessions
 
-Provide Bash, Make, Python 3.11 or newer, GNU Stow and the configured desktop
-tools in the bootc image. Cloning/updating also requires Git. `make check` uses
+For the configuration-only workflow, provide Bash, Make, Python 3.11 or newer,
+GNU Stow and the configured desktop tools through your distribution.
+Cloning/updating also requires Git. `make check` uses
 only Python's standard library; optional validators run when available.
 Applying the `niri` or `fuzzel` configuration requires the corresponding binary
 so its configuration can be validated before files are changed.

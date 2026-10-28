@@ -1,0 +1,14 @@
+[Unit]
+Description=Register Flathub for this user only (no applications)
+After=graphical-session.target
+Requisite=graphical-session.target
+PartOf=graphical-session.target
+ConditionUser=!root
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/flatpak remote-add --user --if-not-exists flathub /usr/local/share/cachyos-desktop/flathub.flatpakrepo
+Restart=on-failure
+RestartSec=60s
+TimeoutStartSec=45s

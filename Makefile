@@ -11,15 +11,16 @@ SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
 PYTHON_FILES := $(wildcard scripts/*.py) packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
 
-.PHONY: help setup local dotfiles stow check doctor verify
+.PHONY: help setup local dotfiles stow check doctor verify cachyos-plan
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-setup: check ## Validate and link dotfiles for the current user
-	@$(MAKE) --no-print-directory dotfiles
+setup: ## Install the CachyOS desktop/tools; on other systems apply local dotfiles
+	@bash scripts/setup.sh
 
-local: setup ## Alias for setup
+local: check ## Validate and link personal dotfiles only (no package installation)
+	@$(MAKE) --no-print-directory dotfiles
 
 dotfiles: ## Link selected dotfile packages with GNU Stow and back up conflicts
 	@bash scripts/apply-dotfiles.sh $(PACKAGES)
@@ -31,9 +32,11 @@ check: ## Run non-mutating repository syntax checks
 	@if command -v zsh >/dev/null 2>&1; then zsh -n packages/shell-container/.zshrc; fi
 	@python3 -c 'import pathlib, tomllib; tomllib.loads(pathlib.Path("packages/starship/.config/starship.toml").read_text())'
 	@python3 -m json.tool packages/waybar/.config/waybar/config.jsonc >/dev/null
+	@python3 -m json.tool cachyos/modules.json >/dev/null
 	@python3 -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text()) for p in "$(PYTHON_FILES)".split()]'
 	@PYTHONDONTWRITEBYTECODE=1 "$(TEST_PYTHON)" -m unittest discover -s tests -p 'test_*.py'
 	@if command -v niri >/dev/null 2>&1; then niri validate --config packages/niri/.config/niri/config.kdl; fi
+	@if command -v niri >/dev/null 2>&1; then niri validate --config cachyos/config/niri.kdl; fi
 	@if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config=packages/fuzzel/.config/fuzzel/fuzzel.ini; fi
 	@if command -v vim >/dev/null 2>&1; then \
 		output=$$(mktemp); \
@@ -50,3 +53,6 @@ doctor: ## Validate required commands, configs, and managed links on this machin
 	@./scripts/doctor.sh $(PACKAGES)
 
 verify: check doctor ## Run static and machine-specific validation
+
+cachyos-plan: ## Preview the fixed CachyOS workstation installation (no changes)
+	@python3 scripts/cachyos.py plan

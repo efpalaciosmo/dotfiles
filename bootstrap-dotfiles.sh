@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Clone or update this repo, then validate and link user dotfiles.
+# Clone or update this repo, then run the platform-aware setup entry point.
 set -Eeuo pipefail
 
 DOTFILES_REPO_URL=${DOTFILES_REPO_URL:-}
@@ -25,5 +25,5 @@ else
     git clone "$DOTFILES_REPO_URL" "$DOTFILES_DIR"
 fi
 
-log "Validating and linking user dotfiles"
+log "Running setup (CachyOS installation or local dotfiles, depending on the host)"
 make -C "$DOTFILES_DIR" setup

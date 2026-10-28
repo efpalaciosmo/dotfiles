@@ -1,0 +1,6 @@
+// System libvirt is host administration. Do not grant passwordless group access.
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.libvirt.unix.manage") {
+        return polkit.Result.AUTH_ADMIN;
+    }
+});
