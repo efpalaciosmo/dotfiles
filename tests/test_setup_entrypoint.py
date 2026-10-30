@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PACMAN_CONF = shutil.which("pacman-conf")
 
 
 @unittest.skipIf(os.geteuid() == 0, "normal-user orchestration is intentionally refused as root")
@@ -97,11 +98,12 @@ class SetupEntrypointTests(unittest.TestCase):
         self.assertIn("interactive", result.stderr)
         self.assertEqual(calls, [])
 
-    def bootstrap_stubs(self, policy="Required DatabaseOptional"):
+    def bootstrap_stubs(self, policy="Required DatabaseOptional", repo_policy=None, repo_status=0):
         self.stub("pacman", 'printf "pacman: %s\\n" "$*" >> "$LOG"\n')
         self.stub("systemctl", "exit 0\n")
         self.stub("pacman-conf", f'''case "$*" in
-  --repo-list) printf 'cachyos\\ncore\\n' ;;
+  --repo-list) printf 'cachyos-znver4\\ncore\\n' ;;
+  --repo*) printf '%s\\n' '{policy if repo_policy is None else repo_policy}'; exit {repo_status} ;;
   *) printf '%s\\n' '{policy}' ;;
 esac
 ''')
@@ -128,6 +130,58 @@ chmod +x "$STUBBIN/python3"
         result, calls = self.run_entrypoint(tty=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("signature", result.stderr)
+        self.assertFalse(any(call.startswith("sudo:") for call in calls))
+
+    def test_python_bootstrap_accepts_inherited_multiline_signature_policy(self):
+        policy = "PackageRequired\nPackageTrustedOnly\nDatabaseOptional\nDatabaseTrustedOnly"
+        self.bootstrap_stubs(policy, repo_policy="")
+        result, calls = self.run_entrypoint(tty=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("sudo: pacman -Syu --needed python", calls)
+
+    def test_python_bootstrap_rejects_explicit_unsafe_repository_policy(self):
+        self.bootstrap_stubs(repo_policy="PackageRequired PackageTrustAll")
+        result, calls = self.run_entrypoint(tty=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("signature", result.stderr)
+        self.assertFalse(any(call.startswith("sudo:") for call in calls))
+
+    def test_python_bootstrap_does_not_inherit_failed_repository_query(self):
+        self.bootstrap_stubs(repo_policy="", repo_status=2)
+        result, calls = self.run_entrypoint(tty=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertFalse(any(call.startswith("sudo:") for call in calls))
+
+    def test_python_bootstrap_rejects_empty_global_signature_policy(self):
+        self.bootstrap_stubs(policy="", repo_policy="")
+        result, calls = self.run_entrypoint(tty=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("signature", result.stderr)
+        self.assertFalse(any(call.startswith("sudo:") for call in calls))
+
+    def native_bootstrap_stubs(self, repo_policy=None):
+        self.bootstrap_stubs()
+        config = self.root / "pacman.conf"
+        config.write_text("[options]\nArchitecture = x86_64\nSigLevel = Required DatabaseOptional\n"
+                          "[cachyos-znver4]\n"
+                          + (f"SigLevel = {repo_policy}\n" if repo_policy else "")
+                          + "Server = https://mirror.example.invalid/$repo/$arch\n"
+                          "[core]\nServer = https://mirror.example.invalid/$repo/$arch\n")
+        self.stub("pacman-conf", f'exec "{PACMAN_CONF}" --config "{config}" "$@"\n')
+
+    @unittest.skipUnless(PACMAN_CONF, "requires native pacman-conf")
+    def test_python_bootstrap_with_real_parser_accepts_inherited_policy(self):
+        self.native_bootstrap_stubs()
+        result, calls = self.run_entrypoint(tty=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("sudo: pacman -Syu --needed python", calls)
+
+    @unittest.skipUnless(PACMAN_CONF, "requires native pacman-conf")
+    def test_python_bootstrap_with_real_parser_rejects_unsafe_override(self):
+        self.native_bootstrap_stubs(repo_policy="TrustAll")
+        result, calls = self.run_entrypoint(tty=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("cachyos-znver4", result.stderr)
         self.assertFalse(any(call.startswith("sudo:") for call in calls))
 
 

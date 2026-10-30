@@ -129,8 +129,12 @@ login shell or personal dotfiles.
    It **does not refresh sync databases**. Stale databases may require a
    deliberate supported full upgrade before planning again, never `pacman -Sy`
    followed by selective installs. Repository metadata is not a package lock.
-   Protected configuration is inspected through sudo automatically; no system
-   configuration is written by that preflight.
+    Protected configuration is inspected through sudo automatically; no system
+    configuration is written by that preflight. An empty repository `SigLevel`
+    from `pacman-conf --repo cachyos-znver4 SigLevel` normally means inheritance
+    from `[options]`, not disabled verification. Both the Python installer and
+    its shell bootstrap validate that inherited global policy; no repository
+    override needs to be added. Plans record raw and effective policies.
 5. The reviewed preparation plan enables `en_US.UTF-8` in the existing
    `/etc/locale.gen` and runs `locale-gen` when needed, preserving other enabled
    locales. It does not change `/etc/locale.conf` or the global language. The

@@ -411,15 +411,23 @@ def repository_check(packages):
         raise Refusal("Expected configured CachyOS signed repositories")
     policies = {"global": run("pacman-conf", "SigLevel")}
     policies.update({repo: run("pacman-conf", "--repo", repo, "SigLevel") for repo in repos})
-    for repo, policy in policies.items():
+    # pacman-conf emits nothing for ALPM_SIG_USE_DEFAULT, not the inherited
+    # global policy. Only a successful empty query means inheritance; run()
+    # still refuses query errors and explicit unsafe overrides stay unchanged.
+    effective_policies = {repo: policy if policy.strip() else policies["global"]
+                          for repo, policy in policies.items()}
+    for repo, policy in effective_policies.items():
         tokens = policy.split()
         if (not ({"Required", "PackageRequired"} & set(tokens)) or
                 {"Never", "Optional", "PackageNever", "PackageOptional", "TrustAll", "PackageTrustAll"} & set(tokens)):
-            raise Refusal(f"Package signatures must be required and trusted for {repo}: {policy}")
+            detail = " ".join(tokens) or "(empty SigLevel)"
+            raise Refusal(f"Package signatures must be required and trusted for {repo}: {detail}; "
+                          "review SigLevel in /etc/pacman.conf and its Include files")
     # No sync refresh here: only the explicit full -Syu transaction refreshes DBs.
     available = run("pacman", "-Si", *packages)
     return {
-        "repositories": repos, "signature_policy": policies, "package_metadata": available,
+        "repositories": repos, "signature_policy": policies,
+        "effective_signature_policy": effective_policies, "package_metadata": available,
         "servers": {repo: run("pacman-conf", "--repo", repo, "Server") for repo in repos},
         "dependency_transaction": run("pacman", "-Sp", "--needed", "--print-format", "%n %v %r", *packages),
         "upgrade_transaction": run("pacman", "-Sup", "--print-format", "%n %v %r"),

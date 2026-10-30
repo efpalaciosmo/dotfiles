@@ -385,6 +385,58 @@ class SafetyTests(unittest.TestCase):
         self.assertIn(("pacman", "-Si", "niri"), calls)
         self.assertNotIn("-Sy", sum((list(call) for call in calls), []))
 
+    def test_repository_check_inherits_global_signature_policy(self):
+        policy = "PackageRequired\nPackageTrustedOnly\nDatabaseOptional\nDatabaseTrustedOnly"
+        def fake_run(*args, **kwargs):
+            if "--repo-list" in args:
+                return "cachyos-znver4\ncachyos-core-znver4\ncore\nextra"
+            if "SigLevel" in args:
+                return "" if "--repo" in args else policy
+            return "package data"
+        with patch.object(cachyos, "run", side_effect=fake_run):
+            provenance = cachyos.repository_check(["niri"])
+        self.assertEqual(provenance["signature_policy"]["cachyos-znver4"], "")
+        for repo in provenance["repositories"]:
+            self.assertEqual(provenance["effective_signature_policy"][repo], policy)
+
+    def test_repository_check_does_not_replace_unsafe_repo_overrides(self):
+        for policy in ("Never", "Optional", "PackageOptional", "Required TrustAll",
+                       "PackageRequired PackageTrustAll"):
+            def fake_run(*args, **kwargs):
+                if "--repo-list" in args:
+                    return "cachyos-znver4\ncore"
+                if "SigLevel" in args:
+                    return policy if "--repo" in args else "Required DatabaseOptional"
+                self.fail("Unsafe policy must fail before querying package transactions")
+            with self.subTest(policy=policy), patch.object(cachyos, "run", side_effect=fake_run):
+                with self.assertRaisesRegex(cachyos.Refusal, "cachyos-znver4"):
+                    cachyos.repository_check(["niri"])
+
+    def test_repository_check_rejects_empty_or_unsafe_global_policy(self):
+        for policy in ("", "Never", "Optional TrustAll"):
+            def fake_run(*args, **kwargs):
+                if "--repo-list" in args:
+                    return "cachyos-znver4\ncore"
+                if "SigLevel" in args:
+                    return "" if "--repo" in args else policy
+                self.fail("Unsafe policy must fail before querying package transactions")
+            with self.subTest(policy=policy), patch.object(cachyos, "run", side_effect=fake_run):
+                with self.assertRaisesRegex(cachyos.Refusal, "global"):
+                    cachyos.repository_check(["niri"])
+
+    def test_repository_query_failure_is_not_treated_as_inheritance(self):
+        def fake_run(*args, **kwargs):
+            if "--repo-list" in args:
+                return "cachyos-znver4\ncore"
+            if args == ("pacman-conf", "SigLevel"):
+                return "Required DatabaseOptional"
+            if "--repo" in args:
+                raise cachyos.Refusal("pacman-conf: could not read configuration")
+            self.fail("Failed query must stop preflight")
+        with patch.object(cachyos, "run", side_effect=fake_run):
+            with self.assertRaisesRegex(cachyos.Refusal, "could not read configuration"):
+                cachyos.repository_check(["niri"])
+
     def test_gdm_only_initializes_accounts_without_any_saved_session(self):
         for prop in ("Session", "XSession", "SessionType"):
             with self.subTest(prop=prop), patch.object(cachyos, "account_path", return_value="/user"), patch.object(cachyos, "run", side_effect=lambda *args: 's "gnome"' if args[-1] == prop else 's ""'), patch.object(cachyos, "mutate") as mutate, redirect_stdout(io.StringIO()):
@@ -523,6 +575,16 @@ class SetupTests(unittest.TestCase):
             cachyos.setup(cachyos.parser().parse_args(["setup"]))
         self.assertEqual([call[3] for call in self.calls], ["plan"])
         self.wizard.assert_not_called()
+
+    def test_failed_repository_review_never_attempts_installation(self):
+        self.subprocess.side_effect = None
+        self.subprocess.return_value = SimpleNamespace(returncode=1)
+        with self.assertRaisesRegex(cachyos.Refusal, "Pre-install review failed"):
+            cachyos.setup(cachyos.parser().parse_args(["setup"]))
+        self.subprocess.assert_called_once()
+        self.assertEqual(self.subprocess.call_args.args[0][3], "plan")
+        self.wizard.assert_not_called()
+        self.input.assert_not_called()
 
     def test_root_and_noninteractive_setup_cannot_install(self):
         with patch.object(cachyos.os, "geteuid", return_value=0), self.assertRaisesRegex(cachyos.Refusal, "normal user"):

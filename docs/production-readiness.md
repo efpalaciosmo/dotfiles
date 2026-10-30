@@ -13,6 +13,11 @@ until the acceptance gates below pass on the actual target.
 
 ## Corrected problems
 
+- Signature preflight rejected repositories such as `cachyos-znver4` when
+  `pacman-conf` returned an empty `SigLevel` to indicate inheritance from the
+  global policy. Earlier package/content tests missed this configuration path.
+  The installer and Python bootstrap now validate the inherited policy while
+  still refusing unsafe explicit overrides, unsafe globals and query failures.
 - Passwordless libvirt previously was explicitly forbidden. Setup now appends
   the invoking account to `libvirt` without replacing its other memberships.
   An account-specific early polkit rule allows management only for that local,
@@ -86,7 +91,17 @@ Verified:
   PNG copy/paste, both real `wl-paste` watchers, history restore with preserved
   MIME types, and **Xwayland ↔ Wayland** clipboard transfers with a focused X11
   test window. The menu selection was noninteractive; the data transfers were
-  real. This does not certify an entire physical desktop session.
+   real. This does not certify an entire physical desktop session.
+
+The signature-policy fix was separately exercised as a non-root account in a
+fresh disposable Arch container using the **real `pacman-conf` parser**, included
+configuration/mirror files and CachyOS repository names. All five native policy
+tests and thirteen shell-entrypoint tests passed, including the two native
+bootstrap cases. Fixture mirrors use `.invalid` URLs; package metadata and
+installation commands are stubbed in these tests. This confirms configuration
+inheritance and fail-closed checks, not CachyOS keyring validity or a complete
+target installation. Native parser tests skip explicitly when `pacman-conf` is
+unavailable; a passing local `make check` alone does not establish that coverage.
 
 ## Required acceptance on your machine
 

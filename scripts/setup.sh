@@ -36,11 +36,17 @@ if ! command -v python3 >/dev/null 2>&1; then
     pacman -Q cachyos-keyring >/dev/null
     mapfile -t repos < <(pacman-conf --repo-list)
     ((${#repos[@]})) || { printf 'setup: no configured repositories\n' >&2; exit 1; }
+    global_policy=$(pacman-conf SigLevel)
     for repo in '' "${repos[@]}"; do
         if [[ -n $repo ]]; then
             policy=$(pacman-conf --repo "$repo" SigLevel)
+            # Empty successful output means this repository inherits [options].
+            # A failed query exits under set -e, never falling back to defaults.
+            if [[ -z ${policy//[[:space:]]/} ]]; then
+                policy=$global_policy
+            fi
         else
-            policy=$(pacman-conf SigLevel)
+            policy=$global_policy
         fi
         required=false
         read -r -a tokens <<< "${policy//$'\n'/ }"
@@ -48,11 +54,11 @@ if ! command -v python3 >/dev/null 2>&1; then
             case $token in
                 Required|PackageRequired) required=true ;;
                 Never|Optional|PackageNever|PackageOptional|TrustAll|PackageTrustAll)
-                    printf 'setup: refusing insecure package-signature policy: %s\n' "$policy" >&2
+                    printf 'setup: refusing insecure package-signature policy for %s: %s\n' "${repo:-global}" "$policy" >&2
                     exit 1 ;;
             esac
         done
-        "$required" || { printf 'setup: package signatures must be required\n' >&2; exit 1; }
+        "$required" || { printf 'setup: package signatures must be required for %s (SigLevel: %s)\n' "${repo:-global}" "${policy:-(empty)}" >&2; exit 1; }
     done
     printf '%s\n' 'Python is needed for the installer. Bootstrap plan: sudo pacman -Syu --needed python'
     printf '%s\n' 'This is a full system upgrade. Proceed only with tested external backups, rescue and fallback boot.'
