@@ -83,7 +83,7 @@ components from the managed startup configuration.
 Static validation uses `make check`, Niri's validator, Fuzzel's validator and
 `ghostty +validate-config` when those commands are available. Linking requires
 the selected validators and checks Ghostty's bundled theme before changing files.
-For visual acceptance, inspect a real CachyOS session, reload Mako and open
+For visual acceptance, inspect a real Niri session, reload Mako and open
 ordinary libadwaita widgets without CSS overrides or forcing the style to check
 that the session preference actually reaches apps.
 Swaylock uses the same wallpaper with a visible orange unlock indicator, keyboard

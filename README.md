@@ -1,65 +1,12 @@
-# Niri desktop dotfiles and CachyOS post-install
+# Niri desktop dotfiles
 
-Install a minimal CachyOS base, then run **`make`** from this clone as your
-normal user. It installs the system and synchronizes the dotfiles; you do not need to
-run a separate installer command or prepare a JSON configuration file.
+Personal dotfiles and desktop settings only. This branch does not install software,
+configure system services or require sudo. Provide the prerequisites through your
+distribution, then run **`make`** from this clone as your normal user.
 
-## CachyOS: minimal base → `make`
+## Commands
 
-1. Install a supported **minimal CachyOS x86_64** system with working networking,
-   Git, Make and a regular account authorized to use sudo. Have this repository
-   available on that system. No GNOME/Niri desktop preset is needed.
-2. Run:
-
-```sh
-make
-```
-
-The full workflow runs `make setup` and then `make dotfiles`, sequentially even
-with `make -j`. A failed setup prevents linking. Setup bootstraps Python if missing, runs repository checks, detects hardware,
-preserves an existing firewall/power stack where possible, shows the signed
-repository installation plan, asks for sudo and installs the fixed **workstation**
-defaults: GNOME + Niri in GDM, Ghostty, desktop/hardware/network/audio/power tools,
-per-user Flathub, Podman/Distrobox, x86 virtualization with 3D/SPICE/PipeWire/USB
-backends, ARM guests and ARM container emulation, Tailscale and security-key
-tools. These are included by default, not a feature menu. It enables the required
-services for the next boot, generates `en_US.UTF-8` without changing the global
-language, and fills missing rootless Podman subordinate-ID mappings using a
-reviewed free range. No browser, extensions, Flatpak apps, guest images or containers are
-preinstalled.
-
-The invoking account joins `libvirt` and gets passwordless `qemu:///system`
-management **only from an active local desktop session**. This is root-equivalent
-access, not just permission to use KVM. Other accounts still require administrator
-authentication. A next-boot service prepares/autostarts the default NAT network,
-preserving existing XML and refusing conflicting host/VPN subnets. Reboot or log
-out completely after group changes; reopening a terminal is insufficient.
-
-There is no setup questionnaire or `INSTALL` phrase to type: only sudo authentication
-and pacman's normal transaction/provider confirmations. Existing zram configuration
-and Intel VA-API providers are kept rather than prompting or guessing. Keep external
-backups and a rescue boot option; recovery evidence is optional and never fabricated.
-Setup does not overwrite conflicting system configuration, authenticate Tailscale,
-change PAM or reboot. After setup, `make` links personal configurations and the Adwaita dark/orange
-theme with GNU Stow, backing up user-file conflicts. Reboot deliberately when ready, then select
-Niri or GNOME in GDM. Unsupported/ambiguous hardware still stops with an error;
-hardware and recovery still need real testing. Intel video decoding may need a
-generation-specific driver installed separately.
-
-No profile, module-selection flags or Make parameters are required or accepted
-by the setup entry point. `make cachyos-plan` previews the same fixed package
-selection without installing anything. Modules are internal organization for
-review/testing, not things you need to choose. Hardware-specific drivers and
-existing firewall/power integration are still detected rather than blindly
-installing competing implementations.
-
-See [CachyOS installation and acceptance](docs/cachyos-install.md) for the exact
-defaults, safeguards, limitations and acceptance checks.
-
-## Commands and configuration-only use
-
-Run from your clone as your normal user. System installation is CachyOS-only;
-other distributions can use `make dotfiles` with their own prerequisites:
+Plain `make` and `make dotfiles` apply the same configuration:
 
 ```sh
 make dotfiles
@@ -70,15 +17,13 @@ user files and links the configuration with GNU Stow. It requires no sudo,
 Ansible, virtual environment or package manager.
 
 ```sh
-make            # setup, then dotfiles: complete installation/configuration
-make setup      # CachyOS packages, system configuration and next-boot services only
+make            # apply personal dotfiles and desktop settings only
 make local      # full static checks, then dotfiles; no software installation
 make dotfiles   # validate and link configuration without the full test suite
 make stow       # alias for dotfiles
 make check      # static checks and tests; no configuration changes
 make doctor     # desktop commands, runtime integration and managed symlinks
 make verify     # static checks plus doctor
-make system-check # after reboot: packages/files, active system services and libvirt membership (sudo, read-only)
 make help       # list available targets
 ```
 
@@ -91,9 +36,8 @@ make dotfiles PACKAGES="niri fuzzel waybar mako ghostty desktop"
 The default Stow packages are `git shell-container starship vi ghostty niri waybar
 mako fuzzel desktop`. These are configuration directories under `packages/`,
 not software packages to install. They include Ghostty, its bundled Adwaita theme,
-desktop appearance, shell and Starship preferences. `make setup` alone never
-links these preferences; plain `make` does. Outside CachyOS, setup stops without
-installing or linking anything; use `make dotfiles` explicitly.
+desktop appearance, shell and Starship preferences. No software packages are
+installed by any target.
 
 Before invoking Stow, the helper moves unmanaged conflicting files or links to
 sibling backups named `.bak` or `.bak.N`. Existing links into this repository
@@ -113,9 +57,10 @@ so its configuration can be validated before files are changed.
 
 The desktop uses Niri, Waybar, Fuzzel, Mako, Ghostty, Swaybg, Swaylock, Swayidle,
 wl-clipboard, Playerctl, PipeWire/WirePlumber, NetworkManager, BlueZ, a polkit
-agent and the GNOME/GTK portals. GNOME Settings and Nautilus provide desktop
-integration. `make setup` supplies these tools, fonts and service enablement on
-CachyOS; other distributions must provide them. The desktop uses Adwaita Sans,
+agent and the GNOME/GTK portals. Niri starts the KDE polkit agent at
+`/usr/libexec/kf6/polkit-kde-authentication-agent-1`; ensure it is installed there.
+GNOME Settings and Nautilus provide desktop integration. Install the tools and
+fonts and configure their services through your distribution. The desktop uses Adwaita Sans,
 Adwaita Mono and a Nerd Font for symbols.
 
 Select **Niri** at the login screen after applying the configuration, then run
@@ -126,7 +71,7 @@ status 1; session checks pending a Niri login exit with status 2.
 Menus, shortcut descriptions, Waybar tooltips and notifications generated by
 these scripts use English. Niri sets English message and time locales for the
 applications it launches, and Waybar's calendar uses `en_US.UTF-8`. Provide that
-locale (`make setup` generates it on CachyOS). Log out and back into Niri after changing the language
+locale through your distribution. Log out and back into Niri after changing the language
 environment. Notifications from other applications use those applications'
 language settings; Mako displays the text it receives.
 
@@ -137,8 +82,6 @@ workspace panels do not configure Niri; use Niri's configuration for them.
 
 Follow [desktop acceptance and recovery](docs/desktop-recovery.md) for manual
 session checks and restoring configuration backups.
-See [production readiness](docs/production-readiness.md) for the audit evidence,
-remaining real-hardware acceptance gates and guest clipboard requirements.
 
 ## Desktop controls
 
@@ -166,7 +109,7 @@ while compositor focus and shell selections use exactly `#ff7800`.
 To reapply preferences, run `~/.local/bin/dotfiles-appearance`.
 
 See the [research and palette](docs/adwaita-theme.md). Appearance and hardware
-acceptance must be checked in the actual CachyOS desktop; static tests are not
+acceptance must be checked in the actual desktop session; static tests are not
 visual certification.
 
 Niri detects desktop monitors automatically and opens windows at half width so two
@@ -194,7 +137,7 @@ locks before sleep. Swaylock shows the Adwaita wallpaper and a visible orange
 unlock indicator; type your password and press Enter. Caps Lock and the keyboard
 layout are shown while typing. The display wakes on activity and after suspend.
 Missing wallpaper or appearance settings fall back to a solid dark lock screen.
-With `swaylock` and `swayidle` installed by setup, apply the dotfiles,
+With `swaylock` and `swayidle` installed, apply the dotfiles,
 then **log out and back in** to start the idle daemon. `make doctor` checks the
 script links, wallpaper and running idle daemon. The wallpaper is the
 official GNOME Adwaita Dark wallpaper at
@@ -239,7 +182,7 @@ automatically by the dotfiles task.
 
 ## Shell
 
-With Zsh and Starship installed by setup, Stow links
+With Zsh and Starship installed, Stow links
 `~/.zshrc`, `~/.bashrc`, `~/.profile`,
 `~/.config/starship.toml` and the optional `~/.local/bin/fedora-terminal`.
 Zsh loads Starship and standard completions; Oh My Zsh, its plugins, fnm,
@@ -250,7 +193,7 @@ changed automatically; start `zsh` manually if you want to use it.
 ## Bootstrap
 
 With the prerequisites already present, the bootstrap script clones or updates
-the repository and runs `make` (system setup followed by Stow synchronization):
+the repository and runs `make` (dotfiles and desktop settings only):
 
 ```sh
 DOTFILES_REPO_URL="https://github.com/USER/dotfiles.git" \

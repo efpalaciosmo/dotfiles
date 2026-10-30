@@ -1,4 +1,4 @@
-"""One default terminal across the installer, launcher, bindings and bar."""
+"""One default terminal across dotfiles, launcher, bindings and bar."""
 
 import os
 import subprocess
@@ -25,7 +25,7 @@ class GhosttyTests(unittest.TestCase):
         self.assertIn("ghostty", defaults)
         self.assertNotIn("kitty", defaults)
         self.assertEqual((config.parent.parent / "xdg-terminals.list").read_text(),
-                         (ROOT / "cachyos/config/xdg-terminals.list").read_text())
+                         "com.mitchellh.ghostty.desktop\n")
         self.assertIn('TERMINAL "ghostty"', (ROOT / "packages/niri/.config/niri/environment.kdl").read_text())
         self.assertIn('spawn "ghostty"', (ROOT / "packages/niri/.config/niri/keyboard.kdl").read_text())
         self.assertIn("terminal=ghostty -e", (ROOT / "packages/fuzzel/.config/fuzzel/fuzzel.ini").read_text())

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Clone or update this repo, then install the system and synchronize dotfiles.
+# Clone or update this repo, then synchronize personal dotfiles.
 set -Eeuo pipefail
 
 DOTFILES_REPO_URL=${DOTFILES_REPO_URL:-}
@@ -25,5 +25,5 @@ else
     git clone "$DOTFILES_REPO_URL" "$DOTFILES_DIR"
 fi
 
-log "Installing CachyOS packages/services and synchronizing dotfiles"
+log "Synchronizing dotfiles and desktop settings (no software installation)"
 make -C "$DOTFILES_DIR"

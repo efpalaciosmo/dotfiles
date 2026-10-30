@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Read-only desktop checks; exit bits 1=missing and 2=pending."""
 import os
-import grp
-import re
 import subprocess
 from pathlib import Path
 
@@ -67,42 +65,10 @@ class Checks:
         self.report('INFO', 'manually test file picking, screen sharing, playback, notifications and an X11 application')
         self.report('INFO', 'manually test lock, suspend/resume, phone/USB/SMB access')
 
-    def virtualization(self):
-        if not Path('/etc/systemd/system/cachyos-libvirt-network.service').is_file():
-            return
-        try:
-            group = grp.getgrnam('libvirt')
-        except KeyError:
-            self.report('MISS', 'libvirt group is missing; run make setup')
-            return
-        if group.gr_gid not in os.getgroups() and group.gr_gid != os.getgid():
-            self.report('PENDING', 'log out completely and sign in again to load libvirt group membership')
-            return
-        self.report('OK', 'current session has libvirt group membership')
-        if not os.environ.get('WAYLAND_DISPLAY') and not os.environ.get('DISPLAY'):
-            self.report('PENDING', 'check passwordless libvirt from an active local graphical login')
-            return
-        # No --allow-user-interaction: diagnosis must never open a password prompt.
-        authorized = self.command('passwordless local libvirt authorization', 'pkcheck',
-                                  '--action-id', 'org.libvirt.unix.manage', '--process', str(os.getpid()))
-        if authorized is None:
-            return
-        self.command('system VM connection (read/write authorization, read-only query)',
-                     'virsh', '--connect', 'qemu:///system', 'list', '--all')
-        self.command('next-boot NAT setup', 'systemctl', 'is-active', 'cachyos-libvirt-network.service')
-        network = self.command('default VM NAT', 'virsh', '--connect', 'qemu:///system', 'net-info', 'default')
-        if network is not None:
-            for field in ('Active', 'Autostart'):
-                if not re.search(rf'^{field}:\s+yes\s*$', network, re.M):
-                    self.report('MISS', f'default VM NAT {field.lower()} is not yes; inspect the network service journal')
-        self.report('INFO', 'boot a real KVM guest; test DHCP/DNS/HTTPS, UEFI/TPM, 3D and SPICE clipboard with guest agents')
-
-
 def main():
     checks = Checks()
     checks.hardware()
     checks.session()
-    checks.virtualization()
     return (1 if checks.missing else 0) | (2 if checks.pending else 0)
 
 

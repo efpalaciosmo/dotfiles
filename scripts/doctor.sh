@@ -14,8 +14,7 @@ for command in stow niri waybar fuzzel ghostty xdg-terminal-exec vim zsh starshi
     check_command "$command"
 done
 
-# Runtime checks belong after a deliberate reboot/login; setup enables units
-# for the next boot without interrupting the current network or session.
+# Read-only runtime checks; services are managed through the distribution.
 if command -v systemctl >/dev/null 2>&1; then
     for unit in NetworkManager.service bluetooth.service; do
         if [[ $unit == bluetooth.service ]] && ! compgen -G '/sys/class/bluetooth/hci*' >/dev/null; then
@@ -104,14 +103,11 @@ if [[ ${desktop,,} == *niri* && -n ${WAYLAND_DISPLAY:-} ]] &&
         failures=$((failures + 1))
     fi
 fi
-polkit_agent=
-for candidate in /usr/libexec/polkit-gnome-authentication-agent-1 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1; do
-    if [[ -x $candidate ]]; then polkit_agent=$candidate; break; fi
-done
-if [[ -n $polkit_agent ]]; then
-    printf 'OK   polkit-gnome agent\n'
+polkit_agent=/usr/libexec/kf6/polkit-kde-authentication-agent-1
+if [[ -x $polkit_agent ]]; then
+    printf 'OK   KDE polkit agent\n'
 else
-    printf 'MISS polkit-gnome agent\n' >&2
+    printf 'MISS KDE polkit agent (%s)\n' "$polkit_agent" >&2
     failures=$((failures + 1))
 fi
 
@@ -119,7 +115,7 @@ if command -v niri >/dev/null 2>&1; then niri validate || failures=$((failures +
 if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config="$HOME/.config/fuzzel/fuzzel.ini" || failures=$((failures + 1)); fi
 if command -v ghostty >/dev/null 2>&1; then ghostty +validate-config --config-file="$HOME/.config/ghostty/config" || failures=$((failures + 1)); fi
 if command -v locale >/dev/null 2>&1 && ! locale -a | grep -Eiq '^en_US\.(utf8|utf-8)$'; then
-    printf 'MISS en_US.UTF-8 locale (run make setup on CachyOS)\n' >&2
+    printf 'MISS en_US.UTF-8 locale (provide it through your distribution)\n' >&2
     failures=$((failures + 1))
 fi
 

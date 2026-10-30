@@ -1,9 +1,8 @@
 # Desktop acceptance and recovery
 
-Target: an installed CachyOS host with GNOME and Niri. Plain `make` installs the
-system and links user configuration; `make setup` handles packages/system
-configuration and next-boot services, while `make dotfiles` only applies Stow
-links and user appearance. Other distributions must supply their own software.
+Target: a Linux desktop with Niri and the required desktop tools installed.
+Plain `make` (or `make dotfiles`) applies Stow links and user appearance only.
+Install software and configure system services through your distribution.
 
 ## Acceptance in Niri
 
@@ -24,8 +23,7 @@ After applying the dotfiles and logging into Niri, run `make doctor` and check:
 Doctor reports missing requirements with exit code 1 and checks pending a Niri
 session with exit code 2. Absent optional Bluetooth adapters, batteries and
 backlights are informational. Missing tools or inactive desktop services should
-be addressed with the CachyOS setup/acceptance checks, not by enabling competing
-services. Setup only enables services for the next boot; reboot deliberately.
+be addressed through your distribution, without enabling competing services.
 
 ## Configuration recovery
 
@@ -45,6 +43,5 @@ managed symlink aside first so you do not overwrite the repository through it.
 The helper validates Niri, Fuzzel and Ghostty before backing up files and linking them.
 Keep the clone available: the user configuration links point into it.
 
-For system/package failures, use the tested CachyOS fallback kernel, rescue
-medium and external backup described in [the installation guide](cachyos-install.md).
+For system/package failures, use your distribution's recovery tools and external backups.
 Configuration changes can be repaired independently from system packages.

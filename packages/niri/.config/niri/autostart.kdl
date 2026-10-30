@@ -1,8 +1,7 @@
-// System packages/services are installed by make setup;
 // Niri starts these processes only inside its own session.
 spawn-at-startup "waybar"
 spawn-at-startup "mako"
-spawn-sh-at-startup "for agent in /usr/libexec/polkit-gnome-authentication-agent-1 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1; do if [ -x \"$agent\" ]; then exec \"$agent\"; fi; done"
+spawn-at-startup "/usr/libexec/kf6/polkit-kde-authentication-agent-1"
 spawn-sh-at-startup "${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/session-idle"
 spawn-sh-at-startup "swaybg -i \"${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/adwaita-dark.png\" -m fill"
 
