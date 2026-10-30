@@ -34,9 +34,16 @@ def state(scale=1.3333333730697632, transform=0):
 class MemoryPreferences:
     def __init__(self):
         self.values = {("org.gnome.settings-daemon.plugins.media-keys", "custom-keybindings", None):
-                       ["/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/personal/"]}
+                       ["/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/personal/"],
+                       (GNOME["WM_KEYBINDINGS"], "close", None): ["<Alt>F4"],
+                       (GNOME["WM_KEYBINDINGS"], "toggle-maximized", None): ["<Alt>F10"],
+                       (GNOME["WM_KEYBINDINGS"], "switch-to-workspace-1", None): ["<Super>Home"],
+                       (GNOME["MUTTER_KEYBINDINGS"], "toggle-tiled-left", None): ["<Super>Left"],
+                       (GNOME["MUTTER_KEYBINDINGS"], "toggle-tiled-right", None): ["<Super>Right"]}
 
     def get(self, schema, key, path=None):
+        if schema in (GNOME["WM_KEYBINDINGS"], GNOME["MUTTER_KEYBINDINGS"]):
+            return self.values.get((schema, key, path), [])
         return self.values[(schema, key, path)]
 
     def set(self, schema, key, value, path=None):
@@ -53,14 +60,61 @@ class GnomeTests(unittest.TestCase):
         self.assertFalse(store.get("org.gnome.mutter", "dynamic-workspaces"))
         self.assertEqual(store.get("org.gnome.desktop.wm.preferences", "num-workspaces"), 4)
         for number in range(1, 5):
-            self.assertEqual(store.get("org.gnome.desktop.wm.keybindings", f"switch-to-workspace-{number}"),
-                             [f"<Super>{number}"])
+            self.assertIn(f"<Super>{number}", store.get(GNOME["WM_KEYBINDINGS"], f"switch-to-workspace-{number}"))
             self.assertEqual(store.get("org.gnome.shell.keybindings", f"switch-to-application-{number}"), [])
             self.assertEqual(store.get("org.gnome.desktop.wm.keybindings", f"move-to-workspace-{number}"),
-                             [f"<Super><Shift>{number}"])
+                             [f"<Super><Shift>{number}", f"<Super><Control>{number}"])
+        self.assertIn("<Super>Home", store.get(GNOME["WM_KEYBINDINGS"], "switch-to-workspace-1"))
         self.assertEqual(len(store.get("org.gnome.settings-daemon.plugins.media-keys", "custom-keybindings")), 2)
         self.assertEqual(store.get(GNOME["CUSTOM_SCHEMA"], "command", GNOME["TERMINAL_PATH"]), "ghostty")
         self.assertEqual(store.get(GNOME["CUSTOM_SCHEMA"], "binding", GNOME["TERMINAL_PATH"]), "<Super>Return")
+
+    def test_niri_like_window_actions_keep_native_gnome_aliases(self):
+        store = MemoryPreferences()
+        GNOME["configure_window_shortcuts"](store)
+        for key, expected in {
+            "close": ["<Alt>F4", "<Super>q"],
+            "toggle-maximized": ["<Alt>F10", "<Super>f"],
+            "toggle-fullscreen": ["<Super><Shift>f"],
+            "move-to-center": ["<Super>c"],
+            "switch-to-workspace-right": ["<Super>u"],
+            "switch-to-workspace-left": ["<Super>i"],
+            "move-to-workspace-right": ["<Super><Control>u"],
+            "move-to-workspace-left": ["<Super><Control>i"],
+            "move-to-monitor-left": ["<Super><Control><Shift>h"],
+            "move-to-monitor-down": ["<Super><Control><Shift>j"],
+            "move-to-monitor-up": ["<Super><Control><Shift>k"],
+            "move-to-monitor-right": ["<Super><Control><Shift>l"],
+        }.items():
+            self.assertEqual(store.get(GNOME["WM_KEYBINDINGS"], key), expected, key)
+        for side, key in (("Left", "h"), ("Right", "l")):
+            self.assertEqual(store.get(GNOME["MUTTER_KEYBINDINGS"], f"toggle-tiled-{side.lower()}"),
+                             [f"<Super>{side}", f"<Super><Control>{key}"])
+
+    def test_personal_window_aliases_survive_reapplication_without_duplicates(self):
+        store = MemoryPreferences()
+        store.set(GNOME["WM_KEYBINDINGS"], "close", ["<Alt>F4", "<Super>q", "<Control><Alt>q"])
+        GNOME["configure_preferences"](store)
+        before = copy.deepcopy(store.values)
+        GNOME["configure_preferences"](store)
+        self.assertEqual(store.values, before)
+        self.assertEqual(store.get(GNOME["WM_KEYBINDINGS"], "close"),
+                         ["<Alt>F4", "<Super>q", "<Control><Alt>q"])
+        # Do not steal GNOME lock/minimize/notification or application cycling keys.
+        self.assertNotIn((GNOME["WM_KEYBINDINGS"], "minimize", None), store.values)
+        self.assertNotIn((GNOME["WM_KEYBINDINGS"], "switch-applications", None), store.values)
+        self.assertNotIn(("org.gnome.shell.keybindings", "toggle-message-tray", None), store.values)
+
+    def test_added_shortcuts_have_no_duplicate_action_assignments(self):
+        store = MemoryPreferences()
+        GNOME["configure_preferences"](store)
+        actions = {}
+        for (schema, key, _), shortcuts in store.values.items():
+            if schema not in (GNOME["WM_KEYBINDINGS"], GNOME["MUTTER_KEYBINDINGS"]):
+                continue
+            for shortcut in shortcuts:
+                self.assertNotIn(shortcut, actions, f"{shortcut}: {key} conflicts with {actions.get(shortcut)}")
+                actions[shortcut] = key
 
     def test_150_percent_preserves_resolution_refresh_transform_and_color(self):
         original = state(transform=1)

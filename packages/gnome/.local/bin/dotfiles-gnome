@@ -12,18 +12,52 @@ from pathlib import Path
 TERMINAL_PATH = "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/dotfiles-ghostty/"
 CUSTOM_SCHEMA = "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding"
 DISPLAY_INTERFACE = "org.gnome.Mutter.DisplayConfig"
+WM_KEYBINDINGS = "org.gnome.desktop.wm.keybindings"
+MUTTER_KEYBINDINGS = "org.gnome.mutter.keybindings"
+
+
+def add_shortcuts(store, schema, key, shortcuts):
+    """Add aliases without replacing native/personal bindings or duplicating them."""
+    current = store.get(schema, key)
+    combined = current + [shortcut for shortcut in shortcuts if shortcut not in current]
+    if combined != current:
+        store.set(schema, key, combined)
+
+
+def configure_window_shortcuts(store):
+    """Native GNOME equivalents; no Shell extensions or synthetic key events."""
+    for key, shortcut in {
+        "close": "<Super>q",
+        "toggle-maximized": "<Super>f",
+        "toggle-fullscreen": "<Super><Shift>f",
+        "move-to-center": "<Super>c",
+        # Niri's down/up workspace navigation maps to GNOME's right/left.
+        "switch-to-workspace-right": "<Super>u",
+        "switch-to-workspace-left": "<Super>i",
+        "move-to-workspace-right": "<Super><Control>u",
+        "move-to-workspace-left": "<Super><Control>i",
+        "move-to-monitor-left": "<Super><Control><Shift>h",
+        "move-to-monitor-down": "<Super><Control><Shift>j",
+        "move-to-monitor-up": "<Super><Control><Shift>k",
+        "move-to-monitor-right": "<Super><Control><Shift>l",
+    }.items():
+        add_shortcuts(store, WM_KEYBINDINGS, key, [shortcut])
+    # Half-screen tiling is the closest native equivalent to moving a column.
+    add_shortcuts(store, MUTTER_KEYBINDINGS, "toggle-tiled-left", ["<Super><Control>h"])
+    add_shortcuts(store, MUTTER_KEYBINDINGS, "toggle-tiled-right", ["<Super><Control>l"])
 
 
 def configure_preferences(store):
-    """Keep unrelated shortcuts; reserve Super+1–4 for fixed workspaces."""
+    """Keep unrelated shortcuts; add Niri-like controls and four workspaces."""
     store.set("org.gnome.mutter", "dynamic-workspaces", False)
     store.set("org.gnome.desktop.wm.preferences", "num-workspaces", 4)
     for number in range(1, 5):
         store.set("org.gnome.shell.keybindings", f"switch-to-application-{number}", [])
-        store.set("org.gnome.desktop.wm.keybindings", f"switch-to-workspace-{number}",
-                  [f"<Super>{number}"])
-        store.set("org.gnome.desktop.wm.keybindings", f"move-to-workspace-{number}",
-                  [f"<Super><Shift>{number}"])
+        add_shortcuts(store, WM_KEYBINDINGS, f"switch-to-workspace-{number}",
+                      [f"<Super>{number}"])
+        add_shortcuts(store, WM_KEYBINDINGS, f"move-to-workspace-{number}",
+                      [f"<Super><Shift>{number}", f"<Super><Control>{number}"])
+    configure_window_shortcuts(store)
     schema = "org.gnome.settings-daemon.plugins.media-keys"
     paths = store.get(schema, "custom-keybindings")
     if TERMINAL_PATH not in paths:
@@ -167,7 +201,7 @@ def main():
     try:
         subprocess.run([str(Path.home() / ".local/bin/dotfiles-appearance")], check=True)
         configure_preferences(Preferences(Gio, GLib))
-        print("gnome: four fixed workspaces, Super+1–4, Super+Shift+1–4 and Super+Return applied")
+        print("gnome: four fixed workspaces, Niri-like window shortcuts and Super+Return applied")
         if not args.preferences_only:
             configure_displays(Gio, GLib)
     except (OSError, RuntimeError, KeyError, GLib.Error, subprocess.SubprocessError) as error:

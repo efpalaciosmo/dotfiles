@@ -22,8 +22,11 @@ The GNOME helper intentionally uses `/usr/bin/python3`, not a virtual environmen
 - **Four fixed workspaces** instead of dynamic workspaces.
 - **Super+1–4** to switch workspaces. GNOME's conflicting application shortcuts
   for those four keys are disabled; Super+5–9 remain untouched.
-- **Super+Shift+1–4** to send the current window to a workspace.
+- **Super+Ctrl+1–4** to send the current window to a workspace, like Niri;
+  **Super+Shift+1–4** remains an alias.
 - **Super+Enter** to open Ghostty, preserving unrelated custom shortcuts.
+- Niri-like native window shortcuts, listed below. Existing shortcuts for the
+  same actions are retained without duplicate entries on repeated logins.
 - **150% per-monitor scaling** on active 4K displays, keeping their current
   resolution and refresh rate. The ASUS VG27UQ1A was detected at DP-1.
 
@@ -44,6 +47,37 @@ then run the helper again. It never replaces the experimental-features list.
 live display configuration. At a non-GNOME login the helper does nothing.
 Waybar and Mako are not started in GNOME; GNOME owns its panel, notifications,
 locking and screen sharing.
+
+## Niri-like window controls
+
+`Mod` means **Super** (the Windows key). These are native GNOME/Mutter actions;
+no Shell extension, Niri process or simulated key presses are required.
+
+| Shortcut | GNOME action |
+| --- | --- |
+| Super+Q | Close the focused window (normal application close, not force-kill). |
+| Super+F | Toggle maximized/restored. |
+| Super+Shift+F | Toggle fullscreen. |
+| Super+Ctrl+H / L | Toggle left/right half-screen tiling. Super+Left/Right still works. |
+| Super+C | Center a non-maximized window. |
+| Super+U / I | Next/previous workspace (right/left in GNOME). |
+| Super+Ctrl+U / I | Move the focused window to the next/previous workspace. |
+| Super+Ctrl+Shift+H / J / K / L | Move the focused window to a monitor left/down/up/right. |
+| Super+1–4 | Switch directly to a workspace. |
+| Super+Ctrl+1–4 or Super+Shift+1–4 | Move the focused window to a workspace. |
+| Super+Enter | Open Ghostty. |
+
+GNOME keeps Alt+F4, Alt+F10 and existing personal aliases for these actions.
+Super+L still locks, Super+H still minimizes, and Super+Tab still switches
+applications. Only the conflicting Super+1–4 application-launcher assignments
+are explicitly cleared. A manually assigned alias for another action or a
+Shell extension can still conflict; resolve those through GNOME Keyboard settings.
+
+This emulates the useful actions, not Niri's layout engine: GNOME does not
+natively provide scrolling columns, directional H/J/K/L focus, column swapping,
+preset widths, or a tiled/floating toggle. Ctrl+H/L tiles a single window rather
+than reordering columns. Monitor moves require another monitor in that direction;
+workspace navigation follows GNOME's boundary behavior, not Niri's auto-creation.
 
 ## Ghostty and theme coverage
 
