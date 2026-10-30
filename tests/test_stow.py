@@ -75,6 +75,21 @@ class StowTests(unittest.TestCase):
         self.assertEqual(config.with_name("config.ghostty.bak").read_text(), "theme = different\n")
         self.assertFalse(config.with_name("config.ghostty.bak.1").exists())
 
+    def test_ghostty_effective_configuration_is_validated_after_linking(self):
+        binary = self.root / "bin/ghostty"
+        binary.write_text('''#!/bin/sh
+if [ "$#" -eq 1 ] && [ "$1" = +validate-config ]; then
+    test -L "$HOME/.config/ghostty/config" || exit 91
+    test -L "$HOME/.config/ghostty/config.ghostty" || exit 92
+    printf 'validated\n' > "$HOME/effective-config-checked"
+    exit 23
+fi
+exit 0
+''')
+        result = self.apply("ghostty")
+        self.assertEqual(result.returncode, 23, result.stdout + result.stderr)
+        self.assertTrue((self.home / "effective-config-checked").exists())
+
     def test_unmanaged_parent_link_does_not_move_external_files(self):
         outside = self.root / "external"
         (outside / "ghostty").mkdir(parents=True)

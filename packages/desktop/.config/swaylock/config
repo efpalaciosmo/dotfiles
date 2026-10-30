@@ -1,7 +1,7 @@
 # Adwaita wallpaper is supplied by lock-screen, with a dark fallback surface.
 color=222226
-font=Adwaita Sans
-font-size=18
+font=JetBrainsMono Nerd Font
+font-size=19
 indicator-radius=72
 indicator-thickness=6
 show-keyboard-layout

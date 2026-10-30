@@ -13,8 +13,11 @@ ROOT = Path(__file__).resolve().parents[1]
 class GhosttyTests(unittest.TestCase):
     def test_theme_and_terminal_defaults_are_stow_packages(self):
         config = ROOT / "packages/ghostty/.config/ghostty/config.ghostty"
-        values = dict(line.split(" = ", 1) for line in config.read_text().splitlines() if line and not line.startswith("#"))
-        self.assertEqual(values["font-family"], "Adwaita Mono")
+        entries = [line.split(" = ", 1) for line in config.read_text().splitlines() if line and not line.startswith("#")]
+        values = dict(entries)
+        self.assertEqual([value for key, value in entries if key == "font-family"],
+                         ['""', "JetBrainsMono Nerd Font", "JetBrains Mono"])
+        self.assertEqual(values["font-size"], "15")
         theme = config.parent / "themes" / values["theme"]
         self.assertTrue(theme.is_file())
         text = theme.read_text()

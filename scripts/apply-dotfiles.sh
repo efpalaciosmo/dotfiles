@@ -111,6 +111,12 @@ for package in "$@"; do
     done < <(package_files "$repo_root/packages/$package")
 done
 
+# Validate the actual auto-loaded files as well as the repository configuration.
+# An explicit --config-file alone can hide errors in the default entry points.
+if [[ " $* " == *" ghostty "* ]]; then
+    ghostty +validate-config
+fi
+
 if [[ " $* " == *" desktop "* ]]; then
     "$repo_root/packages/desktop/.local/bin/dotfiles-appearance"
 fi

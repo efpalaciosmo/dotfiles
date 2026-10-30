@@ -18,7 +18,7 @@ The GNOME helper intentionally uses `/usr/bin/python3`, not a virtual environmen
 
 `~/.config/autostart/dotfiles-gnome.desktop` runs only in GNOME. It reapplies:
 
-- Native Adwaita Dark, orange accent, Adwaita fonts/icons/cursor.
+- Native Adwaita Dark, orange accent, Adwaita icons/cursor and JetBrains fonts.
 - **Four fixed workspaces** instead of dynamic workspaces.
 - **Super+1–4** to switch workspaces. GNOME's conflicting application shortcuts
   for those four keys are disabled; Super+5–9 remain untouched.
@@ -102,6 +102,21 @@ Check `theme`, `font-family`, `background` and selection colors. Explicit
 `--config-file` or color/theme command-line arguments in a personal launcher
 can still override defaults. See the [theme coverage audit](adwaita-theme.md#theme-coverage-audit)
 for the distinction between custom app palettes and native GNOME styling.
+
+Ghostty selects **JetBrainsMono Nerd Font at 15 points**, with JetBrains Mono as
+a fallback. GTK/GNOME interface, document and monospace preferences use the same
+Nerd Font at 12 points; window titles follow the interface font. Fontconfig
+preferences also cover generic sans-serif, serif, monospace and system-ui fonts.
+Install the Nerd Font
+through your distribution; `make doctor` reports silent font substitution.
+After linking, setup validates the actual auto-loaded Ghostty configuration too.
+If Ghostty still appears unconfigured, check that
+`~/.config/ghostty/config.ghostty`, `config` and the bundled theme point into this
+clone. If you set `XDG_CONFIG_HOME`, Ghostty reads that directory instead of
+`~/.config`; it must be the same configuration location you linked. The Stow
+workflow targets `~/.config` and does not relocate files into a custom XDG root.
+A valid unrelated config (for example, one containing only a keybinding) does
+not mean the managed font/theme is installed.
 
 ## Recovery
 

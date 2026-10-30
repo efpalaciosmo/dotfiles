@@ -14,6 +14,8 @@ for command in stow niri waybar fuzzel ghostty xdg-terminal-exec vim zsh starshi
     check_command "$command"
 done
 
+bash "$repo_root/scripts/check-fonts.sh" || failures=$((failures + 1))
+
 # Read-only runtime checks; services are managed through the distribution.
 if command -v systemctl >/dev/null 2>&1; then
     for unit in NetworkManager.service bluetooth.service; do

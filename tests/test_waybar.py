@@ -31,10 +31,11 @@ class WaybarTests(unittest.TestCase):
             return json.loads(result.stdout)
 
     def test_logical_bar_size_and_existing_background_are_preserved(self):
-        self.assertEqual(CONFIG["height"], 40)
-        self.assertEqual(CONFIG["tray"]["icon-size"], 18)
+        self.assertEqual(CONFIG["height"], 41)
+        self.assertEqual(CONFIG["tray"]["icon-size"], 19)
         style = (WAYBAR / "style.css").read_text()
-        self.assertIn("font-size: 14px", style)
+        self.assertIn("font-size: 15px", style)
+        self.assertIn('font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;', style)
         self.assertIn("@define-color surface #222226", style)
         self.assertRegex(style, r"window#waybar\s*\{\s*background: @surface;")
 

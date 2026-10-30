@@ -2,8 +2,9 @@
 theme = Adwaita Dark Orange
 # Reset the fallback list when old/new Ghostty entry points both load this file.
 font-family = ""
-font-family = Adwaita Mono
-font-size = 14
+font-family = JetBrainsMono Nerd Font
+font-family = JetBrains Mono
+font-size = 15
 background-opacity = 1
 cursor-style = bar
 window-padding-x = 12

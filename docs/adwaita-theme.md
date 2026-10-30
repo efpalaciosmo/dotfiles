@@ -17,9 +17,13 @@ The exact requested active window color is **#ff7800**.
    `#ff9c5b`. GTK apps use those native values; the shell uses `#ff7800` for
    the requested focus outline and selections. No global GTK CSS overrides
    or forced `GTK_THEME` environment variable are needed.
-3. [GNOME's Adwaita fonts](https://release.gnome.org/48/)
-   provide Adwaita Sans for the interface and Adwaita Mono for the terminal.
-   Nerd Fonts are fallback fonts for status/menu symbols.
+3. JetBrainsMono Nerd Font is the default throughout the managed desktop,
+    including GTK/GNOME interface, document and monospace text, window titles,
+    Ghostty, Fuzzel, Waybar, Mako, Swaylock and Zathura. Fontconfig aliases prefer
+    it (then JetBrains Mono) for generic families without replacing explicit
+    document fonts or disabling emoji/language fallback. The Adwaita palette,
+    icons and cursor remain unchanged; a matching palette does not require
+    Adwaita's original font families.
 4. [Niri borders](https://niri-wm.github.io/niri/Configuration:-Layout.html)
    identify focused, inactive and urgent windows. A two-pixel orange border
    and neutral inactive border preserve the existing geometry and keybindings.
@@ -30,11 +34,12 @@ The exact requested active window color is **#ff7800**.
     keeps the existing modules and controls, with neutral labels and softly
     colored icons: blue network, yellow audio, orange CPU/clock, purple memory
     and green playback. Warning/error/charging states retain distinct colors.
-    The bar is 40 logical pixels high with 14-pixel type and 18-pixel tray icons;
+    The bar is 41 logical pixels high with 15-pixel JetBrains type and 19-pixel tray icons;
     compositor scaling handles HiDPI rather than hard-coded physical pixels.
 6. Fuzzel's installed `fuzzel.ini(5)` manual supports proportional fonts and
    font fallback, RGBA colors, fixed line heights, and rounded selections.
-   The launcher uses native UI type, 32-pixel rows and an opaque popover.
+    The launcher uses 13-point JetBrains type, 36-pixel rows, ten results,
+    a 52-character width and an opaque popover with more padding.
    Search matches use readable light orange, with dark text in selected rows.
 7. [Mako's configuration reference](https://github.com/emersion/mako/blob/master/doc/mako.5.scd)
    supports alpha-composited progress indicators. A translucent orange fill
@@ -85,20 +90,32 @@ user XDG terminal list all select Ghostty.
 The managed legacy `config` includes `config.ghostty` for older Ghostty versions.
 Newer Ghostty loads the legacy file first and `config.ghostty` afterward; both
 paths are backed up and linked, preventing unmanaged newer files from overriding
-the intended theme. The font list resets before setting Adwaita Mono, so loading
+the intended theme. The font list resets before setting the JetBrains families, so loading
 both entry points does not append duplicate fallbacks.
+Applying the Ghostty package also runs `ghostty +validate-config` without an
+explicit file after linking, checking the actual default entry points rather
+than only the repository file. `make doctor` checks the effective configuration
+and verifies that fontconfig resolves the requested Nerd Font instead of silently
+falling back. Ghostty is 15 points; Fuzzel is 13 points; Waybar is 15 logical pixels.
 
 ## Theme coverage audit
 
 | Component | Theme source / limitation |
 | --- | --- |
-| GNOME + GTK/libadwaita | Supported dark preference, Adwaita icons/cursor/fonts and native orange accent via `dotfiles-appearance`; reapplied at GNOME login. |
+| GNOME + GTK/libadwaita | Supported dark preference, Adwaita icons/cursor, 12-point JetBrains fonts and native orange accent via `dotfiles-appearance`; reapplied at GNOME login. |
 | GNOME Shell | Native GNOME styling, not a separately installed custom Shell CSS theme. Its panel/overview cannot be themed by Waybar CSS. |
-| Ghostty | Bundled `Adwaita Dark Orange` terminal palette; GTK window chrome follows dark mode. |
-| Niri, Waybar, Fuzzel, Mako | Matching custom Adwaita surfaces and orange focus in their own configuration files; used only in Niri. |
-| Swaylock, Zathura, Starship, Bash | Matching configured colors; Swaylock is for Niri, not GNOME's lock screen. |
+| Ghostty | Bundled `Adwaita Dark Orange` terminal palette, 15-point JetBrainsMono Nerd Font; GTK window chrome follows dark mode. |
+| Niri, Waybar, Fuzzel, Mako | Matching custom Adwaita surfaces and orange focus; JetBrains fonts in Waybar/Fuzzel/Mako. Used only in Niri. |
+| Swaylock, Zathura, Starship, Bash | Matching configured colors; JetBrains fonts in Swaylock/Zathura, terminal font inherited by shell programs. Swaylock is for Niri, not GNOME's lock screen. |
 | Vim | Dark background and terminal palette, not a separate custom Vim colorscheme. |
 | Qt, browser content, Flatpaks and third-party apps | No universal override; apps/sandboxes must support desktop preferences or be configured individually. |
+
+`packages/desktop/.config/fontconfig/fonts.conf` provides user-level JetBrains
+defaults for sans-serif, serif, monospace and system-ui families. GTK 3/4 also
+have explicit JetBrains settings. Mako/Zathura use 12-point text; Swaylock uses
+19-point text. Make and other command-line programs use the terminal's font;
+they have no separate font preference. Apps that request explicit fonts or run
+in isolated sandboxes can still ignore the desktop defaults.
 
 This is a coordinated Adwaita Dark/orange desktop, **not one custom theme file
 applied to every application**. No global `GTK_THEME`, font DPI or toolkit scale

@@ -1,5 +1,5 @@
 # Neutral Adwaita chrome. Documents retain their original colors.
-set font "Adwaita Sans 11"
+set font "JetBrainsMono Nerd Font 12"
 set default-bg "#1d1d20"
 set default-fg "#ffffff"
 set statusbar-bg "#222226"

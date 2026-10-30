@@ -18,8 +18,8 @@
     border: none;
     border-radius: 0;
     min-height: 0;
-    font-family: "Adwaita Sans", "JetBrainsMono Nerd Font", sans-serif;
-    font-size: 14px;
+    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+    font-size: 15px;
     font-weight: 500;
     color: @text;
 }
@@ -78,7 +78,6 @@ tooltip label { padding: 8px; color: @text; }
 #privacy { color: @error; }
 #idle_inhibitor { color: @blue; }
 #idle_inhibitor.activated { color: @accent_text; background: @raised; }
-#custom-network-speed { font-family: "Adwaita Mono", "JetBrainsMono Nerd Font", monospace; }
 #custom-network-speed.disconnected { color: @error; }
 #pulseaudio.muted { color: @dim; }
 #custom-cpu, #memory { color: @text; }

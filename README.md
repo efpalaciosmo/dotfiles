@@ -68,8 +68,14 @@ wl-clipboard, Playerctl, PipeWire/WirePlumber, NetworkManager, BlueZ, a polkit
 agent and the GNOME/GTK portals. Niri starts the KDE polkit agent at
 `/usr/libexec/kf6/polkit-kde-authentication-agent-1`; ensure it is installed there.
 GNOME Settings and Nautilus provide desktop integration. Install the tools and
-fonts and configure their services through your distribution. The desktop uses Adwaita Sans,
-Adwaita Mono and a Nerd Font for symbols.
+fonts and configure their services through your distribution. **JetBrainsMono
+Nerd Font** is the desktop-wide default: GTK/GNOME interface, document and
+monospace text, window titles, Ghostty, Fuzzel, Waybar, Mako, Swaylock and Zathura.
+Fontconfig also prefers it for generic font families, with JetBrains Mono as a
+fallback. Install the Nerd Font family through your distribution so status
+symbols render as well as text. `make doctor` detects fontconfig silently
+substituting another family. Terminal programs such as Make, Vim, Bash and
+Starship inherit their font from the terminal rather than selecting one themselves.
 
 Select **Niri** at the login screen after applying the configuration, then run
 `make doctor`. The diagnostic checks desktop runtime availability without
@@ -104,7 +110,7 @@ The desktop follows vanilla **Adwaita Dark**, with the requested `#ff7800`
 active window border, tab indicator, workspace selection and launcher selection.
 Niri uses quiet gray inactive borders, 12-pixel corners and soft shadows.
 Fuzzel and Mako use Adwaita's raised `#36363a` surface; Waybar uses solid
-`#222226` chrome at 40 logical pixels high, with 14-pixel labels and larger tray
+`#222226` chrome at 41 logical pixels high, with 15-pixel JetBrains labels and 19-pixel tray
 icons. Soft blue network, yellow audio, orange CPU, purple memory and green
 playback icons add color without changing the backgrounds or coloring entire
 labels. Amber and red still communicate warnings and urgency.
@@ -113,7 +119,8 @@ Its canonical `config.ghostty` and `Adwaita Dark Orange` theme are both in the
 `ghostty` Stow package. The legacy `config` includes that same file for older
 versions; both entry points are managed and conflicting files receive backups,
 so a newer auto-created configuration cannot silently shadow the theme.
-Ghostty uses Adwaita Mono, a `#1d1d20` text surface, orange cursor
+Ghostty uses JetBrainsMono Nerd Font at 15 points (JetBrains Mono fallback),
+a `#1d1d20` text surface, orange cursor
 and selections, and the GNOME terminal palette; its GTK chrome follows dark Adwaita.
 Mako notifications use a raised Adwaita surface. Bash keeps a
 compact, colored prompt; Zsh uses the linked Starship Adwaita prompt with
@@ -121,12 +128,23 @@ orange directory accents. Vim inherits the editing
 essentials (relative numbers, four-space indentation, search and a matching
 bracket indicator) in `packages/vi/.vimrc`.
 
+Fuzzel uses 13-point JetBrains type, 36-logical-pixel rows, a 52-character width,
+ten results and increased padding. These sizes and Waybar's dimensions are
+logical; the configured 150% output scale provides the additional 4K scaling
+without global font DPI or GTK scale overrides.
+
 The `desktop` Stow package adds GTK settings, Swaylock colors and Zathura
 chrome. Linking it runs `dotfiles-appearance`, which sets GNOME's supported
-dark preference, native orange accent, Adwaita icons/cursor and Adwaita fonts.
+dark preference, native orange accent, Adwaita icons/cursor and JetBrains fonts.
 GTK/libadwaita retain their native styling; GNOME's native orange is `#ed5b00`,
 while compositor focus and shell selections use exactly `#ff7800`.
 To reapply preferences, run `~/.local/bin/dotfiles-appearance`.
+
+Default interface, document, monospace, notification and Zathura text is 12
+points; window-title settings follow the same interface font. Swaylock uses a
+19-point font. Ghostty, Fuzzel and Waybar retain their app-specific larger sizes
+listed above. Fontconfig preferences do not replace embedded PDF fonts, explicit
+website fonts or emoji/language fallback fonts.
 
 See the [research and palette](docs/adwaita-theme.md). Appearance and hardware
 acceptance must be checked in the actual desktop session; static tests are not

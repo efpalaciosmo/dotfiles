@@ -18,7 +18,7 @@ class AppearanceTests(unittest.TestCase):
             gsettings = root / "gsettings"
             gsettings.write_text('''#!/bin/sh
 case "$1" in
-    list-keys) printf 'color-scheme\ngtk-theme\nicon-theme\ncursor-theme\ncursor-size\nfont-name\nmonospace-font-name\naccent-color\n' ;;
+    list-keys) printf 'color-scheme\ngtk-theme\nicon-theme\ncursor-theme\ncursor-size\nfont-name\ndocument-font-name\nmonospace-font-name\ntitlebar-font\ntitlebar-uses-system-font\naccent-color\n' ;;
     writable) echo true ;;
     get) if [ -f "$STATE/$3" ]; then cat "$STATE/$3"; else echo unset; fi ;;
     set) printf '%s=%s\n' "$3" "$4" >> "$LOG"; if [ "$PERSIST" = yes ]; then printf '%s' "$4" > "$STATE/$3"; fi ;;
@@ -49,7 +49,10 @@ exec "$@"
         self.assertEqual(calls[0], "bus")
         self.assertIn("color-scheme='prefer-dark'", calls)
         self.assertIn("accent-color='orange'", calls)
-        self.assertIn("monospace-font-name='Adwaita Mono 11'", calls)
+        self.assertIn("monospace-font-name='JetBrainsMono Nerd Font 12'", calls)
+        self.assertIn("document-font-name='JetBrainsMono Nerd Font 12'", calls)
+        self.assertIn("titlebar-font='JetBrainsMono Nerd Font Bold 12'", calls)
+        self.assertIn("titlebar-uses-system-font=true", calls)
 
     def test_existing_session_bus_is_reused(self):
         result, calls = self.run_helper()
@@ -65,12 +68,12 @@ exec "$@"
         result, calls = self.run_helper()
         self.assertEqual(result.returncode, 0, result.stderr)
         for value in ("gtk-theme='Adwaita-dark'", "icon-theme='Adwaita'",
-                      "cursor-theme='Adwaita'", "font-name='Adwaita Sans 11'"):
+                      "cursor-theme='Adwaita'", "font-name='JetBrainsMono Nerd Font 12'"):
             self.assertIn(value, calls)
         gtk = configparser.ConfigParser()
         gtk.read(ROOT / "packages/desktop/.config/gtk-3.0/settings.ini")
         self.assertEqual(gtk["Settings"]["gtk-theme-name"], "Adwaita-dark")
-        self.assertEqual(gtk["Settings"]["gtk-font-name"], "Adwaita Sans 11")
+        self.assertEqual(gtk["Settings"]["gtk-font-name"], "JetBrainsMono Nerd Font 12")
         for file in ("packages/niri/.config/niri/layout.kdl",
                      "packages/waybar/.config/waybar/style.css",
                      "packages/ghostty/.config/ghostty/themes/Adwaita Dark Orange",

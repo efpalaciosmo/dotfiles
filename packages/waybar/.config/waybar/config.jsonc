@@ -1,7 +1,7 @@
 {
     "layer": "top",
     "position": "bottom",
-    "height": 40,
+    "height": 41,
     "spacing": 4,
     "margin-bottom": 8,
     "margin-left": 12,
@@ -37,10 +37,10 @@
         "on-scroll-up": "playerctl next",
         "on-scroll-down": "playerctl previous"
     },
-    "tray": { "icon-size": 18, "spacing": 8 },
+    "tray": { "icon-size": 19, "spacing": 8 },
     "privacy": {
         "icon-spacing": 4,
-        "icon-size": 16,
+        "icon-size": 17,
         "transition-duration": 250,
         "modules": [
             { "type": "screenshare", "tooltip": true },
