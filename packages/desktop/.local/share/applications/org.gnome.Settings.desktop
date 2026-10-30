@@ -2,10 +2,10 @@
 Name=Settings
 Comment=GNOME device and application settings
 Exec=env XDG_CURRENT_DESKTOP=GNOME gnome-control-center
+TryExec=gnome-control-center
 Icon=org.gnome.Settings
 Terminal=false
 Type=Application
 Categories=Settings;
-OnlyShowIn=niri;GNOME;
 DBusActivatable=false
 StartupNotify=true

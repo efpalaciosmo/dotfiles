@@ -9,7 +9,7 @@
   "modules": {
     "base": {
       "dependencies": [],
-      "packages": ["btop", "curl", "fastfetch", "fontconfig", "git", "glibc", "kmod", "make", "pciutils", "python", "shadow", "stow", "usbutils", "tar", "traceroute", "unzip", "vim", "xz", "zsh", "starship", "zsh-completions", "ttf-jetbrains-mono-nerd"],
+      "packages": ["btop", "curl", "fastfetch", "fontconfig", "git", "glibc", "iproute2", "kmod", "make", "pciutils", "procps-ng", "python", "shadow", "stow", "usbutils", "tar", "traceroute", "unzip", "vim", "xz", "zsh", "starship", "zsh-completions", "ttf-jetbrains-mono-nerd"],
       "files": {}, "system_units": [], "user_units": [], "launchers": ["btop.desktop"],
       "checks": ["locale -a", "fc-list : family style", "Verify Regular, Bold, Italic and Bold Italic terminal font faces."],
       "limitations": "No shell, prompt, global language, bootloader or package-signature changes. Niri preparation additively enables en_US.UTF-8 and runs locale-gen. Package removal is manual."
@@ -75,16 +75,16 @@
     },
     "virtualization-core": {
       "dependencies": ["base"],
-      "packages": ["qemu-system-x86", "qemu-img", "libvirt", "virt-install", "virt-manager", "dnsmasq", "edk2-ovmf", "swtpm"],
-      "files": {"/etc/polkit-1/rules.d/00-cachyos-libvirt-admin.rules": "config/libvirt-admin.rules"},
-      "system_units": ["virtqemud.socket", "virtnetworkd.socket", "virtnodedevd.socket", "virtnwfilterd.socket", "virtsecretd.socket", "virtstoraged.socket", "virtlogd.socket", "virtlockd.socket"],
+      "packages": ["qemu-system-x86", "qemu-img", "libvirt", "virt-install", "virt-manager", "dnsmasq", "edk2-ovmf", "swtpm", "nftables", "iptables"],
+      "files": {"/etc/polkit-1/rules.d/00-cachyos-libvirt-admin.rules": "config/libvirt-admin.rules", "/etc/systemd/system/cachyos-libvirt-network.service": "config/cachyos-libvirt-network.service", "/usr/local/libexec/cachyos-libvirt-network.py": "config/libvirt-network.py"},
+      "system_units": ["virtqemud.socket", "virtnetworkd.socket", "virtnodedevd.socket", "virtnwfilterd.socket", "virtsecretd.socket", "virtstoraged.socket", "virtlogd.socket", "virtlockd.socket", "cachyos-libvirt-network.service"],
       "user_units": [], "launchers": ["virt-manager.desktop"],
-      "checks": ["qemu-system-x86_64 -accel help", "virsh -c qemu:///system net-list --all", "Test administrator authentication, /dev/kvm, UEFI, TPM and guest DHCP/DNS/HTTPS through the enabled firewall.", "Verify directory storage, firmware/TPM state and separate qemu:///session inventory."],
-      "limitations": "Existing monolithic libvirt or broad passwordless grants require manual upstream migration/review. No groups, polkit grants, networks, pools or guests are created. NAT activation and host-boot guest autostart are deliberate follow-up operations."
+      "checks": ["qemu-system-x86_64 -accel help", "virsh -c qemu:///system net-list --all", "After a fresh local login, verify the selected user's libvirt membership and passwordless management; other users still require admin authentication.", "Test /dev/kvm, UEFI, TPM and guest DHCP/DNS/HTTPS through the enabled firewall.", "Verify directory storage, firmware/TPM state and separate qemu:///session inventory."],
+      "limitations": "The invoking regular user joins libvirt and receives local-active-session passwordless management (root-equivalent). Existing monolithic daemons, other authorization rules or other libvirt members require review. A next-boot oneshot prepares/autostarts default NAT without overwriting network XML or disabling the firewall. No guests/images/pools are created; guest autostart remains deliberate."
     },
     "virtualization-3d": {
       "dependencies": ["virtualization-core"],
-      "packages": ["virglrenderer", "qemu-hw-display-virtio-gpu-gl", "qemu-hw-display-virtio-gpu-pci-gl", "qemu-hw-display-qxl", "qemu-ui-egl-headless", "qemu-ui-opengl", "qemu-ui-spice-core", "qemu-ui-spice-app", "qemu-audio-pipewire", "qemu-chardev-spice", "qemu-hw-usb-redirect"],
+      "packages": ["virglrenderer", "qemu-hw-display-virtio-gpu", "qemu-hw-display-virtio-gpu-pci", "qemu-hw-display-virtio-gpu-gl", "qemu-hw-display-virtio-gpu-pci-gl", "qemu-hw-display-virtio-vga", "qemu-hw-display-virtio-vga-gl", "qemu-hw-display-qxl", "qemu-ui-egl-headless", "qemu-ui-opengl", "qemu-ui-spice-core", "qemu-ui-spice-app", "qemu-audio-spice", "qemu-audio-pipewire", "qemu-chardev-spice", "qemu-hw-usb-redirect"],
       "files": {}, "system_units": [], "user_units": [], "launchers": [],
       "checks": ["qemu-system-x86_64 -device help", "qemu-system-x86_64 -display help", "qemu-system-x86_64 -audio driver=help", "Test local SPICE/OpenGL, virtio GL/QXL, render-node access, PipeWire audio and USB redirection."],
       "limitations": "Backend names/content are verified on target; no qemu-full, all-architecture emulators, remote storage backends or permissive device rules."

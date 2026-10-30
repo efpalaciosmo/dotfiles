@@ -66,10 +66,14 @@ if command -v rfkill >/dev/null 2>&1; then
     fi
 fi
 
-if [[ -r /etc/pam.d/swaylock ]]; then
+pam_config=
+for candidate in /etc/pam.d/swaylock /usr/lib/pam.d/swaylock; do
+    if [[ -e $candidate ]]; then pam_config=$candidate; break; fi
+done
+if [[ -n $pam_config && -r $pam_config ]]; then
     printf 'OK   swaylock PAM configuration\n'
 else
-    printf 'MISS /etc/pam.d/swaylock (reinstall the official swaylock package)\n' >&2
+    printf 'MISS swaylock PAM configuration under /etc/pam.d or /usr/lib/pam.d (reinstall the official swaylock package)\n' >&2
     failures=$((failures + 1))
 fi
 

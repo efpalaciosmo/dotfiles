@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Virtual Machine Manager
+Comment=Manage local system virtual machines
+Exec=virt-manager --connect qemu:///system
+TryExec=virt-manager
+Icon=virt-manager
+Terminal=false
+Type=Application
+Categories=System;
+StartupNotify=true

@@ -15,6 +15,13 @@ It also additively generates `en_US.UTF-8` and fills missing rootless subordinat
 ID mappings after conflict checking. These are approved implementation updates
 to the original design below; see [the current installation guide](docs/cachyos-install.md).
 
+**Approved virtualization update:** setup now appends the invoking regular user
+to `libvirt` and renders an account-specific local-active-session passwordless
+polkit grant. This is deliberate root-equivalent host access; other accounts
+retain administrator authentication. Default NAT is prepared at the next boot
+without replacing existing network XML. This supersedes the original optional
+passwordless/manual-NAT proposal in section 8.
+
 ## 1. Goal and non-negotiable behavior
 
 Build a personal, minimal **CachyOS desktop with Niri and GNOME selectable in
@@ -398,9 +405,9 @@ splitting libvirt daemons by driver, and choosing system versus user-session VMs
 - VM features include UEFI, emulated TPM, NAT, directory/filesystem storage,
   virtio 3D, local SPICE/OpenGL, PipeWire audio, and USB redirection.
 - Prefer **modular, socket-activated libvirt**, not monolithic libvirtd.
-- Package installation must not grant passwordless system-libvirt access. Require
-  administrator authentication by default; optionally authorize one explicitly
-  selected local account through reviewed polkit/socket policy.
+- The approved workstation policy grants the invoking libvirt-group account
+  passwordless management only in an active local session, through an early
+  account-specific polkit rule. Other accounts require administrator authentication.
 - If single-account passwordless access is enabled, replacing the selected account
   must replace the previous grant. Review broader group/socket access as well;
   require a full logout/login after group changes.

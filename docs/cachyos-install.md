@@ -54,7 +54,7 @@ Plain `make setup` installs all of the following:
 | Host | Firmware/microcode/AMD or Intel userspace as detected, NetworkManager/OpenVPN, Bluetooth tools, one firewall/power stack, explicit zram policy |
 | Flatpak | Flatpak and deferred per-user Flathub registration; no apps/system remote |
 | Containers | Podman, Distrobox, rootless helpers and missing subordinate-ID mappings; ARM/AArch64 static emulation with only those binfmt registrations |
-| Virtualization | x86 KVM/QEMU, modular libvirt sockets, virt-manager, UEFI/TPM/NAT capabilities, virtio GL/QXL/EGL/SPICE/PipeWire/USB backends, ARM32/AArch64 TCG and firmware |
+| Virtualization | x86 KVM/QEMU, modular sockets, local-active passwordless access for the invoking libvirt-group account, next-boot default NAT, virt-manager, UEFI/TPM, virtio GL/QXL/EGL/SPICE/PipeWire/USB, ARM32/AArch64 TCG and firmware |
 | Other tools | Tailscale and U2F/Yubico tools; no automatic authentication, enrollment or PAM changes |
 | Recovery | Inventories, operator-provided tested backup/recovery evidence and acceptance records |
 
@@ -160,6 +160,12 @@ It verifies required installed units, packaged sessions, the polkit agent, GNOME
 Flatpak plugin, keyring PAM integration, graphics libraries and selected QEMU
 capabilities before enabling anything. Missing support stops for review; PAM,
 permissions and drivers are not patched as workarounds.
+KVM must already be available before installation: enable AMD SVM/Intel VT-x in
+firmware and verify `/dev/kvm`. The preflight refuses an unavailable KVM path
+before upgrading packages. GDM's PAM integration is checked under `/etc/pam.d`
+or, on stateless PAM packages, `/usr/lib/pam.d`, respecting `/etc` overrides.
+The GL selection includes the required non-GL virtio GPU/PCI/VGA modules as well
+as their GL variants; installing GL shared objects alone is insufficient.
 
 Managed file handling is intentionally strict:
 
@@ -173,6 +179,10 @@ Managed file handling is intentionally strict:
 - Locale/subordinate-ID preparation is additive rather than a replacement of
   entire configuration files. The plan shows before/after content, records it
   privately in the run inventory and refuses symlinks or changes since review.
+- Setup pins the reviewed system plan and preparation hash before invoking
+  apply. Changed package/file/unit/account declarations or preparation between
+  review and apply stop before the transaction instead of applying an unseen
+  plan. File contents are checked again before preparation writes.
 - A failure is **not** rolled back automatically. Packages may already have
   upgraded; inspect the saved before/after inventory and pacman log. Never
   blindly downgrade rolling-system libraries to simulate rollback.
@@ -286,12 +296,15 @@ flatpak remote-add --user --if-not-exists flathub \
   static interpreter package, which may contain other architectures, but manages
   only explicit ARM/AArch64 binfmt entries and rejects other existing QEMU
   registrations. It never installs the all-architecture binfmt preset package.
-- **Libvirt:** system management uses an early managed polkit rule requiring
-  administrator authentication, not a libvirt-group/passwordless grant. Existing
-  local grants, earlier rules, custom socket policy and monolithic/remote units
-  stop for review. Installation does not offer a passwordless-account shortcut.
-  Audit vendor rule order and socket ownership; authentication must actually be
-  tested with an unprivileged account. Never chmod `/dev/kvm` or `/dev/dri` 666.
+- **Libvirt:** the invoking regular account is appended to `libvirt`, preserving
+  its other groups. The early managed polkit rule grants that exact account
+  passwordless management only when local, active and in the group; other
+  accounts receive `AUTH_ADMIN` before the vendor's blanket group rule. This is
+  deliberate root-equivalent access. Other existing members, local grants,
+  earlier rules, custom socket policy and monolithic/remote units stop for review.
+  Fully log out/reboot after membership changes. `make doctor` checks the current
+  session's membership, noninteractive polkit authorization and a non-mutating
+  query through a read/write system connection. Never chmod devices 666.
 - Existing monolithic libvirt needs the [upstream daemon migration procedure](https://libvirt.org/daemons.html),
   shut-down guests and state backups **before** using this fresh modular profile.
   Never stop virtlogd/virtlockd underneath guests. Modular sockets are verified
@@ -300,11 +313,15 @@ flatpak remote-add --user --if-not-exists flathub \
   has networking/device/boot-autostart limitations, not inherently better speed.
   No VM XML or storage is moved between them. Bridges are a separate decision;
   a Wi-Fi station is not an ordinary Ethernet bridge uplink.
-- For system NAT, first inspect `virsh -c qemu:///system net-list --all`. If
-  `default` exists, review its XML and then deliberately start/autostart it.
-  If absent, review an appropriate network definition before defining it; never
-  overwrite an existing one. Test guest DHCP/DNS/HTTPS through `virbr0` with
-  the chosen firewall enabled. No firewall disabling or broad forwarding fix.
+- The enabled `cachyos-libvirt-network.service` runs **on the next boot**, after
+  the firewall and required sockets. It starts/autostarts the existing default
+  NAT without changing its XML. If none exists, it chooses a free private /24
+  and defines it through libvirt. Non-NAT definitions, conflicting host/VPN
+  routes or an unowned `virbr0` stop with an actionable journal error. No live
+  network service is started by setup. Both nftables and the nft iptables
+  frontend (current package `iptables`, providing `iptables-nft`) are supplied;
+  the installed frontend is verified and no backend is globally forced. Test guest
+  DHCP/DNS/HTTPS with the chosen firewall enabled. No firewall bypass is used.
   Boot-autostart guests need explicit daemon/object-autostart testing, not just
   enabled sockets. x86 uses KVM; ARM guests on this host use TCG.
 - UEFI/TPM and the included 3D/ARM package contents are checked, but real guest boot,
@@ -319,12 +336,15 @@ flatpak remote-add --user --if-not-exists flathub \
 
 ```sh
 sudo python3 scripts/cachyos.py inventory
-sudo python3 scripts/cachyos.py check
+make system-check
+make doctor
 ```
 
 These commands use the last successful plan. `check` verifies managed files,
 packages, selected enablement, installed capability checks, conflicts and default
-target. They are not runtime certification; root inventory cannot substitute
+target. `make system-check` also requires the selected system services/sockets
+to be active after reboot, including GDM, the firewall and the NAT oneshot.
+They are not runtime certification; root inventory cannot substitute
 for the actual user's launcher and session checks. Run those separately.
 
 After a deliberate reboot, complete **all** applicable checks in specification

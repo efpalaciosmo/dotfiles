@@ -7,6 +7,5 @@ spawn-sh-at-startup "${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/session-idle
 spawn-sh-at-startup "swaybg -i \"${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/adwaita-dark.png\" -m fill"
 
 // GDM starts niri-session, which exports the environment to systemd and D-Bus.
-// One text watcher and one PNG watcher feed the local SQLite history.
-spawn-sh-at-startup "wl-paste --no-newline --type text --watch \"${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/clipboard-history\" store text"
-spawn-sh-at-startup "wl-paste --type image/png --watch \"${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/clipboard-history\" store image/png"
+// Supervised watchers restart on failure and stop with the graphical session.
+spawn-sh-at-startup "systemctl --user daemon-reload && systemctl --user start dotfiles-clipboard-text.service dotfiles-clipboard-image.service"

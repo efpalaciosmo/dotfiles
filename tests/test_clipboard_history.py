@@ -11,6 +11,25 @@ SCRIPT = Path(__file__).resolve().parents[1] / "packages/fuzzel/.config/fuzzel/s
 
 
 class ClipboardHistoryTests(unittest.TestCase):
+    def test_sensitive_and_empty_selection_states_are_never_recorded(self):
+        for state in ("sensitive", "nil", "clear"):
+            with self.subTest(state=state), tempfile.TemporaryDirectory() as directory:
+                env = {**os.environ, "XDG_RUNTIME_DIR": directory, "CLIPBOARD_STATE": state}
+                subprocess.run([str(SCRIPT), "store", "text"], input=b"password", env=env, check=True)
+                self.assertEqual(list(Path(directory).iterdir()), [])
+
+    def test_symlinked_history_directory_cannot_redirect_private_data(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            runtime, outside = root / "runtime", root / "outside"
+            runtime.mkdir(mode=0o700)
+            outside.mkdir()
+            (runtime / "dotfiles").symlink_to(outside)
+            env = {**os.environ, "XDG_RUNTIME_DIR": str(runtime)}
+            result = subprocess.run([str(SCRIPT), "store", "text"], input=b"password", env=env, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(list(outside.iterdir()), [])
+
     def test_session_storage_and_clear(self):
         with tempfile.TemporaryDirectory() as directory:
             runtime = Path(directory) / "runtime"

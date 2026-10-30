@@ -1,0 +1,9 @@
+[Unit]
+Description=Session-only PNG clipboard history
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/wl-paste --type image/png --watch %h/.config/fuzzel/scripts/clipboard-history store image/png
+Restart=on-failure
+RestartSec=3

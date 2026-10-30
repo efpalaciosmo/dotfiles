@@ -263,7 +263,7 @@ class ConflictTests(unittest.TestCase):
         self.put("/etc/polkit-1/rules.d/20-personal.rules", 'action.id == "org.libvirt.unix.manage"')
         self.put("/etc/group", "libvirt:x:999:someone\n")
         self.assertTrue(any("authorization" in error for error in self.conflicts(result)))
-        self.assertTrue(any("membership" in error for error in self.conflicts(result)))
+        self.assertTrue(any("group members" in error for error in self.conflicts(result)))
 
     def test_arm_does_not_install_all_architecture_registrations(self):
         result = plan("--profile", "custom", "--include", "containers-arm")
@@ -299,6 +299,16 @@ class LauncherTests(unittest.TestCase):
 
 
 class SafetyTests(unittest.TestCase):
+    def test_changed_reviewed_plan_is_refused_before_package_transactions(self):
+        args = cachyos.parser().parse_args(["apply", "--profile", "custom", "--confirm", "--recovery-record", __file__, "--reviewed-plan-hash", "changed"])
+        with tempfile.TemporaryDirectory() as directory, patch.object(cachyos, "STATE", Path(directory)), \
+                patch.object(cachyos.os, "geteuid", return_value=0), patch.object(cachyos, "target_check"), \
+                patch.object(cachyos, "recovery_check"), patch.object(cachyos, "conflicts", return_value=[]), \
+                patch.object(cachyos, "repository_check", return_value={}), patch.object(cachyos, "mutate") as mutate:
+            with self.assertRaisesRegex(cachyos.Refusal, "changed since the reviewed plan"):
+                cachyos.apply(args, plan("--profile", "custom"))
+            mutate.assert_not_called()
+
     def test_enablement_verifies_next_boot_not_just_an_active_process(self):
         result = plan("--profile", "desktop")
         def status(*args, **kwargs):

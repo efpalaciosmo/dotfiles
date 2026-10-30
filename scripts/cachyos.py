@@ -4,6 +4,7 @@
 import argparse
 import configparser
 import datetime
+import fcntl
 import grp
 import hashlib
 import json
@@ -68,6 +69,14 @@ def read(path):
 
 def digest(content):
     return hashlib.sha256(content).hexdigest()
+
+
+def reviewed_plan_hash(plan, preparation):
+    keys = ("profile", "modules", "packages", "files", "system_units", "global_user_units",
+            "default_target", "initial_user", "system_preparation")
+    reviewed = {key: plan[key] for key in keys}
+    reviewed["preparation"] = preparation
+    return digest(json.dumps(reviewed, sort_keys=True).encode())
 
 
 def resolve(profile, include, exclude):
@@ -219,6 +228,9 @@ def build_plan(args, hardware=None):
         if "virtualization-core" not in modules:
             raise Refusal("--libvirt-proxy requires virtualization-core")
         system_units.add("virtproxyd.socket")
+    if "virtualization-core" in modules:
+        policy = "/etc/polkit-1/rules.d/00-cachyos-libvirt-admin.rules"
+        files[policy] = files[policy].replace(b"@USER@", json.dumps(args.initial_user).encode())
     if set(launcher_exceptions) & launchers:
         raise Refusal("A launcher exception cannot hide a selected allowlisted application")
     files["/usr/local/share/cachyos-desktop/launcher-allowlist.json"] = (
@@ -238,9 +250,10 @@ def build_plan(args, hardware=None):
         "system_preparation": {
             "locale": "en_US.UTF-8" if "niri" in modules else None,
             "rootless_user": args.initial_user if "containers" in modules else None,
+            "libvirt_user": args.initial_user if "virtualization-core" in modules else None,
         },
         "apply_requirements": ["root", "--confirm", "--recovery-record with passing restore/rescue/fallback/initramfs tests"] +
-        (["--initial-user naming an existing regular account"] if {"niri", "containers"} & set(modules) else []),
+        (["--initial-user naming an existing regular account"] if {"niri", "containers", "virtualization-core"} & set(modules) else []),
         "initial_session": "Set Niri through AccountsService only if this account has no saved session; never replace a choice."
         if "niri" in modules else None,
         "expected_launchers": sorted(launchers), "checks": checks,
@@ -266,6 +279,28 @@ def enablement_problems(plan):
                 problems.append(f"Selected {'global user' if flags else 'system'} unit not enabled for next boot: {unit} ({state or 'unknown'})")
     if plan["default_target"] and run("systemctl", "get-default", required=False) != plan["default_target"]:
         problems.append("Default target does not match the graphical desktop plan")
+    return problems
+
+
+def libvirt_access_problems(plan):
+    if "virtualization-core" not in plan["modules"]:
+        return []
+    user = plan.get("initial_user")
+    if not user:
+        return ["No regular user was selected for local passwordless libvirt"]
+    if "libvirt" not in run("id", "-nG", user, required=False).split():
+        return [f"Selected account {user} is not a member of libvirt"]
+    return []
+
+
+def runtime_system_problems(plan):
+    problems = []
+    for unit in plan["system_units"]:
+        if unit == "bluetooth.service" and not list(Path("/sys/class/bluetooth").glob("hci*")):
+            continue  # A temporarily absent optional controller is not a boot failure.
+        state = run("systemctl", "is-active", unit, required=False)
+        if state != "active":
+            problems.append(f"Selected system unit is not active after reboot: {unit} ({state or 'unknown'})")
     return problems
 
 
@@ -355,8 +390,10 @@ def conflicts(plan, root=Path("/"), unit_enabled=enabled):
                     problems.append(f"Polkit rule precedes the administrative libvirt policy; review ordering: {path}")
         for group in read(root / "etc/group").splitlines():
             fields = group.split(":")
-            if fields[0] == "libvirt" and len(fields) == 4 and fields[3]:
-                problems.append("Existing libvirt group membership grants powerful access; review before installation")
+            if fields[0] == "libvirt" and len(fields) == 4:
+                others = set(filter(None, fields[3].split(","))) - {plan.get("initial_user")}
+                if others:
+                    problems.append("Other libvirt group members need an explicit authorization review: " + ", ".join(sorted(others)))
         for path in (root / "etc/libvirt").glob("*.conf"):
             if re.search(r'^\s*(?:auth_unix_rw|unix_sock_rw_perms|unix_sock_group)\s*=', path.read_text(), re.M):
                 problems.append(f"Review existing libvirt socket authorization settings: {path}")
@@ -403,6 +440,8 @@ def target_check(plan):
     if run("systemd-detect-virt", "--container", required=False):
         raise Refusal("Apply requires an installed host, not a container/chroot desktop test")
     run("pacman", "-Q", "cachyos-keyring")
+    if "virtualization-core" in plan["modules"]:
+        check_kvm()
     if plan["blockers"]:
         raise Refusal("; ".join(plan["blockers"]))
 
@@ -457,6 +496,7 @@ def inventory(plan):
         "enabled_system_units": run("systemctl", "list-unit-files", "--state=enabled", "--no-pager", required=False),
         "enabled_global_user_units": run("systemctl", "--global", "list-unit-files", "--state=enabled", "--no-pager", required=False),
         "failed_system_units": run("systemctl", "--failed", "--no-pager", required=False),
+        "selected_user_groups": run("id", "-nG", plan["initial_user"], required=False) if plan.get("initial_user") else None,
         "managed_files": {path: {"exists": Path(path).is_file(),
                                  "actual_sha256": digest(Path(path).read_bytes()) if Path(path).is_file() else None,
                                  "expected_sha256": value["sha256"]} for path, value in plan["files"].items()},
@@ -497,6 +537,14 @@ def preparation_plan(plan, root=Path("/")):
     """Preview additive locale/rootless preparation without changing the host."""
     policy = plan.get("system_preparation", {})
     result = {"files": {}, "generate_locale": False}
+    if "virtualization-core" in plan["modules"]:
+        user = policy.get("libvirt_user")
+        if not user:
+            raise Refusal("Passwordless local libvirt access requires --initial-user")
+        account = pwd.getpwnam(user)
+        if account.pw_uid < 1000 or account.pw_uid == 65534:
+            raise Refusal("Libvirt access requires an existing regular local account")
+        result["libvirt_user"] = user
 
     def inspect(target):
         path = root / target.lstrip("/")
@@ -585,6 +633,17 @@ def apply_preparation(preparation, record):
         locales = run("locale", "-a").lower().replace("utf-8", "utf8").splitlines()
         if "en_us.utf8" not in locales:
             raise Refusal("locale-gen did not generate the required en_US.UTF-8 locale")
+    if preparation.get("libvirt_user"):
+        user = preparation["libvirt_user"]
+        try:
+            grp.getgrnam("libvirt")
+        except KeyError:
+            mutate("groupadd", "--system", "libvirt")
+        if "libvirt" not in run("id", "-nG", user).split():
+            # --append is essential: never replace wheel/audio/other memberships.
+            mutate("usermod", "--append", "--groups", "libvirt", "--", user)
+        if "libvirt" not in run("id", "-nG", user).split():
+            raise Refusal("Could not verify the selected user's libvirt membership")
 
 
 def write_managed(plan):
@@ -614,6 +673,28 @@ def account_path(user):
     return match[1]
 
 
+def check_kvm():
+    """Read the KVM API version; do not create a guest or change device access."""
+    try:
+        fd = os.open("/dev/kvm", os.O_RDWR | os.O_CLOEXEC)
+        try:
+            if fcntl.ioctl(fd, 0xAE00) != 12:  # KVM_GET_API_VERSION
+                raise Refusal("Unexpected KVM API version; inspect the running kernel")
+        finally:
+            os.close(fd)
+    except OSError as exc:
+        raise Refusal("KVM is unavailable: enable AMD SVM/Intel VT-x in firmware and verify /dev/kvm and kvm_amd/kvm_intel before installation") from exc
+
+
+def gdm_keyring_configured(root=Path("/")):
+    # PAM reads /etc overrides before the stateless vendor directory.
+    pam = next((root / directory / "gdm-password" for directory in ("etc/pam.d", "usr/lib/pam.d")
+                if (root / directory / "gdm-password").exists()), None)
+    text = re.sub(r"#.*", "", read(pam)) if pam is not None else ""
+    return bool(re.search(r"^\s*-?auth\s+\S+\s+pam_gnome_keyring\.so(?:\s|$)", text, re.M) and
+                re.search(r"^\s*-?session\s+\S+\s+pam_gnome_keyring\.so\s+[^\n]*\bauto_start\b", text, re.M))
+
+
 def initial_session(user):
     path = account_path(user)
     properties = {prop: run("busctl", "get-property", "org.freedesktop.Accounts", path,
@@ -631,6 +712,8 @@ def initial_session(user):
 def content_checks(plan, installed=True):
     """Check installed contents, not candidate names alone, before enablement."""
     for unit in plan["system_units"]:
+        if not installed and f"/etc/systemd/system/{unit}" in plan["files"]:
+            continue
         run("systemctl", "cat", unit)
         if run("systemctl", "show", unit, "--property=LoadState", "--value") == "masked":
             raise Refusal(f"Selected unit is masked; review manually: {unit}")
@@ -639,11 +722,21 @@ def content_checks(plan, installed=True):
             continue
         if not any((Path(directory) / unit).is_file() for directory in ("/etc/systemd/user", "/usr/lib/systemd/user")):
             raise Refusal(f"Selected user unit is not supplied: {unit}")
+    if installed:
+        system_files = [path for path in plan["files"] if path.startswith("/etc/systemd/system/") and path.endswith((".service", ".timer"))]
+        user_files = [path for path in plan["files"] if path.startswith("/etc/systemd/user/") and path.endswith((".service", ".timer"))]
+        if system_files:
+            run("systemd-analyze", "verify", "--man=no", *system_files)
+        if user_files:
+            # Parse against the user-unit dependency tree without requiring a
+            # logged-in root user manager or starting any unit during setup.
+            run("env", "SYSTEMD_UNIT_PATH=/etc/systemd/user:/usr/lib/systemd/user",
+                "systemd-analyze", "verify", "--man=no", *user_files)
     if "gnome-minimal" in plan["modules"]:
         if not list(Path("/usr/share/wayland-sessions").glob("gnome*.desktop")):
             raise Refusal("GNOME Wayland session descriptor missing")
     if "desktop-common" in plan["modules"]:
-        if "pam_gnome_keyring.so" not in read("/etc/pam.d/gdm-password"):
+        if not gdm_keyring_configured():
             raise Refusal("Verify GDM/keyring PAM integration manually; installer will not edit PAM")
         if "flatpak-user" in plan["modules"] and not re.search(r"flatpak.*\.so$", run("pacman", "-Qlq", "gnome-software"), re.M):
             raise Refusal("Installed GNOME Software does not supply its Flatpak integration plugin")
@@ -657,10 +750,13 @@ def content_checks(plan, installed=True):
     if "hardware" in plan["modules"]:
         run("python", "-c", "import ctypes; [ctypes.CDLL(n) for n in ('libEGL.so.1','libGLESv2.so.2','libGL.so.1','libgbm.so.1')]")
     if "virtualization-core" in plan["modules"]:
+        # Current Arch/CachyOS calls the nft frontend 'iptables'; the old
+        # iptables-nft name is only a provided capability, not a -Si package.
+        if "nf_tables" not in run("iptables", "--version"):
+            raise Refusal("Installed iptables is not the nft frontend; review the repository/provider before configuring libvirt NAT")
         if "kvm" not in run("qemu-system-x86_64", "-accel", "help").lower():
             raise Refusal("Selected QEMU lacks KVM support")
-        if not Path("/dev/kvm").exists():
-            raise Refusal("/dev/kvm missing: review firmware virtualization support and CPU module binding")
+        check_kvm()
         for package, pattern in (("edk2-ovmf", r"(?i)ovmf.*\.(fd|qcow2)$"), ("swtpm", r"/swtpm_setup$")):
             if not re.search(pattern, run("pacman", "-Qlq", package), re.M):
                 raise Refusal(f"Required firmware/TPM tooling not found in {package}")
@@ -668,8 +764,8 @@ def content_checks(plan, installed=True):
         devices = run("qemu-system-x86_64", "-device", "help")
         displays = run("qemu-system-x86_64", "-display", "help")
         audio = run("qemu-system-x86_64", "-audio", "driver=help")
-        for text, capabilities in ((devices, ("virtio-gpu-gl", "qxl", "usb-redir")),
-                                   (displays, ("egl-headless", "spice-app")), (audio, ("pipewire",))):
+        for text, capabilities in ((devices, ("virtio-gpu-gl", "virtio-vga-gl", "qxl", "usb-redir")),
+                                   (displays, ("egl-headless", "spice-app")), (audio, ("spice", "pipewire"))):
             if any(capability not in text for capability in capabilities):
                 raise Refusal("Selected QEMU backends do not supply all requested 3D/display/audio/USB capabilities")
     if "virtualization-arm" in plan["modules"]:
@@ -728,9 +824,9 @@ def apply(args, plan):
     problems = conflicts(plan)
     if problems:
         raise Refusal("\n".join(problems))
-    if {"niri", "containers"} & set(plan["modules"]):
+    if {"niri", "containers", "virtualization-core"} & set(plan["modules"]):
         if not args.initial_user:
-            raise Refusal("Select --initial-user for first-login Niri and rootless container preparation")
+            raise Refusal("Select --initial-user for Niri, rootless containers and local passwordless libvirt")
         # AccountsService may be supplied by the pending GDM transaction.
         account = pwd.getpwnam(args.initial_user)
         if account.pw_uid < 1000 or account.pw_uid == 65534:
@@ -738,10 +834,11 @@ def apply(args, plan):
     provenance = repository_check(plan["packages"])
     STATE.mkdir(mode=0o700, parents=True, exist_ok=True)
     # flock prevents concurrent runs without assuming a stale PID is safe to remove.
-    import fcntl
     with (STATE / "apply.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         preparation = preparation_plan(plan)
+        if args.reviewed_plan_hash and args.reviewed_plan_hash != reviewed_plan_hash(plan, preparation):
+            raise Refusal("The system/repository preparation changed since the reviewed plan; rerun make setup before installing")
         stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
         record = STATE / "runs" / stamp
         save(record / "before.json", inventory(plan))
@@ -757,8 +854,8 @@ def apply(args, plan):
             content_checks(plan, installed=False)
             write_managed(plan)
             apply_preparation(preparation, record)
-            content_checks(plan)
             mutate("systemctl", "daemon-reload")
+            content_checks(plan)
             if plan["global_user_units"]:
                 mutate("systemctl", "--global", "enable", *plan["global_user_units"])
             if plan["system_units"]:
@@ -768,12 +865,13 @@ def apply(args, plan):
             if "niri" in plan["modules"]:
                 initial_session(args.initial_user)
             problems = enablement_problems(plan)
+            problems.extend(libvirt_access_problems(plan))
             if problems:
                 raise Refusal("\n".join(problems))
             save(STATE / "current.json", plan)
             save(record / "result.json", {"status": "configured; runtime acceptance pending"})
-        except Exception as exc:
-            save(record / "result.json", {"status": "incomplete; no automatic rollback", "error": str(exc)})
+        except (Exception, KeyboardInterrupt) as exc:
+            save(record / "result.json", {"status": "incomplete; no automatic rollback", "error": f"{type(exc).__name__}: {exc}"})
             raise
         finally:
             save(record / "after.json", inventory(plan))
@@ -904,8 +1002,10 @@ def setup(args):
     print("Global USER units to enable: " + ", ".join(plan["global_user_units"]))
     print("Managed system files:\n  " + "\n  ".join(plan["files"]))
     print("Locale/rootless preparation: " + json.dumps(plan.get("preparation_preview", plan["system_preparation"]), indent=2))
+    print(f"Libvirt: {args.initial_user} will join libvirt for passwordless LOCAL ACTIVE desktop management (root-equivalent).")
+    print("Default NAT is prepared on next boot; no VM or image is created.")
     print(f"Full file contents, hashes, dependency/upgrade estimates and limitations: {preview}")
-    print("No personal dotfile/theme/shell changes, container/VM instances, automatic authentication or reboot will be performed.")
+    print("Setup does not link personal dotfiles, create container/VM instances, authenticate Tailscale or reboot.")
     if args.recovery_record:
         recovery_check(args.recovery_record)
     else:
@@ -919,7 +1019,8 @@ def setup(args):
             args.recovery_record = recovery_wizard(state / f"recovery-{stamp}.json", hardware)
     if prompt("Type INSTALL to authorize this full system upgrade and installation") != "INSTALL":
         raise Refusal("Setup cancelled; no desktop installation was attempted")
-    if subprocess.run([*command, "apply", *selection_arguments(args), "--confirm"]).returncode:
+    pin = reviewed_plan_hash(plan, plan.get("preparation_preview"))
+    if subprocess.run([*command, "apply", *selection_arguments(args), "--reviewed-plan-hash", pin, "--confirm"]).returncode:
         raise Refusal("Installation incomplete; inspect the installer run inventory before retrying")
     print("make setup: standard workstation installed, including containers, 3D/ARM virtualization, Tailscale and security-key tools.")
     print("Reboot when ready; choose Niri or GNOME in GDM.")
@@ -947,6 +1048,8 @@ def parser():
     result.add_argument("--verify-repositories", action="store_true", help="Read-only CachyOS/pacman checks using current sync DBs")
     result.add_argument("--recovery-record", help="External operator-authored recovery test record, required for apply")
     result.add_argument("--confirm", action="store_true", help="Explicitly authorize apply after reviewing the plan")
+    result.add_argument("--runtime", action="store_true", help="With check, require selected system services/sockets active after deliberate reboot")
+    result.add_argument("--reviewed-plan-hash", help=argparse.SUPPRESS)
     return result
 
 
@@ -991,10 +1094,13 @@ def main(argv=None):
                 except Refusal as exc:
                     problems.append(str(exc))
                 problems.extend(enablement_problems(plan))
+                problems.extend(libvirt_access_problems(plan))
                 report["static_problems"] = problems
+                runtime = runtime_system_problems(plan) if args.runtime else []
+                report["runtime_problems"] = runtime
                 report["runtime_acceptance"] = "PENDING: perform and record the manual checks; static success is not certification"
                 print(json.dumps(report, indent=2))
-                return 1 if problems else 0
+                return 1 if problems or runtime else 0
             print(json.dumps(report, indent=2))
     except (Refusal, OSError, KeyError, ValueError, configparser.Error) as exc:
         print(f"cachyos: {exc}", file=sys.stderr)

@@ -28,6 +28,13 @@ language, and fills missing rootless Podman subordinate-ID mappings using a
 reviewed free range. No browser, extensions, Flatpak apps, guest images or containers are
 preinstalled.
 
+The invoking account joins `libvirt` and gets passwordless `qemu:///system`
+management **only from an active local desktop session**. This is root-equivalent
+access, not just permission to use KVM. Other accounts still require administrator
+authentication. A next-boot service prepares/autostarts the default NAT network,
+preserving existing XML and refusing conflicting host/VPN subnets. Reboot or log
+out completely after group changes; reopening a terminal is insufficient.
+
 There are interactive review/safety questions, including recording actual tested
 backup/recovery evidence in the command itself. Setup does not invent passing
 tests, overwrite conflicting system configuration, authenticate Tailscale, change PAM
@@ -68,6 +75,7 @@ make stow       # alias for dotfiles
 make check      # static checks and tests; no configuration changes
 make doctor     # desktop commands, runtime integration and managed symlinks
 make verify     # static checks plus doctor
+make system-check # after reboot: packages/files, active system services and libvirt membership (sudo, read-only)
 make help       # list available targets
 ```
 
@@ -126,6 +134,8 @@ workspace panels do not configure Niri; use Niri's configuration for them.
 
 Follow [desktop acceptance and recovery](docs/desktop-recovery.md) for manual
 session checks and restoring configuration backups.
+See [production readiness](docs/production-readiness.md) for the audit evidence,
+remaining real-hardware acceptance gates and guest clipboard requirements.
 
 ## Desktop controls
 
@@ -202,6 +212,13 @@ with `~/.config/fuzzel/scripts/clipboard --clear`. Start a new Niri session afte
 linking the dotfiles to activate its clipboard watchers. The former persistent
 `~/.local/share/dotfiles/clipboard/` directory is **not deleted automatically**;
 remove it yourself after verifying that it contains no data you need.
+
+The text/PNG watchers are user services started only by Niri, supervised for
+restart and stopped with the graphical session. Offers marked sensitive by the
+source application are not saved; unmarked passwords can still enter history.
+Normal apps use `Ctrl+C`/`Ctrl+V`; Ghostty uses `Ctrl+Shift+C`/`Ctrl+Shift+V`.
+Clipboard sharing with VMs additionally needs the guest's SPICE agent; host
+clipboard packages alone cannot provide that.
 
 `Super+Shift+N` opens a Wi-Fi menu in Fuzzel, also available under quick actions.
 It lists nearby networks and signal strength, connects with a password prompt

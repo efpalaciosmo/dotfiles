@@ -9,9 +9,9 @@ SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	packages/desktop/.local/bin/dotfiles-appearance \
 	$(filter-out packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker,$(shell find packages/fuzzel/.config/fuzzel/scripts -maxdepth 1 -type f)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
-PYTHON_FILES := $(wildcard scripts/*.py) packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
+PYTHON_FILES := $(wildcard scripts/*.py) $(wildcard cachyos/config/*.py) packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
 
-.PHONY: all help setup local dotfiles stow check doctor verify cachyos-plan
+.PHONY: all help setup local dotfiles stow check doctor verify system-check cachyos-plan
 
 # Keep installation and linking sequential even with make -j.
 all: setup ## Install packages, enable services, then synchronize all dotfiles
@@ -43,6 +43,7 @@ check: ## Run non-mutating repository syntax checks
 	@if command -v niri >/dev/null 2>&1; then niri validate --config cachyos/config/niri.kdl; fi
 	@if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config=packages/fuzzel/.config/fuzzel/fuzzel.ini; fi
 	@if command -v ghostty >/dev/null 2>&1; then bash scripts/validate-configs.sh ghostty; fi
+	@if command -v desktop-file-validate >/dev/null 2>&1; then desktop-file-validate packages/desktop/.local/share/applications/*.desktop; fi
 	@if command -v vim >/dev/null 2>&1; then \
 		output=$$(mktemp); \
 		vim -Nu packages/vi/.vimrc -i NONE -es -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \
@@ -58,6 +59,9 @@ doctor: ## Validate required commands, configs, and managed links on this machin
 	@./scripts/doctor.sh $(PACKAGES)
 
 verify: check doctor ## Run static and machine-specific validation
+
+system-check: ## Audit installed CachyOS packages, permissions and active services after reboot (sudo, read-only)
+	@sudo python3 scripts/cachyos.py check --runtime
 
 cachyos-plan: ## Preview the fixed CachyOS workstation installation (no changes)
 	@python3 scripts/cachyos.py plan

@@ -37,7 +37,8 @@ Use PASS / FAIL / PENDING / N/A with evidence, not an unchecked assumption.
 | Actual driver bindings and firmware; kernel logs after upgrade | PENDING | |
 | Rootless containers/subordinate mappings/networking, no precreated images | PENDING | |
 | Only ARM/AArch64 binfmt registered; test a user-supplied image | PENDING | |
-| System libvirt requires admin; session VM inventory stays separate | PENDING | |
+| Selected local-active libvirt-group account is passwordless; other accounts still require admin; session VM inventory stays separate | PENDING | |
+| Next-boot default NAT is active/autostarted without replacing existing XML; conflicting subnets are refused | PENDING | |
 | x86 KVM, UEFI, TPM, directory storage and NAT DHCP/DNS/HTTPS | PENDING | |
 | Included virtio GL/QXL/EGL/SPICE/audio/USB and ARM TCG paths | PENDING | |
 | One firewall/power stack; SSH and remote libvirt disabled by default | PENDING | |
