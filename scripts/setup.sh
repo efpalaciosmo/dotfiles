@@ -62,8 +62,6 @@ if ! command -v python3 >/dev/null 2>&1; then
     done
     printf '%s\n' 'Python is needed for the installer. Bootstrap plan: sudo pacman -Syu --needed python'
     printf '%s\n' 'This is a full system upgrade. Proceed only with tested external backups, rescue and fallback boot.'
-    read -r -p 'Type INSTALL to confirm these recovery preparations and bootstrap Python: ' confirmation
-    [[ $confirmation == INSTALL ]] || { printf 'setup: cancelled; no bootstrap changes\n' >&2; exit 1; }
     # Preserve the pre-upgrade inventory even when Python is not yet available.
     bootstrap_state=${XDG_STATE_HOME:-$HOME/.local/state}/cachyos-desktop
     (

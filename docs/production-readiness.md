@@ -13,6 +13,10 @@ until the acceptance gates below pass on the actual target.
 
 ## Corrected problems
 
+- Normal `make` no longer asks for backup locations, recovery-test dates, boot
+  details or an `INSTALL` phrase. Only sudo/pacman prompts remain. Existing zram
+  policy and Intel VA-API providers are preserved without a question. Recovery
+  evidence is optional; absence is recorded as unverified, never certified.
 - Signature preflight rejected repositories such as `cachyos-znver4` when
   `pacman-conf` returned an empty `SigLevel` to indicate inheritance from the
   global policy. Earlier package/content tests missed this configuration path.

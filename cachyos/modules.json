@@ -58,7 +58,7 @@
       "files": {"/etc/systemd/zram-generator.conf.d/99-cachyos-desktop.conf": "config/zram-generator.conf"},
       "system_units": [], "user_units": [], "launchers": [],
       "checks": ["zramctl", "swapon --show", "cat /sys/block/zram0/comp_algorithm", "Test GNOME power-profile switching and the chosen power daemon."],
-      "limitations": "Existing zram definitions or competing power managers require review. No live swap changes, disk writeback, hibernation or boot configuration changes."
+      "limitations": "Setup preserves existing zram definitions without adding an override. Explicit maintenance-time layering and competing power managers require review. No live swap changes, disk writeback, hibernation or boot configuration changes."
     },
     "flatpak-user": {
       "dependencies": ["desktop-common"], "packages": ["flatpak"],
@@ -117,7 +117,7 @@
     "recovery": {
       "dependencies": ["base"], "packages": [], "files": {}, "system_units": [], "user_units": [], "launchers": [],
       "checks": ["Test external backup restoration, rescue boot, a fallback kernel and initramfs regeneration for the actual boot tooling.", "Test failed-upgrade recovery and Secure Boot separately. Record kernel, package versions, hardware and results."],
-      "limitations": "Application requires an external recovery record, not an assumed snapshot. No automatic snapshots, boot changes, rollback, package removal or reboot."
+      "limitations": "External recovery records are optional and validated only when explicitly supplied; missing evidence is recorded as unverified, never as passing tests. No automatic snapshots, boot changes, rollback, package removal or reboot."
     }
   }
 }

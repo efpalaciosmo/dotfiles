@@ -215,6 +215,9 @@ def build_plan(args, hardware=None):
             packages.update(["bluez", "bluez-utils"])
             system_units.add("bluetooth.service")
     if "power-memory" in modules:
+        if args.preserve_zram:
+            files.pop("/etc/systemd/zram-generator.conf.d/99-cachyos-desktop.conf", None)
+            notes.append("Preserve existing zram configuration; no managed override is written.")
         power = args.power or "tuned"
         if power == "tuned":
             packages.update(["tuned", "tuned-ppd"])
@@ -252,7 +255,7 @@ def build_plan(args, hardware=None):
             "rootless_user": args.initial_user if "containers" in modules else None,
             "libvirt_user": args.initial_user if "virtualization-core" in modules else None,
         },
-        "apply_requirements": ["root", "--confirm", "--recovery-record with passing restore/rescue/fallback/initramfs tests"] +
+        "apply_requirements": ["root", "--confirm"] +
         (["--initial-user naming an existing regular account"] if {"niri", "containers", "virtualization-core"} & set(modules) else []),
         "initial_session": "Set Niri through AccountsService only if this account has no saved session; never replace a choice."
         if "niri" in modules else None,
@@ -316,6 +319,8 @@ def zram_sources(root=Path("/")):
 
 
 def zram_conflicts(plan, root):
+    if "/etc/systemd/zram-generator.conf.d/99-cachyos-desktop.conf" not in plan["files"]:
+        return []  # Keeping existing policy does not require reconciling an override.
     problems = []
     for path in zram_sources(root):
         if not plan.get("reviewed_zram"):
@@ -826,8 +831,10 @@ def apply(args, plan):
     if not args.confirm:
         raise Refusal("Review plan first, then explicitly pass --confirm")
     target_check(plan)
-    recovery_check(args.recovery_record)
-    recovery = Path(args.recovery_record)
+    recovery = None
+    if args.recovery_record:
+        recovery_check(args.recovery_record)
+        recovery = Path(args.recovery_record)
     # Root will execute this repository's reviewed declarations. No shell eval.
     problems = conflicts(plan)
     if problems:
@@ -852,8 +859,12 @@ def apply(args, plan):
         save(record / "before.json", inventory(plan))
         save(record / "provenance.json", provenance)
         save(record / "system-preparation.json", preparation)
-        save(record / "recovery.json", {"record_sha256": digest(recovery.read_bytes()),
-                                         "path": str(recovery.resolve()), "status": "operator supplied; not independently certified"})
+        recovery_evidence = {"status": "not supplied; backup and recovery readiness not verified"}
+        if recovery is not None:
+            recovery_evidence = {"record_sha256": digest(recovery.read_bytes()),
+                                 "path": str(recovery.resolve()),
+                                 "status": "operator supplied; not independently certified"}
+        save(record / "recovery.json", recovery_evidence)
         try:
             mutate("pacman", "-Syu")
             # Recheck availability and signature policy against the refreshed DBs.
@@ -887,46 +898,6 @@ def apply(args, plan):
     print("Reboot deliberately, test both sessions and complete docs/cachyos-install.md acceptance checks.")
 
 
-def prompt(message, default=None):
-    suffix = f" [{default}]" if default else ""
-    try:
-        answer = input(f"{message}{suffix}: ").strip()
-    except EOFError as exc:
-        raise Refusal("Setup cancelled: interactive input ended") from exc
-    answer = answer or default
-    if not answer:
-        raise Refusal("Setup cancelled; a required answer was left blank")
-    return answer
-
-
-def recovery_wizard(destination, hardware):
-    print("Recovery must be tested, not assumed. Only record tests that actually passed.")
-    print("For each test enter its date and evidence: YYYY-MM-DD description. Blank cancels.")
-    record = {
-        "external_backup_confirmed": True,
-        "backup_location": prompt("Location of your tested EXTERNAL backup (not a local snapshot)"),
-        "target": {"kernel": hardware["kernel"]},
-        "secure_boot": {"state": "unknown", "result": "pending", "details": "Validate separately on actual hardware"},
-    }
-    for name, description in (
-        ("backup_restore_test", "Successful external-backup restore test"),
-        ("rescue_boot_test", "Successful rescue-medium boot test"),
-        ("fallback_boot_test", "Successful fallback-kernel boot test"),
-        ("initramfs_test", "Successful kernel/initramfs regeneration test"),
-    ):
-        answer = prompt(description)
-        date, _, details = answer.partition(" ")
-        record[name] = {"date": date, "details": details.strip(), "result": "passed"}
-    record["target"]["bootloader"] = prompt("Installed bootloader")
-    candidates = [tool for tool in ("mkinitcpio", "dracut") if shutil.which(tool)]
-    record["target"]["initramfs_tool"] = prompt("Installed initramfs tooling", candidates[0] if len(candidates) == 1 else None)
-    filesystem = run("findmnt", "--noheadings", "--output", "FSTYPE", "/", required=False)
-    record["target"]["root_filesystem"] = prompt("Root filesystem", filesystem or None)
-    validate_recovery_record(record)
-    save(destination, record)
-    return str(destination)
-
-
 def selection_arguments(args):
     """Forward only supported options, never construct a shell command."""
     result = []
@@ -938,7 +909,7 @@ def selection_arguments(args):
     for name in ("include", "without", "firmware"):
         for value in getattr(args, name):
             result.extend(["--" + name, value])
-    for name in ("libvirt_proxy", "reviewed_zram"):
+    for name in ("libvirt_proxy", "reviewed_zram", "preserve_zram"):
         if getattr(args, name):
             result.append("--" + name.replace("_", "-"))
     return result
@@ -972,20 +943,16 @@ def setup(args):
         if args.power is None:
             args.power = "existing" if any(enabled(unit) for unit in POWER) else (
                 "power-profiles-daemon" if run("pacman", "-Qq", "power-profiles-daemon", required=False) else "tuned")
-        sources = zram_sources()
-        if sources and not args.reviewed_zram:
-            print("Existing zram policy (files will be kept, not replaced):")
-            for path in sources:
-                print(f"--- {path}\n{path.read_text()}")
-            answer = prompt("Layer the reviewed zram0 policy: min(ram,8192) MiB, priority 100, zstd(level=1), no writeback? yes/no", "no")
-            if answer.lower() not in ("yes", "y"):
-                raise Refusal("Setup cancelled; existing zram policy was not approved for layering")
-            args.reviewed_zram = True
+        if zram_sources() and not args.reviewed_zram:
+            args.preserve_zram = True
+            print("Keeping existing zram configuration; no override will be installed.")
     if "hardware" in modules and "intel" in (hardware["graphics"] if args.graphics == "auto" else args.graphics.split(",")):
         if args.intel_vaapi == "review":
-            args.intel_vaapi = prompt("Intel VA-API provider for your GPU generation: modern / legacy / existing")
-            if args.intel_vaapi not in ("modern", "legacy", "existing"):
-                raise Refusal("Unknown Intel VA-API choice")
+            # Do not guess a GPU generation or replace a working provider.
+            args.intel_vaapi = "existing"
+            print("Keeping existing Intel VA-API providers; generation-specific video decoding is not provisioned automatically.")
+    if args.recovery_record:
+        recovery_check(args.recovery_record)
     plan = build_plan(args, hardware)
     if plan["blockers"]:
         raise Refusal("; ".join(plan["blockers"]))
@@ -1014,19 +981,8 @@ def setup(args):
     print("Default NAT is prepared on next boot; no VM or image is created.")
     print(f"Full file contents, hashes, dependency/upgrade estimates and limitations: {preview}")
     print("Setup does not link personal dotfiles, create container/VM instances, authenticate Tailscale or reboot.")
-    if args.recovery_record:
-        recovery_check(args.recovery_record)
-    else:
-        previous_records = sorted(state.glob("recovery*.json"))
-        previous = previous_records[-1] if previous_records else None
-        reuse = previous is not None and prompt("Reuse the previously recorded recovery tests? yes/no", "no").lower() in ("yes", "y")
-        if reuse:
-            recovery_check(str(previous))
-            args.recovery_record = str(previous)
-        else:
-            args.recovery_record = recovery_wizard(state / f"recovery-{stamp}.json", hardware)
-    if prompt("Type INSTALL to authorize this full system upgrade and installation") != "INSTALL":
-        raise Refusal("Setup cancelled; no desktop installation was attempted")
+    print("This performs a full system upgrade. Keep external backups and a rescue boot option.")
+    print("Continuing to pacman's transaction prompts; Ctrl+C cancels. No recovery questionnaire is required.", flush=True)
     pin = reviewed_plan_hash(plan, plan.get("preparation_preview"))
     if subprocess.run([*command, "apply", *selection_arguments(args), "--reviewed-plan-hash", pin, "--confirm"]).returncode:
         raise Refusal("Installation incomplete; inspect the installer run inventory before retrying")
@@ -1051,10 +1007,11 @@ def parser():
     result.add_argument("--firewall", choices=("firewalld", "ufw"), help="setup preserves existing UFW; otherwise firewalld")
     result.add_argument("--power", choices=("tuned", "power-profiles-daemon", "existing"), help="setup preserves an existing stack; otherwise tuned")
     result.add_argument("--reviewed-zram", action="store_true", help="Explicitly approve layering the managed zram0 policy over reviewed existing defaults")
+    result.add_argument("--preserve-zram", action="store_true", help="Keep existing zram policy without writing a managed override; setup detects this automatically")
     result.add_argument("--libvirt-proxy", action="store_true", help="Also enable the local compatibility proxy socket")
     result.add_argument("--initial-user", help="Existing regular account whose unset GDM session should initially be Niri")
     result.add_argument("--verify-repositories", action="store_true", help="Read-only CachyOS/pacman checks using current sync DBs")
-    result.add_argument("--recovery-record", help="External operator-authored recovery test record, required for apply")
+    result.add_argument("--recovery-record", help="Optional external operator-authored recovery test record; never generated automatically")
     result.add_argument("--confirm", action="store_true", help="Explicitly authorize apply after reviewing the plan")
     result.add_argument("--runtime", action="store_true", help="With check, require selected system services/sockets active after deliberate reboot")
     result.add_argument("--reviewed-plan-hash", help=argparse.SUPPRESS)

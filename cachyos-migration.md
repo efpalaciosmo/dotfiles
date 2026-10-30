@@ -10,7 +10,9 @@ setup followed by personal GNU Stow synchronization. `make setup` installs
 packages, prepares the system and enables services for the next boot without
 linking personal preferences; `make dotfiles` only validates/links those
 preferences and applies Adwaita dark/orange, including the bundled Ghostty theme.
-Setup is CachyOS-only, retains review/recovery confirmations and never reboots.
+Setup is CachyOS-only and retains sudo/pacman confirmations, but has no recovery
+questionnaire or custom confirmation phrase. Recovery records are optional, existing
+zram/Intel VA-API choices are preserved, and setup never reboots.
 It also additively generates `en_US.UTF-8` and fills missing rootless subordinate
 ID mappings after conflict checking. These are approved implementation updates
 to the original design below; see [the current installation guide](docs/cachyos-install.md).

@@ -35,13 +35,16 @@ authentication. A next-boot service prepares/autostarts the default NAT network,
 preserving existing XML and refusing conflicting host/VPN subnets. Reboot or log
 out completely after group changes; reopening a terminal is insufficient.
 
-There are interactive review/safety questions, including recording actual tested
-backup/recovery evidence in the command itself. Setup does not invent passing
-tests, overwrite conflicting system configuration, authenticate Tailscale, change PAM
-or reboot. After setup, `make` links personal configurations and the Adwaita dark/orange
+There is no setup questionnaire or `INSTALL` phrase to type: only sudo authentication
+and pacman's normal transaction/provider confirmations. Existing zram configuration
+and Intel VA-API providers are kept rather than prompting or guessing. Keep external
+backups and a rescue boot option; recovery evidence is optional and never fabricated.
+Setup does not overwrite conflicting system configuration, authenticate Tailscale,
+change PAM or reboot. After setup, `make` links personal configurations and the Adwaita dark/orange
 theme with GNU Stow, backing up user-file conflicts. Reboot deliberately when ready, then select
-Niri or GNOME in GDM. Intel VA-API generation and unsupported/ambiguous hardware
-may require an explicit choice; hardware and recovery still need real testing.
+Niri or GNOME in GDM. Unsupported/ambiguous hardware still stops with an error;
+hardware and recovery still need real testing. Intel video decoding may need a
+generation-specific driver installed separately.
 
 No profile, module-selection flags or Make parameters are required or accepted
 by the setup entry point. `make cachyos-plan` previews the same fixed package

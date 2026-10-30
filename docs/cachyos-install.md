@@ -20,22 +20,23 @@ succeeds, including under parallel Make. `make help` lists the targets.
 runs checks; setup installs the fixed workstation defaults, detects hardware
 and preserves an existing UFW/power stack and NetworkManager Wi-Fi backend
 where possible. It performs root read-only preflight, presents the plan,
-collects tested recovery evidence itself (no hand-written JSON needed), then
-requests confirmation and invokes the installer through sudo. After installing,
+then invokes the installer through sudo without a questionnaire or custom
+confirmation phrase. Only sudo and pacman's normal prompts remain. After installing,
 it validates again. Setup alone does not apply personal Stow/theme/shell
 preferences; the full `make` workflow then links them and applies dark/orange
 Adwaita, including Ghostty's bundled theme. `make dotfiles` can also be rerun
 independently without installing packages or changing system services.
 
-Recovery evidence remains an operator attestation: enter actual passed tests
-and their dates, never fabricated results. If Python needs bootstrapping, the
-command first asks for explicit confirmation of recovery preparations before
-that prerequisite full upgrade. Nothing bypasses package signatures. Unsupported
+Keep external backups and a rescue boot option before starting: setup performs
+a full system upgrade, including when Python needs bootstrapping. It does not
+ask for backup locations, test dates, bootloader details or an `INSTALL` phrase.
+Recovery evidence is optional and never fabricated; absent evidence is recorded
+as unverified, not as passing tests. Nothing bypasses package signatures. Unsupported
 hardware, conflicting services or complex existing configuration still stop
 for review rather than being silently overwritten. A command cannot replace
 physical hardware/backup tests or provision a missing bootable rescue path.
 The prerequisite upgrade saves its own private pre-upgrade package/unit inventory
-alongside the user's setup plan and recovery records under
+alongside the user's setup plan under
 `$XDG_STATE_HOME/cachyos-desktop` (normally `~/.local/state/cachyos-desktop`).
 
 There are no setup arguments or Make feature variables to pass. `make local`
@@ -51,12 +52,12 @@ Plain `make setup` installs all of the following:
 | --- | --- |
 | Desktop | GDM, minimal usable GNOME and Niri, Ghostty, Files, Settings, Software, Fuzzel, Waybar, Mako and lock/idle tools |
 | Integration | Fonts/CLI tools, en_US.UTF-8 generation (no global language change), portals/keyring/polkit, PipeWire/WirePlumber, camera/phone/input support and hardware diagnostics |
-| Host | Firmware/microcode/AMD or Intel userspace as detected, NetworkManager/OpenVPN, Bluetooth tools, one firewall/power stack, explicit zram policy |
+| Host | Firmware/microcode/AMD or Intel userspace as detected, NetworkManager/OpenVPN, Bluetooth tools, one firewall/power stack, existing zram policy or a standard default |
 | Flatpak | Flatpak and deferred per-user Flathub registration; no apps/system remote |
 | Containers | Podman, Distrobox, rootless helpers and missing subordinate-ID mappings; ARM/AArch64 static emulation with only those binfmt registrations |
 | Virtualization | x86 KVM/QEMU, modular sockets, local-active passwordless access for the invoking libvirt-group account, next-boot default NAT, virt-manager, UEFI/TPM, virtio GL/QXL/EGL/SPICE/PipeWire/USB, ARM32/AArch64 TCG and firmware |
 | Other tools | Tailscale and U2F/Yubico tools; no automatic authentication, enrollment or PAM changes |
-| Recovery | Inventories, operator-provided tested backup/recovery evidence and acceptance records |
+| Recovery | Inventories, optional operator-provided backup/recovery evidence and manual acceptance checks |
 
 `make cachyos-plan` is a read-only preview of this same fixed module/package
 selection. The final plan inside setup also incorporates the detected existing
@@ -82,17 +83,21 @@ CPU microcode, graphics and split firmware are hardware-detected, not a menu
 of features. Detection uses known PCI/USB vendor IDs with a sysfs fallback and
 is advisory, not hardware certification. Unsupported NVIDIA or ambiguous
 hardware stops for review rather than installing a universal driver stack.
-Intel VA-API generation may require an in-command hardware clarification;
-this is not a feature-selection parameter. SOF firmware and UCM are explicit.
+Setup keeps existing Intel VA-API providers without asking for a GPU generation
+or selecting an unverified replacement. If none is installed, generation-specific
+video decoding needs separate provisioning; Intel Vulkan is still selected.
+SOF firmware and UCM are explicit.
 
 Setup preserves an existing reviewed UFW setup or otherwise uses firewalld,
 and preserves an existing power implementation or defaults to TuneD/tuned-ppd.
-Competing managers stop for review. Existing zram policy is shown before
-confirming the standard zram0 layer in
+Competing managers stop for review. Setup preserves any existing zram policy
+without adding an override or asking a question. If no policy exists, it installs
+the standard zram0 configuration in
 `/etc/systemd/zram-generator.conf.d/99-cachyos-desktop.conf`:
 `min(ram,8192)` MiB, priority 100, `zstd(level=1)`, no disk writeback.
-Existing files remain untouched. Additional devices, advanced/non-swap settings
-and later competing drop-ins still stop for review.
+Existing files remain untouched. Maintenance-time `--reviewed-zram` layering
+still checks for additional devices, advanced/non-swap settings and later
+competing drop-ins; setup does not automatically approve that layering.
 
 Kernel selection, fallback kernel installation, matching headers for actual
 DKMS users, Secure Boot, firmware settings, OpenCL/ROCm, multilib/NVIDIA,
@@ -117,11 +122,12 @@ login shell or personal dotfiles.
    kernel/initramfs regeneration. Keep the tested boot option. Btrfs snapshots
    alone do not meet the external backup requirement; account separately for
    `/boot`/ESP and package-database consistency.
-3. Setup collects actual test dates/results, backup location and target boot
-   details itself, or offers to reuse a previously recorded attestation. You do
-   not need to create JSON or pass a record path. Do not record passing results
-   until you have actually performed the tests; this is operator evidence, not
-   independently verified recovery certification.
+3. No recovery questionnaire or record is required to install. If using the
+   maintenance CLI, `--recovery-record PATH` optionally attaches an existing
+   operator attestation, validated against `cachyos/recovery.example.json`.
+   Previous records are not silently reused. Do not record passing results
+   until you have actually performed those tests; installation does not certify
+   that your backups or recovery procedures work.
 4. Setup's automatic root read-only preflight checks CachyOS/keyring and the
    effective required/trusted package-signature
    policy for every configured repository, `pacman -Si` availability, repository
@@ -129,12 +135,12 @@ login shell or personal dotfiles.
    It **does not refresh sync databases**. Stale databases may require a
    deliberate supported full upgrade before planning again, never `pacman -Sy`
    followed by selective installs. Repository metadata is not a package lock.
-    Protected configuration is inspected through sudo automatically; no system
-    configuration is written by that preflight. An empty repository `SigLevel`
-    from `pacman-conf --repo cachyos-znver4 SigLevel` normally means inheritance
-    from `[options]`, not disabled verification. Both the Python installer and
-    its shell bootstrap validate that inherited global policy; no repository
-    override needs to be added. Plans record raw and effective policies.
+   Protected configuration is inspected through sudo automatically; no system
+   configuration is written by that preflight. An empty repository `SigLevel`
+   from `pacman-conf --repo cachyos-znver4 SigLevel` normally means inheritance
+   from `[options]`, not disabled verification. Both the Python installer and
+   its shell bootstrap validate that inherited global policy; no repository
+   override needs to be added. Plans record raw and effective policies.
 5. The reviewed preparation plan enables `en_US.UTF-8` in the existing
    `/etc/locale.gen` and runs `locale-gen` when needed, preserving other enabled
    locales. It does not change `/etc/locale.conf` or the global language. The
@@ -147,8 +153,9 @@ before apply. Do not post inventories publicly without reviewing host metadata.
 
 ## 3. Installation is part of `make setup`
 
-After showing the plan and recording real recovery evidence, setup asks you to
-type `INSTALL`, then performs the upgrade/installation itself through sudo.
+After showing the plan, setup performs the upgrade/installation itself through
+sudo. It does not ask for recovery evidence, a backup path or an `INSTALL` phrase.
+Pacman still asks you to confirm its actual transactions; Ctrl+C cancels.
 There is no separate apply command to run. Review the repository's code before
 executing it as root. Root executes only argument arrays, not package/configuration
 text as shell commands. The underlying planner retains module subsets for
@@ -213,8 +220,8 @@ autologin is configured. An unsupported AccountsService API stops for review.
 Every run records private root-owned JSON under
 `/var/lib/cachyos-desktop/runs/TIMESTAMP/`: before/after package versions and
 explicit packages, hardware/kernel, enabled system/global-user units, requested
-plan, managed file hashes, launcher flags, repository provenance, recovery-record
-hash and completion/failure status. A successful selection is also saved in
+plan, managed file hashes, launcher flags, repository provenance, optional
+recovery-record hash (or an explicit unverified status) and completion/failure status. A successful selection is also saved in
 `current.json`. No credentials, guest disks or container volumes are copied.
 
 ## 4. Sessions, launchers and Flathub

@@ -50,7 +50,8 @@ class SetupEntrypointTests(unittest.TestCase):
         if tty:
             master, slave = pty.openpty()
             try:
-                os.write(master, b"INSTALL\n")
+                # No answers are supplied: custom bootstrap questions must fail
+                # this test by timeout rather than being hidden by canned input.
                 result = subprocess.run(["/bin/bash", str(self.script), *arguments], env=self.environment,
                                         stdin=slave, text=True, capture_output=True, timeout=15)
             finally:
@@ -124,6 +125,7 @@ chmod +x "$STUBBIN/python3"
         self.assertEqual(sum(call.startswith("make:") for call in calls), 2)
         self.assertTrue(any("cachyos.py setup" in call for call in calls))
         self.assertTrue(list(self.root.glob("state/cachyos-desktop/bootstrap-before-*.txt")))
+        self.assertNotIn("Type INSTALL", result.stdout + result.stderr)
 
     def test_python_bootstrap_refuses_weakened_signatures(self):
         self.bootstrap_stubs("Optional TrustAll")

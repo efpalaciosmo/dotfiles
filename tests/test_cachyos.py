@@ -250,6 +250,13 @@ class ConflictTests(unittest.TestCase):
         self.put("/etc/systemd/zram-generator.conf.d/zz-personal.conf", "[zram0]\nzram-size=ram\n")
         self.assertTrue(any("Later zram" in error for error in self.conflicts(result)))
 
+    def test_preserving_existing_zram_does_not_write_or_reconcile_an_override(self):
+        path = self.put("/etc/systemd/zram-generator.conf", "[zram1]\nzram-size=ram / 2\n")
+        result = plan("--preserve-zram")
+        self.assertNotIn("/etc/systemd/zram-generator.conf.d/99-cachyos-desktop.conf", result["files"])
+        self.assertEqual(cachyos.zram_conflicts(result, self.root), [])
+        self.assertEqual(path.read_text(), "[zram1]\nzram-size=ram / 2\n")
+
     def test_existing_identical_wifi_backend_is_preserved(self):
         self.put("/etc/NetworkManager/NetworkManager.conf", "[device]\nwifi.backend=iwd\n")
         self.assertEqual(self.conflicts(plan("--wifi-backend", "iwd")), [])
@@ -462,7 +469,7 @@ class SafetyTests(unittest.TestCase):
             self.assertEqual(cachyos.recovery_check(str(path)), record)
 
     def test_apply_orders_full_upgrade_inventory_and_selected_enablement(self):
-        args = cachyos.parser().parse_args(["apply", "--profile", "custom", "--include", "flatpak-user", "--confirm", "--recovery-record", __file__])
+        args = cachyos.parser().parse_args(["apply", "--profile", "custom", "--include", "flatpak-user", "--confirm"])
         result = plan("--profile", "custom", "--include", "flatpak-user")
         events = []
         with tempfile.TemporaryDirectory() as directory, patch.object(cachyos, "STATE", Path(directory)), patch.object(cachyos.os, "geteuid", return_value=0), patch.object(cachyos, "target_check"), patch.object(cachyos, "recovery_check"), patch.object(cachyos, "conflicts", return_value=[]), patch.object(cachyos, "repository_check", return_value={}), patch.object(cachyos, "inventory", return_value={}), patch.object(cachyos, "enablement_problems", return_value=[]), patch.object(cachyos, "write_managed", side_effect=lambda p: events.append("files")), patch.object(cachyos, "content_checks", side_effect=lambda *a, **k: events.append("checks")), patch.object(cachyos, "mutate", side_effect=lambda *a: events.append(a)), redirect_stdout(io.StringIO()):
@@ -471,6 +478,9 @@ class SafetyTests(unittest.TestCase):
             self.assertTrue((Path(directory) / "current.json").exists())
             self.assertTrue(list(Path(directory).glob("runs/*/before.json")))
             self.assertTrue(list(Path(directory).glob("runs/*/after.json")))
+            recovery = json.loads(next(Path(directory).glob("runs/*/recovery.json")).read_text())
+            self.assertIn("not supplied", recovery["status"])
+            self.assertNotIn("record_sha256", recovery)
             commands = [event for event in events if isinstance(event, tuple)]
             self.assertFalse(any("--now" in command or "reboot" in command for command in commands))
             self.assertIn(("systemctl", "enable", "gdm.service"), commands)
@@ -491,6 +501,18 @@ class SafetyTests(unittest.TestCase):
             status = json.loads(next(Path(directory).glob("runs/*/result.json")).read_text())
             self.assertIn("incomplete", status["status"])
             self.assertEqual(mutate.call_count, 1)
+            recovery = json.loads(next(Path(directory).glob("runs/*/recovery.json")).read_text())
+            self.assertEqual(recovery["record_sha256"], cachyos.digest(Path(__file__).read_bytes()))
+
+    def test_invalid_optional_recovery_record_stops_before_mutation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            record = Path(directory) / "recovery.json"
+            record.write_text("{}\n")
+            args = cachyos.parser().parse_args(["apply", "--profile", "custom", "--confirm", "--recovery-record", str(record)])
+            with patch.object(cachyos.os, "geteuid", return_value=0), patch.object(cachyos, "target_check"), patch.object(cachyos, "mutate") as mutate:
+                with self.assertRaisesRegex(cachyos.Refusal, "external backup"):
+                    cachyos.apply(args, plan("--profile", "custom"))
+                mutate.assert_not_called()
 
 
 class SetupTests(unittest.TestCase):
@@ -502,19 +524,19 @@ class SetupTests(unittest.TestCase):
         self.calls = []
         self.recovery = self.root / "provided-recovery.json"
         self.recovery.write_text("{}\n")
+        self.hardware = copy.deepcopy(HARDWARE)
         self.stack.enter_context(patch.dict(os.environ, {"XDG_STATE_HOME": str(self.root)}))
         self.stack.enter_context(patch.object(cachyos.os, "geteuid", return_value=1000))
         self.stack.enter_context(patch.object(cachyos.sys, "stdin", SimpleNamespace(isatty=lambda: True)))
         self.stack.enter_context(patch.object(cachyos.pwd, "getpwuid", return_value=SimpleNamespace(pw_name="tester")))
-        self.stack.enter_context(patch.object(cachyos, "detect", return_value=HARDWARE))
+        self.stack.enter_context(patch.object(cachyos, "detect", return_value=self.hardware))
         self.stack.enter_context(patch.object(cachyos, "target_check"))
         self.enabled = self.stack.enter_context(patch.object(cachyos, "enabled", return_value=False))
         self.stack.enter_context(patch.object(cachyos, "wifi_backends", return_value={}))
-        self.stack.enter_context(patch.object(cachyos, "zram_sources", return_value=[]))
+        self.zram_sources = self.stack.enter_context(patch.object(cachyos, "zram_sources", return_value=[]))
         self.stack.enter_context(patch.object(cachyos, "run", return_value=""))
-        self.stack.enter_context(patch.object(cachyos, "recovery_check"))
-        self.wizard = self.stack.enter_context(patch.object(cachyos, "recovery_wizard", return_value=str(self.recovery)))
-        self.input = self.stack.enter_context(patch("builtins.input", return_value="INSTALL"))
+        self.recovery_check = self.stack.enter_context(patch.object(cachyos, "recovery_check"))
+        self.input = self.stack.enter_context(patch("builtins.input", side_effect=AssertionError("Setup must not ask custom questions")))
         self.subprocess = self.stack.enter_context(patch.object(cachyos.subprocess, "run", side_effect=self.command))
         self.output = self.stack.enter_context(redirect_stdout(io.StringIO()))
         self.preflight_conflicts = []
@@ -523,7 +545,7 @@ class SetupTests(unittest.TestCase):
         self.calls.append(command)
         if command[3] == "plan":
             args = cachyos.parser().parse_args(command[3:])
-            result = cachyos.build_plan(args, HARDWARE)
+            result = cachyos.build_plan(args, self.hardware)
             result["existing_conflicts"] = self.preflight_conflicts
             return SimpleNamespace(returncode=0, stdout=json.dumps(result))
         self.assertEqual(command[3], "apply")
@@ -538,9 +560,11 @@ class SetupTests(unittest.TestCase):
             self.assertEqual(call[call.index("--initial-user") + 1], "tester")
             self.assertNotIn("--noconfirm", call)
         self.assertIn("--confirm", self.calls[-1])
-        self.assertIn(str(self.recovery), self.calls[-1])
+        self.assertNotIn("--recovery-record", self.calls[-1])
         self.assertTrue(list(self.root.glob("cachyos-desktop/plan-*.json")))
-        self.wizard.assert_called_once()
+        self.assertFalse(list(self.root.glob("cachyos-desktop/recovery*.json")))
+        self.input.assert_not_called()
+        self.recovery_check.assert_not_called()
         self.assertNotIn("make local", " ".join(self.calls[-1]))
 
     def test_setup_preserves_detected_firewall_and_power_stack(self):
@@ -562,19 +586,48 @@ class SetupTests(unittest.TestCase):
                 cachyos.setup(cachyos.parser().parse_args(["setup", *flags]))
         self.subprocess.assert_not_called()
 
-    def test_rejected_plan_does_not_install_or_request_recovery_details(self):
-        self.input.return_value = "cancel"
-        with self.assertRaisesRegex(cachyos.Refusal, "cancelled"):
-            cachyos.setup(cachyos.parser().parse_args(["setup", "--recovery-record", str(self.recovery)]))
-        self.assertEqual([call[3] for call in self.calls], ["plan"])
-        self.wizard.assert_not_called()
+    def test_supplied_recovery_record_is_validated_and_forwarded_without_questions(self):
+        cachyos.setup(cachyos.parser().parse_args(["setup", "--recovery-record", str(self.recovery)]))
+        self.recovery_check.assert_called_once_with(str(self.recovery))
+        self.assertIn(str(self.recovery), self.calls[-1])
+        self.input.assert_not_called()
+
+    def test_previous_recovery_record_is_not_silently_reused_or_requested(self):
+        previous = self.root / "cachyos-desktop/recovery-old.json"
+        previous.parent.mkdir()
+        previous.write_text("{}\n")
+        cachyos.setup(cachyos.parser().parse_args(["setup"]))
+        self.recovery_check.assert_not_called()
+        self.assertNotIn("--recovery-record", self.calls[-1])
+        self.input.assert_not_called()
+
+    def test_existing_zram_is_preserved_without_a_question(self):
+        self.zram_sources.return_value = [self.root / "vendor-zram.conf"]
+        cachyos.setup(cachyos.parser().parse_args(["setup"]))
+        for command in self.calls:
+            self.assertIn("--preserve-zram", command)
+            self.assertNotIn("--reviewed-zram", command)
+            result = cachyos.build_plan(cachyos.parser().parse_args(command[3:]), self.hardware)
+            self.assertNotIn("/etc/systemd/zram-generator.conf.d/99-cachyos-desktop.conf", result["files"])
+        self.input.assert_not_called()
+
+    def test_intel_provider_is_preserved_without_guessing_a_generation(self):
+        self.hardware["graphics"] = ["intel"]
+        cachyos.setup(cachyos.parser().parse_args(["setup"]))
+        for command in self.calls:
+            self.assertEqual(command[command.index("--intel-vaapi") + 1], "existing")
+            result = cachyos.build_plan(cachyos.parser().parse_args(command[3:]), self.hardware)
+            self.assertIn("vulkan-intel", result["packages"])
+            self.assertNotIn("intel-media-driver", result["packages"])
+            self.assertNotIn("libva-intel-driver", result["packages"])
+        self.input.assert_not_called()
 
     def test_preflight_conflict_does_not_install(self):
         self.preflight_conflicts = ["Existing configuration needs review"]
         with self.assertRaisesRegex(cachyos.Refusal, "needs review"):
             cachyos.setup(cachyos.parser().parse_args(["setup"]))
         self.assertEqual([call[3] for call in self.calls], ["plan"])
-        self.wizard.assert_not_called()
+        self.input.assert_not_called()
 
     def test_failed_repository_review_never_attempts_installation(self):
         self.subprocess.side_effect = None
@@ -583,7 +636,6 @@ class SetupTests(unittest.TestCase):
             cachyos.setup(cachyos.parser().parse_args(["setup"]))
         self.subprocess.assert_called_once()
         self.assertEqual(self.subprocess.call_args.args[0][3], "plan")
-        self.wizard.assert_not_called()
         self.input.assert_not_called()
 
     def test_root_and_noninteractive_setup_cannot_install(self):
@@ -592,27 +644,6 @@ class SetupTests(unittest.TestCase):
         with patch.object(cachyos.sys, "stdin", SimpleNamespace(isatty=lambda: False)), self.assertRaisesRegex(cachyos.Refusal, "interactive"):
             cachyos.setup(cachyos.parser().parse_args(["setup"]))
         self.subprocess.assert_not_called()
-
-
-class RecoveryWizardTests(unittest.TestCase):
-    def answers(self, date="2026-10-28"):
-        return ["external USB backup", *[f"{date} Actual successful {test} test" for test in ("restore", "rescue", "fallback", "initramfs")], "systemd-boot", "mkinitcpio", "btrfs"]
-
-    def test_wizard_records_user_evidence_without_a_handwritten_json_file(self):
-        with tempfile.TemporaryDirectory() as directory, patch("builtins.input", side_effect=self.answers()), patch.object(cachyos, "run", return_value=""), patch.object(cachyos.shutil, "which", return_value=None), redirect_stdout(io.StringIO()):
-            destination = Path(directory) / "recovery.json"
-            self.assertEqual(cachyos.recovery_wizard(destination, HARDWARE), str(destination))
-            record = cachyos.recovery_check(str(destination))
-            self.assertEqual(record["backup_restore_test"]["date"], "2026-10-28")
-            self.assertIn("Actual successful", record["backup_restore_test"]["details"])
-            self.assertEqual(destination.stat().st_mode & 0o777, 0o600)
-
-    def test_invalid_evidence_never_saves_a_passing_record(self):
-        with tempfile.TemporaryDirectory() as directory, patch("builtins.input", side_effect=self.answers("invalid-date")), patch.object(cachyos, "run", return_value=""), patch.object(cachyos.shutil, "which", return_value=None), redirect_stdout(io.StringIO()):
-            destination = Path(directory) / "recovery.json"
-            with self.assertRaises(cachyos.Refusal):
-                cachyos.recovery_wizard(destination, HARDWARE)
-            self.assertFalse(destination.exists())
 
 
 if __name__ == "__main__":
