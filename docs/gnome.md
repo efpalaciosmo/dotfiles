@@ -58,7 +58,7 @@ no Shell extension, Niri process or simulated key presses are required.
 | Super+F | Toggle maximized/restored. |
 | Super+Shift+F | Toggle fullscreen. |
 | Super+H / L | Toggle left/right half-screen tiling. Super+Left/Right still works. |
-| Super+J / K | Restore/maximize, matching GNOME's native down/up actions (not bottom/top half-tiling). |
+| Super+J / K | Center/maximize the window (not bottom/top half-tiling). |
 | Super+C | Center a non-maximized window. |
 | Super+U / I | Next/previous workspace (right/left in GNOME). |
 | Super+Ctrl+U / I | Move the focused window to the next/previous workspace. |

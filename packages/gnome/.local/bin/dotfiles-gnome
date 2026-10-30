@@ -31,13 +31,14 @@ def configure_window_shortcuts(store):
     # Reserve Super+H/L for tiling instead of minimize/lock. Keep other aliases
     # and replace the lock binding atomically so a working lock shortcut remains.
     add_shortcuts(store, WM_KEYBINDINGS, "minimize", [], remove=["<Super>h"])
+    add_shortcuts(store, WM_KEYBINDINGS, "unmaximize", [], remove=["<Super>j"])
+    add_shortcuts(store, WM_KEYBINDINGS, "move-to-center", ["<Super>j"])
     add_shortcuts(store, MEDIA_KEYBINDINGS, "screensaver", ["<Super><Alt>l"], remove=["<Super>l"])
     for key, shortcut in {
         "close": "<Super>q",
         "toggle-maximized": "<Super>f",
         "toggle-fullscreen": "<Super><Shift>f",
         "maximize": "<Super>k",
-        "unmaximize": "<Super>j",
         "move-to-center": "<Super>c",
         # Niri's down/up workspace navigation maps to GNOME's right/left.
         "switch-to-workspace-right": "<Super>u",
@@ -51,7 +52,7 @@ def configure_window_shortcuts(store):
     }.items():
         add_shortcuts(store, WM_KEYBINDINGS, key, [shortcut])
     # GNOME has native left/right half-tiling, but no top/bottom half-tiling;
-    # J/K use the native down/up equivalents (restore/maximize).
+    # J centers the window; K uses the native up equivalent (maximize).
     add_shortcuts(store, MUTTER_KEYBINDINGS, "toggle-tiled-left", ["<Super>h"], remove=["<Super><Control>h"])
     add_shortcuts(store, MUTTER_KEYBINDINGS, "toggle-tiled-right", ["<Super>l"], remove=["<Super><Control>l"])
 
