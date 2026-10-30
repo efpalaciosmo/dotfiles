@@ -14,22 +14,30 @@ CUSTOM_SCHEMA = "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding"
 DISPLAY_INTERFACE = "org.gnome.Mutter.DisplayConfig"
 WM_KEYBINDINGS = "org.gnome.desktop.wm.keybindings"
 MUTTER_KEYBINDINGS = "org.gnome.mutter.keybindings"
+MEDIA_KEYBINDINGS = "org.gnome.settings-daemon.plugins.media-keys"
 
 
-def add_shortcuts(store, schema, key, shortcuts):
-    """Add aliases without replacing native/personal bindings or duplicating them."""
+def add_shortcuts(store, schema, key, shortcuts, *, remove=()):
+    """Add aliases, retiring only explicitly superseded/conflicting bindings."""
     current = store.get(schema, key)
-    combined = current + [shortcut for shortcut in shortcuts if shortcut not in current]
+    retained = [shortcut for shortcut in current if shortcut not in remove]
+    combined = retained + [shortcut for shortcut in shortcuts if shortcut not in retained]
     if combined != current:
         store.set(schema, key, combined)
 
 
 def configure_window_shortcuts(store):
     """Native GNOME equivalents; no Shell extensions or synthetic key events."""
+    # Reserve Super+H/L for tiling instead of minimize/lock. Keep other aliases
+    # and replace the lock binding atomically so a working lock shortcut remains.
+    add_shortcuts(store, WM_KEYBINDINGS, "minimize", [], remove=["<Super>h"])
+    add_shortcuts(store, MEDIA_KEYBINDINGS, "screensaver", ["<Super><Alt>l"], remove=["<Super>l"])
     for key, shortcut in {
         "close": "<Super>q",
         "toggle-maximized": "<Super>f",
         "toggle-fullscreen": "<Super><Shift>f",
+        "maximize": "<Super>k",
+        "unmaximize": "<Super>j",
         "move-to-center": "<Super>c",
         # Niri's down/up workspace navigation maps to GNOME's right/left.
         "switch-to-workspace-right": "<Super>u",
@@ -42,9 +50,10 @@ def configure_window_shortcuts(store):
         "move-to-monitor-right": "<Super><Control><Shift>l",
     }.items():
         add_shortcuts(store, WM_KEYBINDINGS, key, [shortcut])
-    # Half-screen tiling is the closest native equivalent to moving a column.
-    add_shortcuts(store, MUTTER_KEYBINDINGS, "toggle-tiled-left", ["<Super><Control>h"])
-    add_shortcuts(store, MUTTER_KEYBINDINGS, "toggle-tiled-right", ["<Super><Control>l"])
+    # GNOME has native left/right half-tiling, but no top/bottom half-tiling;
+    # J/K use the native down/up equivalents (restore/maximize).
+    add_shortcuts(store, MUTTER_KEYBINDINGS, "toggle-tiled-left", ["<Super>h"], remove=["<Super><Control>h"])
+    add_shortcuts(store, MUTTER_KEYBINDINGS, "toggle-tiled-right", ["<Super>l"], remove=["<Super><Control>l"])
 
 
 def configure_preferences(store):
@@ -56,7 +65,7 @@ def configure_preferences(store):
         add_shortcuts(store, WM_KEYBINDINGS, f"switch-to-workspace-{number}",
                       [f"<Super>{number}"])
         add_shortcuts(store, WM_KEYBINDINGS, f"move-to-workspace-{number}",
-                      [f"<Super><Shift>{number}", f"<Super><Control>{number}"])
+                      [f"<Super><Shift>{number}"], remove=[f"<Super><Control>{number}"])
     configure_window_shortcuts(store)
     schema = "org.gnome.settings-daemon.plugins.media-keys"
     paths = store.get(schema, "custom-keybindings")

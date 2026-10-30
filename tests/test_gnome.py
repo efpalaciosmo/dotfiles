@@ -37,6 +37,10 @@ class MemoryPreferences:
                        ["/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/personal/"],
                        (GNOME["WM_KEYBINDINGS"], "close", None): ["<Alt>F4"],
                        (GNOME["WM_KEYBINDINGS"], "toggle-maximized", None): ["<Alt>F10"],
+                       (GNOME["WM_KEYBINDINGS"], "maximize", None): ["<Super>Up"],
+                       (GNOME["WM_KEYBINDINGS"], "unmaximize", None): ["<Super>Down", "<Alt>F5"],
+                       (GNOME["WM_KEYBINDINGS"], "minimize", None): ["<Super>h", "<Alt>F9"],
+                       (GNOME["MEDIA_KEYBINDINGS"], "screensaver", None): ["<Super>l", "<Control><Alt>l"],
                        (GNOME["WM_KEYBINDINGS"], "switch-to-workspace-1", None): ["<Super>Home"],
                        (GNOME["MUTTER_KEYBINDINGS"], "toggle-tiled-left", None): ["<Super>Left"],
                        (GNOME["MUTTER_KEYBINDINGS"], "toggle-tiled-right", None): ["<Super>Right"]}
@@ -63,7 +67,7 @@ class GnomeTests(unittest.TestCase):
             self.assertIn(f"<Super>{number}", store.get(GNOME["WM_KEYBINDINGS"], f"switch-to-workspace-{number}"))
             self.assertEqual(store.get("org.gnome.shell.keybindings", f"switch-to-application-{number}"), [])
             self.assertEqual(store.get("org.gnome.desktop.wm.keybindings", f"move-to-workspace-{number}"),
-                             [f"<Super><Shift>{number}", f"<Super><Control>{number}"])
+                             [f"<Super><Shift>{number}"])
         self.assertIn("<Super>Home", store.get(GNOME["WM_KEYBINDINGS"], "switch-to-workspace-1"))
         self.assertEqual(len(store.get("org.gnome.settings-daemon.plugins.media-keys", "custom-keybindings")), 2)
         self.assertEqual(store.get(GNOME["CUSTOM_SCHEMA"], "command", GNOME["TERMINAL_PATH"]), "ghostty")
@@ -76,6 +80,8 @@ class GnomeTests(unittest.TestCase):
             "close": ["<Alt>F4", "<Super>q"],
             "toggle-maximized": ["<Alt>F10", "<Super>f"],
             "toggle-fullscreen": ["<Super><Shift>f"],
+            "maximize": ["<Super>Up", "<Super>k"],
+            "unmaximize": ["<Super>Down", "<Alt>F5", "<Super>j"],
             "move-to-center": ["<Super>c"],
             "switch-to-workspace-right": ["<Super>u"],
             "switch-to-workspace-left": ["<Super>i"],
@@ -89,7 +95,10 @@ class GnomeTests(unittest.TestCase):
             self.assertEqual(store.get(GNOME["WM_KEYBINDINGS"], key), expected, key)
         for side, key in (("Left", "h"), ("Right", "l")):
             self.assertEqual(store.get(GNOME["MUTTER_KEYBINDINGS"], f"toggle-tiled-{side.lower()}"),
-                             [f"<Super>{side}", f"<Super><Control>{key}"])
+                             [f"<Super>{side}", f"<Super>{key}"])
+        self.assertEqual(store.get(GNOME["WM_KEYBINDINGS"], "minimize"), ["<Alt>F9"])
+        self.assertEqual(store.get(GNOME["MEDIA_KEYBINDINGS"], "screensaver"),
+                         ["<Control><Alt>l", "<Super><Alt>l"])
 
     def test_personal_window_aliases_survive_reapplication_without_duplicates(self):
         store = MemoryPreferences()
@@ -100,8 +109,9 @@ class GnomeTests(unittest.TestCase):
         self.assertEqual(store.values, before)
         self.assertEqual(store.get(GNOME["WM_KEYBINDINGS"], "close"),
                          ["<Alt>F4", "<Super>q", "<Control><Alt>q"])
-        # Do not steal GNOME lock/minimize/notification or application cycling keys.
-        self.assertNotIn((GNOME["WM_KEYBINDINGS"], "minimize", None), store.values)
+        # Keep alternate lock/minimize bindings and unrelated notification/cycling keys.
+        self.assertEqual(store.get(GNOME["WM_KEYBINDINGS"], "minimize"), ["<Alt>F9"])
+        self.assertIn("<Control><Alt>l", store.get(GNOME["MEDIA_KEYBINDINGS"], "screensaver"))
         self.assertNotIn((GNOME["WM_KEYBINDINGS"], "switch-applications", None), store.values)
         self.assertNotIn(("org.gnome.shell.keybindings", "toggle-message-tray", None), store.values)
 
@@ -110,11 +120,30 @@ class GnomeTests(unittest.TestCase):
         GNOME["configure_preferences"](store)
         actions = {}
         for (schema, key, _), shortcuts in store.values.items():
-            if schema not in (GNOME["WM_KEYBINDINGS"], GNOME["MUTTER_KEYBINDINGS"]):
+            if schema not in (GNOME["WM_KEYBINDINGS"], GNOME["MUTTER_KEYBINDINGS"], GNOME["MEDIA_KEYBINDINGS"]):
                 continue
             for shortcut in shortcuts:
                 self.assertNotIn(shortcut, actions, f"{shortcut}: {key} conflicts with {actions.get(shortcut)}")
                 actions[shortcut] = key
+
+    def test_previous_managed_ctrl_aliases_are_migrated_without_losing_personal_ones(self):
+        store = MemoryPreferences()
+        for side, key in (("left", "h"), ("right", "l")):
+            store.set(GNOME["MUTTER_KEYBINDINGS"], f"toggle-tiled-{side}",
+                      [f"<Super>{side.title()}", f"<Super><Control>{key}", f"<Alt>{key}"])
+        for number in range(1, 5):
+            store.set(GNOME["WM_KEYBINDINGS"], f"move-to-workspace-{number}",
+                      [f"<Super><Control>{number}", f"<Alt><Shift>{number}"])
+        GNOME["configure_preferences"](store)
+        before = copy.deepcopy(store.values)
+        GNOME["configure_preferences"](store)
+        self.assertEqual(store.values, before)
+        for side, key in (("left", "h"), ("right", "l")):
+            self.assertEqual(store.get(GNOME["MUTTER_KEYBINDINGS"], f"toggle-tiled-{side}"),
+                             [f"<Super>{side.title()}", f"<Alt>{key}", f"<Super>{key}"])
+        for number in range(1, 5):
+            self.assertEqual(store.get(GNOME["WM_KEYBINDINGS"], f"move-to-workspace-{number}"),
+                             [f"<Alt><Shift>{number}", f"<Super><Shift>{number}"])
 
     def test_150_percent_preserves_resolution_refresh_transform_and_color(self):
         original = state(transform=1)

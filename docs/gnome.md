@@ -22,8 +22,7 @@ The GNOME helper intentionally uses `/usr/bin/python3`, not a virtual environmen
 - **Four fixed workspaces** instead of dynamic workspaces.
 - **Super+1–4** to switch workspaces. GNOME's conflicting application shortcuts
   for those four keys are disabled; Super+5–9 remain untouched.
-- **Super+Ctrl+1–4** to send the current window to a workspace, like Niri;
-  **Super+Shift+1–4** remains an alias.
+- **Super+Shift+1–4** to send the current window to a workspace.
 - **Super+Enter** to open Ghostty, preserving unrelated custom shortcuts.
 - Niri-like native window shortcuts, listed below. Existing shortcuts for the
   same actions are retained without duplicate entries on repeated logins.
@@ -58,24 +57,28 @@ no Shell extension, Niri process or simulated key presses are required.
 | Super+Q | Close the focused window (normal application close, not force-kill). |
 | Super+F | Toggle maximized/restored. |
 | Super+Shift+F | Toggle fullscreen. |
-| Super+Ctrl+H / L | Toggle left/right half-screen tiling. Super+Left/Right still works. |
+| Super+H / L | Toggle left/right half-screen tiling. Super+Left/Right still works. |
+| Super+J / K | Restore/maximize, matching GNOME's native down/up actions (not bottom/top half-tiling). |
 | Super+C | Center a non-maximized window. |
 | Super+U / I | Next/previous workspace (right/left in GNOME). |
 | Super+Ctrl+U / I | Move the focused window to the next/previous workspace. |
 | Super+Ctrl+Shift+H / J / K / L | Move the focused window to a monitor left/down/up/right. |
 | Super+1–4 | Switch directly to a workspace. |
-| Super+Ctrl+1–4 or Super+Shift+1–4 | Move the focused window to a workspace. |
+| Super+Shift+1–4 | Move the focused window to a workspace. |
 | Super+Enter | Open Ghostty. |
+| Super+Alt+L | Lock the screen (moved from Super+L to avoid the tiling conflict). |
 
 GNOME keeps Alt+F4, Alt+F10 and existing personal aliases for these actions.
-Super+L still locks, Super+H still minimizes, and Super+Tab still switches
-applications. Only the conflicting Super+1–4 application-launcher assignments
-are explicitly cleared. A manually assigned alias for another action or a
+Super+Tab still switches applications. Super+H no longer minimizes and Super+L
+no longer locks; existing alternative minimize/lock shortcuts are preserved.
+The old managed Super+Ctrl+H/L tiling and Super+Ctrl+1–4 workspace-move aliases
+are retired when this profile is reapplied. Conflicting Super+1–4 application
+shortcuts are also cleared. A manually assigned alias for another action or a
 Shell extension can still conflict; resolve those through GNOME Keyboard settings.
 
 This emulates the useful actions, not Niri's layout engine: GNOME does not
 natively provide scrolling columns, directional H/J/K/L focus, column swapping,
-preset widths, or a tiled/floating toggle. Ctrl+H/L tiles a single window rather
+preset widths, top/bottom half-tiling, or a tiled/floating toggle. Super+H/L tiles a single window rather
 than reordering columns. Monitor moves require another monitor in that direction;
 workspace navigation follows GNOME's boundary behavior, not Niri's auto-creation.
 

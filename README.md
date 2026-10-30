@@ -86,8 +86,9 @@ language settings; Mako displays the text it receives.
 The `desktop` configuration applies user appearance preferences through
 GSettings, including dark mode, orange accent and font names. These preferences
 also affect GNOME when using the same account. The `gnome` package adds four
-fixed workspaces, `Super+1`–`Super+4`, `Super+Ctrl+1`–`Super+Ctrl+4` (or Shift)
-to move a window, and `Super+Return` for Ghostty. It also mirrors Niri's close,
+fixed workspaces, `Super+1`–`Super+4`, `Super+Shift+1`–`Super+Shift+4`
+to move a window, and `Super+Return` for Ghostty. `Super+H/L` tiles left/right,
+`Super+J/K` restores/maximizes, and `Super+Alt+L` locks. It also mirrors Niri's close,
 maximize/fullscreen, left/right tiling, workspace navigation and monitor moves
 using [native GNOME shortcuts](docs/gnome.md#niri-like-window-controls), keeping
 existing aliases. Its GNOME-only login helper also requests
