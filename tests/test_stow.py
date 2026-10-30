@@ -28,7 +28,8 @@ class StowTests(unittest.TestCase):
             path = binary / name
             path.write_text("#!/bin/sh\nexit 0\n")
             path.chmod(0o755)
-        self.environment = {**os.environ, "HOME": str(self.home), "PATH": f"{binary}:{os.environ['PATH']}"}
+        self.environment = {**os.environ, "HOME": str(self.home), "PATH": f"{binary}:{os.environ['PATH']}",
+                            "XDG_CURRENT_DESKTOP": "niri"}
 
     def apply(self, *packages):
         return subprocess.run(["bash", str(self.repo / "scripts/apply-dotfiles.sh"), *packages],
@@ -62,6 +63,17 @@ class StowTests(unittest.TestCase):
         self.assertEqual(config.with_name("config.bak").read_text(), "older backup")
         self.assertEqual(config.with_name("config.bak.1").read_text(), "personal config")
         self.assertFalse(config.with_name("config.bak.2").exists())
+
+    def test_new_ghostty_config_cannot_shadow_the_managed_theme(self):
+        config = self.home / ".config/ghostty/config.ghostty"
+        config.parent.mkdir(parents=True)
+        config.write_text("theme = different\n")
+        self.successful("ghostty")
+        self.successful("ghostty")
+        self.assertTrue(config.is_symlink())
+        self.assertIn("theme = Adwaita Dark Orange", config.read_text())
+        self.assertEqual(config.with_name("config.ghostty.bak").read_text(), "theme = different\n")
+        self.assertFalse(config.with_name("config.ghostty.bak.1").exists())
 
     def test_unmanaged_parent_link_does_not_move_external_files(self):
         outside = self.root / "external"

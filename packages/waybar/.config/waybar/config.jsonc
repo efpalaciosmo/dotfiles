@@ -1,8 +1,8 @@
 {
     "layer": "top",
     "position": "bottom",
-    "height": 36,
-    "spacing": 3,
+    "height": 40,
+    "spacing": 4,
     "margin-bottom": 8,
     "margin-left": 12,
     "margin-right": 12,
@@ -22,6 +22,13 @@
     "custom/media": {
         "exec": "~/.config/waybar/scripts/media-status",
         "return-type": "json",
+        "format": "{icon}  {text}",
+        "format-icons": {
+            "playing": "<span color='#8ff0a4'></span>",
+            "paused": "<span color='#c0bfbc'></span>",
+            "stopped": "<span color='#9a9996'></span>"
+        },
+        "hide-empty-text": true,
         "interval": 3,
         "max-length": 30,
         "escape": true,
@@ -30,10 +37,10 @@
         "on-scroll-up": "playerctl next",
         "on-scroll-down": "playerctl previous"
     },
-    "tray": { "spacing": 6 },
+    "tray": { "icon-size": 18, "spacing": 8 },
     "privacy": {
         "icon-spacing": 4,
-        "icon-size": 13,
+        "icon-size": 16,
         "transition-duration": 250,
         "modules": [
             { "type": "screenshare", "tooltip": true },
@@ -50,13 +57,20 @@
     "custom/network-speed": {
         "exec": "~/.config/waybar/scripts/network-speed",
         "return-type": "json",
+        "format": "{icon}  {text}",
+        "format-icons": {
+            "wifi": "<span color='#99c1f1'>󰤨</span>",
+            "ethernet": "<span color='#99c1f1'>󰈀</span>",
+            "disconnected": "<span color='#ff938c'>󰤮</span>"
+        },
+        "escape": true,
         "interval": 3,
         "on-click": "~/.config/fuzzel/scripts/wifi",
         "on-click-right": "nm-connection-editor"
     },
     "pulseaudio": {
-        "format": "{icon}  {volume}%",
-        "format-bluetooth": "{icon}  {volume}%",
+        "format": "<span color='#f9f06b'>{icon}</span>  {volume}%",
+        "format-bluetooth": "<span color='#99c1f1'>{icon}</span>  {volume}%",
         "format-muted": "󰝟  muted",
         "format-icons": { "headphone": "", "default": ["", "", ""] },
         "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ -l 1.0",
@@ -67,11 +81,19 @@
     "custom/cpu": {
         "exec": "~/.config/waybar/scripts/cpu-status",
         "return-type": "json",
+        "format": "{icon}  {text}",
+        "format-icons": {
+            "normal": "<span color='#ffbe6f'></span>",
+            "warning": "<span color='#ffc252'></span>",
+            "critical": "<span color='#1d1d20'></span>"
+        },
+        "escape": true,
         "interval": 5,
         "on-click": "~/.config/waybar/scripts/terminal-tool monitor"
     },
     "memory": {
-        "format": "󰍛  {}%",
+        "format": "<span color='#dc8add'>󰍛</span>  {}%",
+        "format-critical": "󰍛  {}%",
         "interval": 10,
         "states": { "critical": 85 },
         "on-click": "~/.config/waybar/scripts/terminal-tool monitor",
@@ -79,8 +101,8 @@
     },
     "clock": {
         "locale": "en_US.UTF-8",
-        "format": "  {:%a %d · %H:%M}",
-        "format-alt": "  {:%d/%m/%Y · %H:%M}",
+        "format": "<span color='#ff9c5b'></span>  {:%a %d · %H:%M}",
+        "format-alt": "<span color='#ff9c5b'></span>  {:%d/%m/%Y · %H:%M}",
         "on-click": "~/.config/waybar/scripts/open-calendar",
         "tooltip-format": "<tt>{calendar}</tt>",
         "calendar": {

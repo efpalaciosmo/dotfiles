@@ -9,7 +9,8 @@ The exact requested active window color is **#ff7800**.
 1. [Adwaita's color reference](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/css-variables.html)
    distinguishes dark text views (`#1d1d20`), window surfaces (`#222226`),
    header bars (`#2e2e32`) and popovers (`#36363a`). These give the desktop
-   depth through solid surfaces. Color is reserved for focus and status.
+    depth through solid surfaces. Soft icon accents add color without tinting
+    the surfaces; stronger colors identify focus and status.
 2. [Native appearance preferences](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html)
    let libadwaita follow the system dark style and orange accent. GNOME's native
    orange background is `#ed5b00`, and its readable standalone orange is
@@ -26,8 +27,11 @@ The exact requested active window color is **#ff7800**.
 5. [Waybar's Niri states](https://github.com/Alexays/Waybar/wiki/Module:-Niri)
    distinguish the focused workspace from workspaces visible on other outputs.
    Only the focused workspace gets a solid orange selection. The bottom bar
-   keeps the existing modules and controls, with a neutral clock and routine
-   indicators; warning/error/charging states retain distinct colors.
+    keeps the existing modules and controls, with neutral labels and softly
+    colored icons: blue network, yellow audio, orange CPU/clock, purple memory
+    and green playback. Warning/error/charging states retain distinct colors.
+    The bar is 40 logical pixels high with 14-pixel type and 18-pixel tray icons;
+    compositor scaling handles HiDPI rather than hard-coded physical pixels.
 6. Fuzzel's installed `fuzzel.ini(5)` manual supports proportional fonts and
    font fallback, RGBA colors, fixed line heights, and rounded selections.
    The launcher uses native UI type, 32-pixel rows and an opaque popover.
@@ -57,6 +61,11 @@ The exact requested active window color is **#ff7800**.
 | Warning | `#ffc252` | Low battery and high CPU |
 | Error | `#ff938c` | Critical status and urgent windows |
 | Success | `#78e9ab` | Charging/full battery |
+| Soft blue | `#99c1f1` | Network, Bluetooth audio and idle icons |
+| Soft yellow | `#f9f06b` | Audio icon |
+| Soft orange | `#ffbe6f` | CPU icon |
+| Soft purple | `#dc8add` | Memory icon |
+| Soft green | `#8ff0a4` | Playing media icon |
 
 Computed sRGB contrast ratios: dark text on `#ff7800` is **6.36:1**;
 white on that orange is only **2.65:1**, so orange selections use dark text.
@@ -65,14 +74,36 @@ the window surface is **8.62:1**.
 
 ## Applying and checking
 
-`make dotfiles` links the full desktop package and applies supported appearance
+`make` links both desktop configurations and applies supported appearance
 preferences. The helper is also available as `~/.local/bin/dotfiles-appearance`.
 Older schemas without an accent preference are reported and skipped.
 Existing conflicting files receive the repository's usual `.bak` backups.
-Ghostty's configuration and `themes/Adwaita Dark Orange` live together in
+Ghostty's canonical `config.ghostty` and `themes/Adwaita Dark Orange` live together in
 `packages/ghostty/.config/ghostty/` and are both linked with Stow. No theme
 download or absolute repository path is needed. Niri, Fuzzel, Waybar and the
 user XDG terminal list all select Ghostty.
+The managed legacy `config` includes `config.ghostty` for older Ghostty versions.
+Newer Ghostty loads the legacy file first and `config.ghostty` afterward; both
+paths are backed up and linked, preventing unmanaged newer files from overriding
+the intended theme. The font list resets before setting Adwaita Mono, so loading
+both entry points does not append duplicate fallbacks.
+
+## Theme coverage audit
+
+| Component | Theme source / limitation |
+| --- | --- |
+| GNOME + GTK/libadwaita | Supported dark preference, Adwaita icons/cursor/fonts and native orange accent via `dotfiles-appearance`; reapplied at GNOME login. |
+| GNOME Shell | Native GNOME styling, not a separately installed custom Shell CSS theme. Its panel/overview cannot be themed by Waybar CSS. |
+| Ghostty | Bundled `Adwaita Dark Orange` terminal palette; GTK window chrome follows dark mode. |
+| Niri, Waybar, Fuzzel, Mako | Matching custom Adwaita surfaces and orange focus in their own configuration files; used only in Niri. |
+| Swaylock, Zathura, Starship, Bash | Matching configured colors; Swaylock is for Niri, not GNOME's lock screen. |
+| Vim | Dark background and terminal palette, not a separate custom Vim colorscheme. |
+| Qt, browser content, Flatpaks and third-party apps | No universal override; apps/sandboxes must support desktop preferences or be configured individually. |
+
+This is a coordinated Adwaita Dark/orange desktop, **not one custom theme file
+applied to every application**. No global `GTK_THEME`, font DPI or toolkit scale
+override is used. GNOME's supported accent differs from the exact shell orange
+as documented above; forcing global CSS would break native libadwaita styling.
 
 Niri reloads edited configuration automatically. Reload Waybar with
 `pkill -SIGUSR2 -x waybar` and Mako with `makoctl reload`. New Fuzzel and Ghostty

@@ -80,7 +80,7 @@ for relative in niri/scripts/lock-screen niri/scripts/session-idle; do
     if [[ -x $HOME/.config/$relative ]]; then
         printf 'OK   executable ~/.config/%s\n' "$relative"
     else
-        printf 'MISS executable ~/.config/%s (run make dotfiles)\n' "$relative" >&2
+        printf 'MISS executable ~/.config/%s (run make)\n' "$relative" >&2
         failures=$((failures + 1))
     fi
 done
@@ -113,7 +113,10 @@ fi
 
 if command -v niri >/dev/null 2>&1; then niri validate || failures=$((failures + 1)); fi
 if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config="$HOME/.config/fuzzel/fuzzel.ini" || failures=$((failures + 1)); fi
-if command -v ghostty >/dev/null 2>&1; then ghostty +validate-config --config-file="$HOME/.config/ghostty/config" || failures=$((failures + 1)); fi
+if command -v ghostty >/dev/null 2>&1; then
+    # Validate the effective configuration, including automatically loaded files.
+    ghostty +validate-config || failures=$((failures + 1))
+fi
 if command -v locale >/dev/null 2>&1 && ! locale -a | grep -Eiq '^en_US\.(utf8|utf-8)$'; then
     printf 'MISS en_US.UTF-8 locale (provide it through your distribution)\n' >&2
     failures=$((failures + 1))

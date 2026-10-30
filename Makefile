@@ -1,30 +1,23 @@
 SHELL := /bin/bash
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := dotfiles
 
 TEST_PYTHON ?= python3
 
-PACKAGES := git shell-container starship vi ghostty niri waybar mako fuzzel desktop
+PACKAGES := git shell-container starship vi ghostty niri waybar mako fuzzel desktop gnome
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/niri/.config/niri/scripts/*) \
 	packages/desktop/.local/bin/dotfiles-appearance \
 	$(filter-out packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker,$(shell find packages/fuzzel/.config/fuzzel/scripts -maxdepth 1 -type f)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
-PYTHON_FILES := $(wildcard scripts/*.py) packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
+PYTHON_FILES := $(wildcard scripts/*.py) packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker packages/gnome/.local/bin/dotfiles-gnome
 
-.PHONY: all help local dotfiles stow check doctor verify
-
-all: dotfiles ## Synchronize personal dotfiles and desktop settings only
+.PHONY: dotfiles check doctor help
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-local: check ## Validate and link personal dotfiles only (no package installation)
-	@$(MAKE) --no-print-directory dotfiles
-
-dotfiles: ## Link selected dotfile packages with GNU Stow and back up conflicts
+dotfiles: ## Default: configure dotfiles for both Niri and GNOME; no software installation
 	@bash scripts/apply-dotfiles.sh $(PACKAGES)
-
-stow: dotfiles ## Alias for dotfiles
 
 check: ## Run non-mutating repository syntax checks
 	@for file in $(SCRIPT_FILES) packages/shell-container/.bashrc packages/shell-container/.profile packages/shell-container/.local/bin/fedora-terminal; do bash -n "$$file" || exit 1; done
@@ -36,7 +29,7 @@ check: ## Run non-mutating repository syntax checks
 	@if command -v niri >/dev/null 2>&1; then niri validate --config packages/niri/.config/niri/config.kdl; fi
 	@if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config=packages/fuzzel/.config/fuzzel/fuzzel.ini; fi
 	@if command -v ghostty >/dev/null 2>&1; then bash scripts/validate-configs.sh ghostty; fi
-	@if command -v desktop-file-validate >/dev/null 2>&1; then desktop-file-validate packages/desktop/.local/share/applications/*.desktop; fi
+	@if command -v desktop-file-validate >/dev/null 2>&1; then desktop-file-validate packages/desktop/.local/share/applications/*.desktop packages/gnome/.config/autostart/*.desktop; fi
 	@if command -v vim >/dev/null 2>&1; then \
 		output=$$(mktemp); \
 		vim -Nu packages/vi/.vimrc -i NONE -es -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \
@@ -50,5 +43,3 @@ check: ## Run non-mutating repository syntax checks
 
 doctor: ## Validate required commands, configs, and managed links on this machine
 	@./scripts/doctor.sh $(PACKAGES)
-
-verify: check doctor ## Run static and machine-specific validation

@@ -1,2 +1,7 @@
-// Let Niri detect connected desktop monitors and choose their preferred modes.
-// Add output blocks here only for deliberate per-monitor overrides.
+// ASUS VG27UQ1A 4K display, detected on DP-1 in the GNOME session.
+// 150% gives a 2560x1440 logical workspace. Other outputs stay automatic.
+output "DP-1" {
+    scale 1.5
+}
+// Leave mode unset to preserve the preferred resolution/refresh rate.
+// GNOME has its own display configuration, applied by dotfiles-gnome.

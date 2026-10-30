@@ -1,0 +1,11 @@
+# Both this configuration and its theme are managed by GNU Stow.
+theme = Adwaita Dark Orange
+# Reset the fallback list when old/new Ghostty entry points both load this file.
+font-family = ""
+font-family = Adwaita Mono
+font-size = 14
+background-opacity = 1
+cursor-style = bar
+window-padding-x = 12
+window-padding-y = 12
+window-theme = dark

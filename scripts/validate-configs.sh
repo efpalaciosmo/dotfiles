@@ -9,7 +9,7 @@ for package in "$@"; do
         ghostty)
             # Resolve the bundled theme before it has been linked into HOME.
             XDG_CONFIG_HOME="$repo_root/packages/ghostty/.config" \
-                ghostty +validate-config --config-file="$repo_root/packages/ghostty/.config/ghostty/config"
+                ghostty +validate-config --config-file="$repo_root/packages/ghostty/.config/ghostty/config.ghostty"
             ;;
     esac
 done

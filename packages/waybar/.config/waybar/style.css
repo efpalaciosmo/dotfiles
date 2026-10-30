@@ -1,4 +1,6 @@
-/* Adwaita dark: neutral chrome, orange focus, color only for state. */
+/* Adwaita dark: unchanged surfaces, orange focus, soft colored status icons.
+ * Dimensions are logical pixels: Niri handles per-output HiDPI scaling.
+ * Icon-only accents live in config.jsonc; labels stay neutral and readable. */
 @define-color surface #222226;
 @define-color raised #36363a;
 @define-color line #45454a;
@@ -10,13 +12,14 @@
 @define-color warning #ffc252;
 @define-color success #78e9ab;
 @define-color error #ff938c;
+@define-color blue #99c1f1;
 
 * {
     border: none;
     border-radius: 0;
     min-height: 0;
     font-family: "Adwaita Sans", "JetBrainsMono Nerd Font", sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     color: @text;
 }
@@ -36,9 +39,9 @@ tooltip label { padding: 8px; color: @text; }
 
 #workspaces { padding: 0 5px; }
 #workspaces button {
-    min-width: 22px;
-    padding: 2px 4px;
-    margin: 3px 1px;
+    min-width: 24px;
+    padding: 3px 5px;
+    margin: 4px 1px;
     border-radius: 8px;
     color: @muted;
     background: transparent;
@@ -68,17 +71,17 @@ tooltip label { padding: 8px; color: @text; }
 .modules-right { padding: 0 4px; }
 #tray, #privacy, #idle_inhibitor, #custom-network-speed,
 #backlight, #pulseaudio, #custom-cpu, #memory, #custom-battery, #clock, #custom-power {
-    padding: 0 7px;
+    padding: 0 8px;
     border-radius: 8px;
 }
 #tray { padding: 0 4px; }
 #privacy { color: @error; }
-#idle_inhibitor { color: @muted; }
+#idle_inhibitor { color: @blue; }
 #idle_inhibitor.activated { color: @accent_text; background: @raised; }
 #custom-network-speed { font-family: "Adwaita Mono", "JetBrainsMono Nerd Font", monospace; }
 #custom-network-speed.disconnected { color: @error; }
 #pulseaudio.muted { color: @dim; }
-#custom-cpu, #memory { color: @muted; }
+#custom-cpu, #memory { color: @text; }
 #custom-cpu.warning, #custom-battery.warning { color: @warning; background: @raised; }
 #custom-cpu.critical, #memory.critical, #custom-battery.critical {
     color: #1d1d20;
@@ -92,7 +95,7 @@ tooltip label { padding: 8px; color: @text; }
     padding: 0 10px;
     font-weight: 600;
 }
-#custom-power { color: @muted; }
+#custom-power { color: @error; }
 #idle_inhibitor:hover, #custom-network-speed:hover, #backlight:hover, #pulseaudio:hover,
 #custom-cpu:hover, #memory:hover, #clock:hover, #custom-battery:hover, #custom-power:hover {
     background: @raised;

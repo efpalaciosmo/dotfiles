@@ -39,7 +39,7 @@ lock_session() {
         fi
         notify_user "Power menu" "Could not lock the session"
     else
-        notify_user "Power menu" "Niri screen locker is missing; run make dotfiles"
+        notify_user "Power menu" "Niri screen locker is missing; run make"
     fi
     return 1
 }

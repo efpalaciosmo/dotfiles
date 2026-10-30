@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class GhosttyTests(unittest.TestCase):
     def test_theme_and_terminal_defaults_are_stow_packages(self):
-        config = ROOT / "packages/ghostty/.config/ghostty/config"
+        config = ROOT / "packages/ghostty/.config/ghostty/config.ghostty"
         values = dict(line.split(" = ", 1) for line in config.read_text().splitlines() if line and not line.startswith("#"))
         self.assertEqual(values["font-family"], "Adwaita Mono")
         theme = config.parent / "themes" / values["theme"]
@@ -21,6 +21,7 @@ class GhosttyTests(unittest.TestCase):
         self.assertIn("background = #1d1d20", text)
         self.assertIn("selection-background = #ff7800", text)
         self.assertEqual(text.count("palette = "), 16)
+        self.assertIn("config-file = config.ghostty", (config.parent / "config").read_text())
         defaults = (ROOT / "Makefile").read_text().split("PACKAGES :=", 1)[1].splitlines()[0].split()
         self.assertIn("ghostty", defaults)
         self.assertNotIn("kitty", defaults)
@@ -55,5 +56,5 @@ class GhosttyTests(unittest.TestCase):
             self.assertEqual(result.returncode, 17)
             self.assertEqual((root / "args").read_text().splitlines(), [
                 str(ROOT / "packages/ghostty/.config"), "+validate-config",
-                f"--config-file={ROOT}/packages/ghostty/.config/ghostty/config",
+                f"--config-file={ROOT}/packages/ghostty/.config/ghostty/config.ghostty",
             ])

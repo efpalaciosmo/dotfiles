@@ -1,7 +1,7 @@
 # Desktop acceptance and recovery
 
 Target: a Linux desktop with Niri and the required desktop tools installed.
-Plain `make` (or `make dotfiles`) applies Stow links and user appearance only.
+Plain `make` sets up both Niri and GNOME dotfiles and user desktop preferences.
 Install software and configure system services through your distribution.
 
 ## Acceptance in Niri
@@ -24,6 +24,44 @@ Doctor reports missing requirements with exit code 1 and checks pending a Niri
 session with exit code 2. Absent optional Bluetooth adapters, batteries and
 backlights are informational. Missing tools or inactive desktop services should
 be addressed through your distribution, without enabling competing services.
+
+## 4K display scaling
+
+GNOME and Niri have independent display configurations. `make` installs a
+GNOME login helper which requests **150%** on active 4K displays. It preserves
+resolution, refresh rate, rotation and other monitors' scales. GNOME persists
+the result in its own `monitors.xml`; this mutable file is not Stow-managed.
+If GNOME asks, confirm **Keep Changes**. See [GNOME setup](gnome.md).
+
+Niri's `packages/niri/.config/niri/monitors.kdl` explicitly sets **150%** on the
+ASUS display at `DP-1`; other outputs remain automatic. If the connector changes,
+find the new name with:
+
+```sh
+niri msg outputs
+```
+
+Update the output name in that file (or `~/.config/niri/monitors.kdl` after linking):
+
+```kdl
+output "DP-1" {
+    scale 1.5
+}
+```
+
+For 3840×2160, **1.5 (150%)** gives a 2560×1440 logical desktop.
+Configure only the 4K output so other monitors keep their own scale.
+Leave `mode` unset to retain the preferred resolution and refresh rate.
+
+Niri reloads this automatically. Waybar, Fuzzel and Mako use logical sizes and
+follow output scaling. Do not also force `GDK_SCALE`, `GDK_DPI_SCALE` or font DPI:
+that can double-scale apps and break mixed-DPI setups. To undo the override,
+remove the output block and let Niri choose again.
+
+After applying the dotfiles, reload Waybar with `pkill -SIGUSR2 -x waybar`.
+Check that labels do not clip, tray icons are sharp, warning states remain
+legible and tooltips display network/media names containing `&` or `<` correctly.
+The dark bar surface and desktop wallpaper are unchanged.
 
 ## Configuration recovery
 

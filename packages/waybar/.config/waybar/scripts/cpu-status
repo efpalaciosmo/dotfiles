@@ -92,7 +92,7 @@ elif (( usage >= 70 )); then
     class="warning"
 fi
 
-text="  ${usage}%"
+text="${usage}%"
 
 tooltip="CPU: ${usage}%"
 if [[ -n "${temp:-}" ]]; then
@@ -103,7 +103,8 @@ if [[ -n "$top_processes" ]]; then
     tooltip+=$'\n\n'"Top CPU processes:"$'\n'"${top_processes}"
 fi
 
-printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \
+printf '{"text":"%s","tooltip":"%s","class":"%s","alt":"%s"}\n' \
     "$(json_escape "$text")" \
     "$(json_escape "$tooltip")" \
+    "$class" \
     "$class"

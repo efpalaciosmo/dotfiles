@@ -1,40 +1,46 @@
-# Niri desktop dotfiles
+# GNOME and Niri desktop dotfiles
 
 Personal dotfiles and desktop settings only. This branch does not install software,
 configure system services or require sudo. Provide the prerequisites through your
-distribution, then run **`make`** from this clone as your normal user.
+distribution, then run **`make`** from this clone as your normal user to set up
+the dotfiles for **both Niri and GNOME**.
 
 ## Commands
 
-Plain `make` and `make dotfiles` apply the same configuration:
+One setup command configures both desktops:
 
 ```sh
-make dotfiles
+make
 ```
+
+This links the shared shell, editor, Ghostty and appearance settings together
+with Niri's configuration and GNOME's login helper. Select either desktop at
+login: the helper runs only in GNOME, while Niri starts its own Waybar, Fuzzel
+actions and Mako. Setup does not start a second desktop or switch sessions.
+See [GNOME settings](docs/gnome.md).
 
 This user-only workflow validates Niri, Fuzzel and Ghostty, backs up conflicting
 user files and links the configuration with GNU Stow. It requires no sudo,
 Ansible, virtual environment or package manager.
 
 ```sh
-make            # apply personal dotfiles and desktop settings only
-make local      # full static checks, then dotfiles; no software installation
-make dotfiles   # validate and link configuration without the full test suite
-make stow       # alias for dotfiles
+make            # validate and set up dotfiles for Niri and GNOME
 make check      # static checks and tests; no configuration changes
 make doctor     # desktop commands, runtime integration and managed symlinks
-make verify     # static checks plus doctor
 make help       # list available targets
 ```
+
+The former `all`, `local`, `stow`, `gnome` and `verify` wrappers are removed.
+The default target is `dotfiles`, not a separate desktop-specific installer.
 
 To apply only selected configurations:
 
 ```sh
-make dotfiles PACKAGES="niri fuzzel waybar mako ghostty desktop"
+make PACKAGES="niri fuzzel waybar mako ghostty desktop gnome"
 ```
 
 The default Stow packages are `git shell-container starship vi ghostty niri waybar
-mako fuzzel desktop`. These are configuration directories under `packages/`,
+mako fuzzel desktop gnome`. These are configuration directories under `packages/`,
 not software packages to install. They include Ghostty, its bundled Adwaita theme,
 desktop appearance, shell and Starship preferences. No software packages are
 installed by any target.
@@ -53,7 +59,9 @@ GNU Stow and the configured desktop tools through your distribution.
 Cloning/updating also requires Git. `make check` uses
 only Python's standard library; optional validators run when available.
 Applying the `niri`, `fuzzel` or `ghostty` configuration requires the corresponding binary
-so its configuration can be validated before files are changed.
+so its configuration can be validated before files are changed. GNOME's login
+helper also needs system Python with PyGObject (`Gio`/`GLib`) and GNOME's settings
+schemas; see [GNOME prerequisites](docs/gnome.md).
 
 The desktop uses Niri, Waybar, Fuzzel, Mako, Ghostty, Swaybg, Swaylock, Swayidle,
 wl-clipboard, Playerctl, PipeWire/WirePlumber, NetworkManager, BlueZ, a polkit
@@ -77,8 +85,11 @@ language settings; Mako displays the text it receives.
 
 The `desktop` configuration applies user appearance preferences through
 GSettings, including dark mode, orange accent and font names. These preferences
-also affect GNOME when using the same account. GNOME display, keyboard and
-workspace panels do not configure Niri; use Niri's configuration for them.
+also affect GNOME when using the same account. The `gnome` package adds four
+fixed workspaces, `Super+1`–`Super+4`, `Super+Shift+1`–`Super+Shift+4` to move a
+window, and `Super+Return` for Ghostty. Its GNOME-only login helper also requests
+150% on active 4K displays without changing their resolution or refresh rate.
+GNOME display, keyboard and workspace panels do not configure Niri.
 
 Follow [desktop acceptance and recovery](docs/desktop-recovery.md) for manual
 session checks and restoring configuration backups.
@@ -89,11 +100,16 @@ The desktop follows vanilla **Adwaita Dark**, with the requested `#ff7800`
 active window border, tab indicator, workspace selection and launcher selection.
 Niri uses quiet gray inactive borders, 12-pixel corners and soft shadows.
 Fuzzel and Mako use Adwaita's raised `#36363a` surface; Waybar uses solid
-`#222226` chrome at 36 pixels high. Normal status indicators are neutral;
-amber, red and green communicate warnings, urgency and charging.
+`#222226` chrome at 40 logical pixels high, with 14-pixel labels and larger tray
+icons. Soft blue network, yellow audio, orange CPU, purple memory and green
+playback icons add color without changing the backgrounds or coloring entire
+labels. Amber and red still communicate warnings and urgency.
 `Super+Return`, Fuzzel, XDG terminal launchers and Waybar actions open Ghostty.
-Its configuration and `Adwaita Dark Orange` theme are both in the `ghostty`
-Stow package. Ghostty uses Adwaita Mono, a `#1d1d20` text surface, orange cursor
+Its canonical `config.ghostty` and `Adwaita Dark Orange` theme are both in the
+`ghostty` Stow package. The legacy `config` includes that same file for older
+versions; both entry points are managed and conflicting files receive backups,
+so a newer auto-created configuration cannot silently shadow the theme.
+Ghostty uses Adwaita Mono, a `#1d1d20` text surface, orange cursor
 and selections, and the GNOME terminal palette; its GTK chrome follows dark Adwaita.
 Mako notifications use a raised Adwaita surface. Bash keeps a
 compact, colored prompt; Zsh uses the linked Starship Adwaita prompt with
@@ -112,8 +128,12 @@ See the [research and palette](docs/adwaita-theme.md). Appearance and hardware
 acceptance must be checked in the actual desktop session; static tests are not
 visual certification.
 
-Niri detects desktop monitors automatically and opens windows at half width so two
-fit side by side; `Super+F` maximizes a column. The slim bar sits at the
+Niri uses 150% scaling on the ASUS 4K display at `DP-1`; other monitors remain
+automatic. Windows open at half width so two fit side by side; `Super+F`
+maximizes a column. See [4K scaling](docs/desktop-recovery.md#4k-display-scaling):
+150% gives a 2560×1440 logical workspace at 3840×2160 physical resolution.
+Waybar, the launcher and notifications follow the compositor's output scale;
+no global GTK scale is forced. The bar sits at the
 bottom and keeps playback, download/upload speed in Mb/s, audio,
 load and clock visible. Hover for details; click the network indicator
 for the Wi-Fi menu (right click for connection settings), the clock for

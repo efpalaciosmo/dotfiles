@@ -1,5 +1,6 @@
 """Persist Adwaita preferences from either a desktop session or first-install TTY."""
 
+import configparser
 import os
 import subprocess
 import tempfile
@@ -59,3 +60,23 @@ exec "$@"
         result, calls = self.run_helper(persist=False)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("failed to persist", result.stderr)
+
+    def test_shared_adwaita_preferences_and_app_palettes_are_consistent(self):
+        result, calls = self.run_helper()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for value in ("gtk-theme='Adwaita-dark'", "icon-theme='Adwaita'",
+                      "cursor-theme='Adwaita'", "font-name='Adwaita Sans 11'"):
+            self.assertIn(value, calls)
+        gtk = configparser.ConfigParser()
+        gtk.read(ROOT / "packages/desktop/.config/gtk-3.0/settings.ini")
+        self.assertEqual(gtk["Settings"]["gtk-theme-name"], "Adwaita-dark")
+        self.assertEqual(gtk["Settings"]["gtk-font-name"], "Adwaita Sans 11")
+        for file in ("packages/niri/.config/niri/layout.kdl",
+                     "packages/waybar/.config/waybar/style.css",
+                     "packages/ghostty/.config/ghostty/themes/Adwaita Dark Orange",
+                     "packages/desktop/.config/zathura/zathurarc",
+                     "packages/mako/.config/mako/config"):
+            self.assertIn("#ff7800", (ROOT / file).read_text(), file)
+        fuzzel = (ROOT / "packages/fuzzel/.config/fuzzel/fuzzel.ini").read_text()
+        self.assertIn("selection=ff7800ff", fuzzel)
+        self.assertIn("dpi-aware=no", fuzzel)

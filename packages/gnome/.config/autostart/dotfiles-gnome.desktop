@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Personal GNOME desktop settings
+Comment=Four workspaces, Ghostty shortcut, Adwaita dark and 150% 4K scaling
+Exec=sh -c "exec ~/.local/bin/dotfiles-gnome"
+OnlyShowIn=GNOME;
+X-GNOME-Autostart-enabled=true
+Terminal=false

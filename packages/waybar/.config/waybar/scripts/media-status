@@ -31,17 +31,14 @@ fi
 
 case "$status" in
     Playing)
-        icon=""
         class="playing"
         state="Playing"
         ;;
     Paused)
-        icon=""
         class="paused"
         state="Paused"
         ;;
     *)
-        icon=""
         class="stopped"
         state="Stopped"
         ;;
@@ -59,7 +56,8 @@ tooltip+=$'\n'"${label}"
 [[ -n "$album" ]] && tooltip+=$'\n'"${album}"
 tooltip+=$'\n\n'"Click: play/pause · right-click: next"$'\n'"Scroll: previous/next"
 
-printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' \
-    "$(json_escape "${icon} ${label}")" \
+printf '{"text":"%s","tooltip":"%s","class":"%s","alt":"%s"}\n' \
+    "$(json_escape "$label")" \
     "$(json_escape "$tooltip")" \
+    "$class" \
     "$class"

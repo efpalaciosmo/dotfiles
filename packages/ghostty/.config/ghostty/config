@@ -1,9 +1,3 @@
-# Both this configuration and its theme are managed by GNU Stow.
-theme = Adwaita Dark Orange
-font-family = Adwaita Mono
-font-size = 14
-background-opacity = 1
-cursor-style = bar
-window-padding-x = 12
-window-padding-y = 12
-window-theme = dark
+# Compatibility entry point for Ghostty before 1.2.3.
+# Newer versions also read config.ghostty; keep all real settings there.
+config-file = config.ghostty

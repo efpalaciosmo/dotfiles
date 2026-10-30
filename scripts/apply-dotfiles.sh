@@ -115,6 +115,11 @@ if [[ " $* " == *" desktop "* ]]; then
     "$repo_root/packages/desktop/.local/bin/dotfiles-appearance"
 fi
 
+# GNOME's settings are separate from Niri. Also reapplied at GNOME login.
+if [[ " $* " == *" gnome "* ]]; then
+    "$repo_root/packages/gnome/.local/bin/dotfiles-gnome"
+fi
+
 # Retire only old Kitty links from this clone after Ghostty is safely linked.
 # Independent Kitty files, other clones and installed software are preserved.
 if [[ " $* " == *" ghostty "* ]]; then

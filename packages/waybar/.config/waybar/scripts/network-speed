@@ -5,29 +5,30 @@ json_escape() {
     local s=${1//\\/\\\\}
     s=${s//\"/\\\"}
     s=${s//$'\n'/\\n}
+    s=${s//$'\t'/\\t}
     printf '%s' "$s"
 }
 
 route=$(ip -4 route show default 2>/dev/null | head -n 1)
 [[ -n "$route" ]] || route=$(ip -6 route show default 2>/dev/null | head -n 1)
 if [[ ! "$route" =~ (^|[[:space:]])dev[[:space:]]+([^[:space:]]+) ]]; then
-    printf '{"text":"󰤮  offline","tooltip":"No network route · click to choose Wi-Fi","class":"disconnected"}\n'
+    printf '{"text":"offline","tooltip":"No network route · click to choose Wi-Fi","class":"disconnected","alt":"disconnected"}\n'
     exit 0
 fi
 
 iface=${BASH_REMATCH[2]}
 stats="/sys/class/net/$iface/statistics"
 if [[ ! -r "$stats/rx_bytes" || ! -r "$stats/tx_bytes" ]]; then
-    printf '{"text":"󰤮  offline","tooltip":"Interface statistics unavailable","class":"disconnected"}\n'
+    printf '{"text":"offline","tooltip":"Interface statistics unavailable","class":"disconnected","alt":"disconnected"}\n'
     exit 0
 fi
 
 connection=$(nmcli -g GENERAL.CONNECTION device show "$iface" 2>/dev/null | head -n 1)
 [[ -n "$connection" && "$connection" != -- ]] || connection=$iface
-icon="󰈀"
+kind="ethernet"
 signal=""
 if [[ -d "/sys/class/net/$iface/wireless" ]]; then
-    icon="󰤨"
+    kind="wifi"
     signal=$(nmcli -g IN-USE,SIGNAL device wifi list ifname "$iface" 2>/dev/null | awk -F: '$1 == "*" { print $2; exit }')
 fi
 
@@ -53,5 +54,5 @@ fi
 tooltip="${connection} (${iface})"
 [[ -n "$signal" ]] && tooltip+=$'\n'"Signal: ${signal}%"
 tooltip+=$'\n'"Download: ${down} Mb/s · upload: ${up} Mb/s"$'\n'"Click: Wi-Fi · right-click: connections"
-printf '{"text":"%s","tooltip":"%s","class":"connected"}\n' \
-    "$(json_escape "$icon  ↓${down} ↑${up} Mb/s")" "$(json_escape "$tooltip")"
+printf '{"text":"%s","tooltip":"%s","class":"connected","alt":"%s"}\n' \
+    "$(json_escape "↓${down} ↑${up} Mb/s")" "$(json_escape "$tooltip")" "$kind"
