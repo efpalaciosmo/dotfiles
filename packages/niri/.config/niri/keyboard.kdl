@@ -3,7 +3,7 @@
 binds {
     Mod+Shift+Slash repeat=false { show-hotkey-overlay; }
 
-    Mod+Return repeat=false hotkey-overlay-title="Open terminal" { spawn "kitty"; }
+    Mod+Return repeat=false hotkey-overlay-title="Open Ghostty" { spawn "ghostty"; }
     Mod+D repeat=false hotkey-overlay-title="Application launcher" {
       spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/launcher"
     }

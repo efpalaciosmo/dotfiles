@@ -1,0 +1,24 @@
+# Native Adwaita dark text surface, orange focus and GNOME's ANSI palette.
+background = #1d1d20
+foreground = #ffffff
+cursor-color = #ff7800
+cursor-text = #1d1d20
+selection-background = #ff7800
+selection-foreground = #1d1d20
+split-divider-color = #45454a
+palette = 0=#1d1d20
+palette = 1=#e01b24
+palette = 2=#33d17a
+palette = 3=#f6d32d
+palette = 4=#3584e4
+palette = 5=#9141ac
+palette = 6=#2190a4
+palette = 7=#deddda
+palette = 8=#77767b
+palette = 9=#f66151
+palette = 10=#8ff0a4
+palette = 11=#f9f06b
+palette = 12=#99c1f1
+palette = 13=#dc8add
+palette = 14=#7bdff4
+palette = 15=#ffffff

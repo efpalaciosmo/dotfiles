@@ -16,7 +16,8 @@ fi
 # shellcheck source=/dev/null
 source /etc/os-release
 if [[ ${ID:-} != cachyos && ! ( ${ID:-} == arch && -f /etc/cachyos-release ) ]]; then
-    exec make --no-print-directory -C "$repo_root" local
+    printf 'setup: only installed CachyOS hosts are supported; use make dotfiles for configuration-only linking on other systems\n' >&2
+    exit 1
 fi
 
 if [[ -d /run/archiso || -d /run/miso ]] || systemd-detect-virt --quiet --container; then

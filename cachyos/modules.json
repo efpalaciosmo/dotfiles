@@ -9,10 +9,10 @@
   "modules": {
     "base": {
       "dependencies": [],
-      "packages": ["btop", "curl", "fastfetch", "fontconfig", "git", "kmod", "make", "pciutils", "python", "stow", "usbutils", "tar", "traceroute", "unzip", "vim", "xz", "zsh", "starship", "zsh-completions", "ttf-jetbrains-mono-nerd"],
+      "packages": ["btop", "curl", "fastfetch", "fontconfig", "git", "glibc", "kmod", "make", "pciutils", "python", "shadow", "stow", "usbutils", "tar", "traceroute", "unzip", "vim", "xz", "zsh", "starship", "zsh-completions", "ttf-jetbrains-mono-nerd"],
       "files": {}, "system_units": [], "user_units": [], "launchers": ["btop.desktop"],
       "checks": ["locale -a", "fc-list : family style", "Verify Regular, Bold, Italic and Bold Italic terminal font faces."],
-      "limitations": "No shell, prompt, locale.gen, bootloader or package-signature changes. Generate any required locales deliberately. Package removal is manual."
+      "limitations": "No shell, prompt, global language, bootloader or package-signature changes. Niri preparation additively enables en_US.UTF-8 and runs locale-gen. Package removal is manual."
     },
     "desktop-common": {
       "dependencies": ["base"],
@@ -71,7 +71,7 @@
       "dependencies": ["base"], "packages": ["podman", "distrobox", "passt", "slirp4netns", "fuse-overlayfs"],
       "files": {}, "system_units": [], "user_units": [], "launchers": [],
       "checks": ["podman info", "Verify non-overlapping /etc/subuid and /etc/subgid mappings and rootless networking for the intended account."],
-      "limitations": "No subordinate-ID edits, containers, images, volumes or daemon enablement. Existing data is never removed. Rootless use needs reviewed subordinate mappings."
+      "limitations": "Missing subordinate-ID mappings receive a reviewed free 65536-ID range for the invoking regular user. Existing valid mappings are preserved; malformed, overlapping or undersized mappings stop installation. No containers, images, volumes or daemon enablement. Existing data is never removed."
     },
     "virtualization-core": {
       "dependencies": ["base"],

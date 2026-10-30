@@ -8,6 +8,7 @@ environment {
     LC_TIME "en_US.UTF-8"
     EDITOR "vim"
     VISUAL "vim"
+    TERMINAL "ghostty"
     XCURSOR_THEME "Adwaita"
     XCURSOR_SIZE "24"
 }

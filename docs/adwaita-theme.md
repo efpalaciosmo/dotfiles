@@ -1,7 +1,7 @@
 # Adwaita Dark with orange focus
 
 The desktop uses native Adwaita Dark for GTK/libadwaita applications and adapts
-its palette to Niri, Waybar, Fuzzel, Mako, Kitty, Starship, Swaylock and Zathura.
+its palette to Niri, Waybar, Fuzzel, Mako, Ghostty, Starship, Swaylock and Zathura.
 The exact requested active window color is **#ff7800**.
 
 ## Research and decisions
@@ -44,7 +44,7 @@ The exact requested active window color is **#ff7800**.
 
 | Role | Color | Usage |
 | --- | --- | --- |
-| Text view / selection text | `#1d1d20` | Kitty, Zathura, text on orange |
+| Text view / selection text | `#1d1d20` | Ghostty, Zathura, text on orange |
 | Window surface | `#222226` | Waybar, lock screen |
 | Raised surface | `#36363a` | Fuzzel, Mako, tooltips |
 | Quiet outline | `#45454a` | Inactive borders and separators |
@@ -69,22 +69,27 @@ the window surface is **8.62:1**.
 preferences. The helper is also available as `~/.local/bin/dotfiles-appearance`.
 Older schemas without an accent preference are reported and skipped.
 Existing conflicting files receive the repository's usual `.bak` backups.
+Ghostty's configuration and `themes/Adwaita Dark Orange` live together in
+`packages/ghostty/.config/ghostty/` and are both linked with Stow. No theme
+download or absolute repository path is needed. Niri, Fuzzel, Waybar and the
+user XDG terminal list all select Ghostty.
 
 Niri reloads edited configuration automatically. Reload Waybar with
-`pkill -SIGUSR2 -x waybar` and Mako with `makoctl reload`. New Fuzzel and Kitty
-instances read the new theme; existing Kitty windows can reload with
-`Ctrl+Shift+F5`. Log out and back in to restart the wallpaper and all session
+`pkill -SIGUSR2 -x waybar` and Mako with `makoctl reload`. New Fuzzel and Ghostty
+instances read the new theme; Ghostty can reload with `Ctrl+Shift+,`.
+Log out and back in to restart the wallpaper and all session
 components from the managed startup configuration.
 
-Validation uses `make check`, Niri's validator, Fuzzel's validator, Mako's live
-reload and screenshots from the running 1920×1200 Niri session. The native
-Adwaita preview uses ordinary libadwaita widgets without CSS overrides or
-forcing the style, checking that the session preference actually reaches apps.
+Static validation uses `make check`, Niri's validator, Fuzzel's validator and
+`ghostty +validate-config` when those commands are available. Linking requires
+the selected validators and checks Ghostty's bundled theme before changing files.
+For visual acceptance, inspect a real CachyOS session, reload Mako and open
+ordinary libadwaita widgets without CSS overrides or forcing the style to check
+that the session preference actually reaches apps.
 Swaylock uses the same wallpaper with a visible orange unlock indicator, keyboard
 layout and Caps Lock feedback. Stub-based tests check the lock/suspend handshake,
 image paths containing spaces or colons, and safe locking when appearance files
 are missing. Visual lock verification is deferred to the next user-initiated lock.
 
-Screenshots: [desktop](screenshots/desktop-adwaita-orange.png),
-[launcher](screenshots/launcher-adwaita-orange.png),
-[notifications](screenshots/notifications-adwaita-orange.png).
+Visual acceptance of the Ghostty migration remains a real-session check; old
+screenshots do not establish that the migrated desktop works.

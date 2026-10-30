@@ -299,6 +299,17 @@ class LauncherTests(unittest.TestCase):
 
 
 class SafetyTests(unittest.TestCase):
+    def test_enablement_verifies_next_boot_not_just_an_active_process(self):
+        result = plan("--profile", "desktop")
+        def status(*args, **kwargs):
+            return "graphical.target" if "get-default" in args else "enabled"
+        with patch.object(cachyos, "run", side_effect=status):
+            self.assertEqual(cachyos.enablement_problems(result), [])
+        with patch.object(cachyos, "run", return_value="disabled"):
+            problems = cachyos.enablement_problems(result)
+            self.assertTrue(any("next boot" in item for item in problems))
+            self.assertTrue(any("global user" in item for item in problems))
+
     def test_managed_writes_reapply_without_overwriting_changes(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "managed.conf"
@@ -392,7 +403,7 @@ class SafetyTests(unittest.TestCase):
         args = cachyos.parser().parse_args(["apply", "--profile", "custom", "--include", "flatpak-user", "--confirm", "--recovery-record", __file__])
         result = plan("--profile", "custom", "--include", "flatpak-user")
         events = []
-        with tempfile.TemporaryDirectory() as directory, patch.object(cachyos, "STATE", Path(directory)), patch.object(cachyos.os, "geteuid", return_value=0), patch.object(cachyos, "target_check"), patch.object(cachyos, "recovery_check"), patch.object(cachyos, "conflicts", return_value=[]), patch.object(cachyos, "repository_check", return_value={}), patch.object(cachyos, "inventory", return_value={}), patch.object(cachyos, "write_managed", side_effect=lambda p: events.append("files")), patch.object(cachyos, "content_checks", side_effect=lambda *a, **k: events.append("checks")), patch.object(cachyos, "mutate", side_effect=lambda *a: events.append(a)), redirect_stdout(io.StringIO()):
+        with tempfile.TemporaryDirectory() as directory, patch.object(cachyos, "STATE", Path(directory)), patch.object(cachyos.os, "geteuid", return_value=0), patch.object(cachyos, "target_check"), patch.object(cachyos, "recovery_check"), patch.object(cachyos, "conflicts", return_value=[]), patch.object(cachyos, "repository_check", return_value={}), patch.object(cachyos, "inventory", return_value={}), patch.object(cachyos, "enablement_problems", return_value=[]), patch.object(cachyos, "write_managed", side_effect=lambda p: events.append("files")), patch.object(cachyos, "content_checks", side_effect=lambda *a, **k: events.append("checks")), patch.object(cachyos, "mutate", side_effect=lambda *a: events.append(a)), redirect_stdout(io.StringIO()):
             cachyos.apply(args, result)
             self.assertEqual(events[:2], [("pacman", "-Syu"), ("pacman", "-S", "--needed", *result["packages"])])
             self.assertTrue((Path(directory) / "current.json").exists())

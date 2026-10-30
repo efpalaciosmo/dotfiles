@@ -4,6 +4,7 @@
 import argparse
 import configparser
 import datetime
+import grp
 import hashlib
 import json
 import os
@@ -234,8 +235,12 @@ def build_plan(args, hardware=None):
         "system_units": sorted(system_units), "global_user_units": sorted(user_units),
         "default_target": "graphical.target" if "desktop-common" in modules else None,
         "initial_user": args.initial_user,
+        "system_preparation": {
+            "locale": "en_US.UTF-8" if "niri" in modules else None,
+            "rootless_user": args.initial_user if "containers" in modules else None,
+        },
         "apply_requirements": ["root", "--confirm", "--recovery-record with passing restore/rescue/fallback/initramfs tests"] +
-        (["--initial-user naming an existing regular account"] if "niri" in modules else []),
+        (["--initial-user naming an existing regular account"] if {"niri", "containers"} & set(modules) else []),
         "initial_session": "Set Niri through AccountsService only if this account has no saved session; never replace a choice."
         if "niri" in modules else None,
         "expected_launchers": sorted(launchers), "checks": checks,
@@ -250,6 +255,18 @@ def enabled(unit):
     return run("systemctl", "is-enabled", unit, required=False) in {
         "enabled", "enabled-runtime", "linked", "linked-runtime", "alias"
     } or run("systemctl", "is-active", unit, required=False) == "active"
+
+
+def enablement_problems(plan):
+    problems = []
+    for flags, units in (([], plan["system_units"]), (["--global"], plan["global_user_units"])):
+        for unit in units:
+            state = run("systemctl", *flags, "is-enabled", unit, required=False)
+            if state not in {"enabled", "alias"}:
+                problems.append(f"Selected {'global user' if flags else 'system'} unit not enabled for next boot: {unit} ({state or 'unknown'})")
+    if plan["default_target"] and run("systemctl", "get-default", required=False) != plan["default_target"]:
+        problems.append("Default target does not match the graphical desktop plan")
+    return problems
 
 
 def zram_sources(root=Path("/")):
@@ -458,6 +475,118 @@ def save(path, value):
     temporary.replace(path)
 
 
+def subordinate_ranges(content, label):
+    ranges = []
+    for line in content.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        fields = line.split(":")
+        if len(fields) != 3 or not fields[0] or not all(value.isascii() and value.isdigit() for value in fields[1:]):
+            raise Refusal(f"Malformed subordinate-ID entry in {label}; review manually")
+        owner, start, count = fields[0], int(fields[1]), int(fields[2])
+        if start < 1 or count < 1 or start + count > 2**32:
+            raise Refusal(f"Invalid subordinate-ID range in {label}")
+        ranges.append((start, start + count, owner))
+    ranges.sort()
+    if any(left[1] > right[0] for left, right in zip(ranges, ranges[1:])):
+        raise Refusal(f"Overlapping subordinate-ID ranges in {label}; review manually")
+    return ranges
+
+
+def preparation_plan(plan, root=Path("/")):
+    """Preview additive locale/rootless preparation without changing the host."""
+    policy = plan.get("system_preparation", {})
+    result = {"files": {}, "generate_locale": False}
+
+    def inspect(target):
+        path = root / target.lstrip("/")
+        if path.is_symlink() or any(parent.is_symlink() for parent in path.parents):
+            raise Refusal(f"System preparation path contains a symlink: {target}")
+        if path.exists() and not path.is_file():
+            raise Refusal(f"System preparation needs a regular file: {target}")
+        return read(path) if path.exists() else None
+
+    def change(target, before, after):
+        if before != after:
+            result["files"][target] = {"before": before, "after": after}
+
+    if policy.get("locale"):
+        target = "/etc/locale.gen"
+        before = inspect(target)
+        after = before or ""
+        if not re.search(r"^\s*en_US\.UTF-8\s+UTF-8(?:\s|$)", after, re.M):
+            after, replaced = re.subn(r"^[ \t]*#[ \t]*(en_US\.UTF-8[ \t]+UTF-8)[ \t]*(?:#.*)?$",
+                                      r"\1", after, count=1, flags=re.M)
+            if not replaced:
+                after += ("\n" if after and not after.endswith("\n") else "") + "en_US.UTF-8 UTF-8\n"
+        change(target, before, after)
+        locales = run("locale", "-a", required=False).lower().replace("utf-8", "utf8").splitlines()
+        result["generate_locale"] = before != after or "en_us.utf8" not in locales
+
+    user = policy.get("rootless_user")
+    if "containers" in plan["modules"] and not user:
+        raise Refusal("Rootless container preparation requires --initial-user")
+    if user:
+        account = pwd.getpwnam(user)
+        if account.pw_uid < 1000 or account.pw_uid == 65534:
+            raise Refusal("Rootless container preparation requires an existing regular local account")
+        accounts = pwd.getpwall()
+        actual_ids = {entry.pw_uid for entry in accounts} | {entry.pw_gid for entry in accounts}
+        actual_ids.update(entry.gr_gid for entry in grp.getgrall())
+        occupied = [(identifier, identifier + 1) for identifier in actual_ids]
+        missing = []
+        for target in ("/etc/subuid", "/etc/subgid"):
+            before = inspect(target)
+            ranges = subordinate_ranges(before or "", target)
+            if any(start <= identifier < end for start, end, _ in ranges for identifier in actual_ids):
+                raise Refusal(f"Subordinate range overlaps a real account/group ID in {target}")
+            occupied.extend((start, end) for start, end, _ in ranges)
+            owned = [(start, end) for start, end, owner in ranges if owner in (user, str(account.pw_uid))]
+            if owned and not any(end - start >= 65536 for start, end in owned):
+                raise Refusal(f"Existing range for {user} in {target} is smaller than 65536; review manually")
+            if not owned:
+                missing.append((target, before))
+        start, count = 100000, 65536
+        for lower, upper in sorted(occupied):
+            if start + count <= lower:
+                break
+            if start < upper:
+                start = upper
+        if start + count > 2**32:
+            raise Refusal("No free subordinate-ID range; review manually")
+        for target, before in missing:
+            after = before or ""
+            after += ("\n" if after and not after.endswith("\n") else "") + f"{user}:{start}:{count}\n"
+            change(target, before, after)
+    return result
+
+
+def apply_preparation(preparation, record):
+    """Preserve other locales/accounts and refuse files changed since preview."""
+    save(record / "system-preparation.json", preparation)
+    for target, item in preparation["files"].items():
+        path = Path(target)
+        if path.is_symlink() or any(parent.is_symlink() for parent in path.parents):
+            raise Refusal(f"System preparation path contains a symlink: {target}")
+        before = read(path) if path.exists() else None
+        if before != item["before"]:
+            raise Refusal(f"System preparation file changed since review: {target}")
+    for target, item in preparation["files"].items():
+        path = Path(target)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        existed = path.exists()
+        with path.open("r+" if existed else "x") as stream:
+            stream.write(item["after"])
+            stream.truncate()
+        if not existed:
+            path.chmod(0o644)
+    if preparation["generate_locale"]:
+        mutate("locale-gen")
+        locales = run("locale", "-a").lower().replace("utf-8", "utf8").splitlines()
+        if "en_us.utf8" not in locales:
+            raise Refusal("locale-gen did not generate the required en_US.UTF-8 locale")
+
+
 def write_managed(plan):
     # Recheck after package installation; package-owned or user files may appear.
     problems = conflicts(plan)
@@ -599,9 +728,9 @@ def apply(args, plan):
     problems = conflicts(plan)
     if problems:
         raise Refusal("\n".join(problems))
-    if "niri" in plan["modules"]:
+    if {"niri", "containers"} & set(plan["modules"]):
         if not args.initial_user:
-            raise Refusal("Select --initial-user for first-login Niri; an existing GDM choice will be preserved")
+            raise Refusal("Select --initial-user for first-login Niri and rootless container preparation")
         # AccountsService may be supplied by the pending GDM transaction.
         account = pwd.getpwnam(args.initial_user)
         if account.pw_uid < 1000 or account.pw_uid == 65534:
@@ -612,10 +741,12 @@ def apply(args, plan):
     import fcntl
     with (STATE / "apply.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        preparation = preparation_plan(plan)
         stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
         record = STATE / "runs" / stamp
         save(record / "before.json", inventory(plan))
         save(record / "provenance.json", provenance)
+        save(record / "system-preparation.json", preparation)
         save(record / "recovery.json", {"record_sha256": digest(recovery.read_bytes()),
                                          "path": str(recovery.resolve()), "status": "operator supplied; not independently certified"})
         try:
@@ -625,6 +756,7 @@ def apply(args, plan):
             mutate("pacman", "-S", "--needed", *plan["packages"])
             content_checks(plan, installed=False)
             write_managed(plan)
+            apply_preparation(preparation, record)
             content_checks(plan)
             mutate("systemctl", "daemon-reload")
             if plan["global_user_units"]:
@@ -635,6 +767,9 @@ def apply(args, plan):
                 mutate("systemctl", "set-default", plan["default_target"])
             if "niri" in plan["modules"]:
                 initial_session(args.initial_user)
+            problems = enablement_problems(plan)
+            if problems:
+                raise Refusal("\n".join(problems))
             save(STATE / "current.json", plan)
             save(record / "result.json", {"status": "configured; runtime acceptance pending"})
         except Exception as exc:
@@ -704,7 +839,7 @@ def selection_arguments(args):
 
 
 def setup(args):
-    """Interactive single-command installation; personal dotfiles stay opt-in."""
+    """Install system packages/services; the default Make target then links dotfiles."""
     if os.geteuid() == 0:
         raise Refusal("Run make setup as your normal user; it will request sudo")
     if not sys.stdin.isatty():
@@ -768,6 +903,7 @@ def setup(args):
     print("System units to enable: " + ", ".join(plan["system_units"]))
     print("Global USER units to enable: " + ", ".join(plan["global_user_units"]))
     print("Managed system files:\n  " + "\n  ".join(plan["files"]))
+    print("Locale/rootless preparation: " + json.dumps(plan.get("preparation_preview", plan["system_preparation"]), indent=2))
     print(f"Full file contents, hashes, dependency/upgrade estimates and limitations: {preview}")
     print("No personal dotfile/theme/shell changes, container/VM instances, automatic authentication or reboot will be performed.")
     if args.recovery_record:
@@ -787,7 +923,7 @@ def setup(args):
         raise Refusal("Installation incomplete; inspect the installer run inventory before retrying")
     print("make setup: standard workstation installed, including containers, 3D/ARM virtualization, Tailscale and security-key tools.")
     print("Reboot when ready; choose Niri or GNOME in GDM.")
-    print("Personal dotfiles remain unchanged. make local is a separate, optional preference workflow.")
+    print("make setup leaves personal dotfiles unchanged. Plain make also links them with GNU Stow.")
 
 
 def parser():
@@ -828,6 +964,7 @@ def main(argv=None):
             if args.verify_repositories:
                 target_check(plan)
                 plan["provenance"] = repository_check(plan["packages"])
+                plan["preparation_preview"] = preparation_plan(plan)
             print(json.dumps(plan, indent=2))
         elif args.command == "launchers":
             allowlist = Path("/usr/local/share/cachyos-desktop/launcher-allowlist.json")
@@ -847,16 +984,13 @@ def main(argv=None):
                 problems.extend(f"Selected package missing: {package}" for package in plan["packages"] if package not in installed_packages)
                 try:
                     content_checks(plan)
+                    preparation = preparation_plan(plan)
+                    problems.extend(f"System preparation pending: {path}" for path in preparation["files"])
+                    if preparation["generate_locale"]:
+                        problems.append("Required en_US.UTF-8 locale has not been generated")
                 except Refusal as exc:
                     problems.append(str(exc))
-                for unit in plan["system_units"]:
-                    if not enabled(unit):
-                        problems.append(f"Selected unit is not enabled/active: {unit}")
-                for unit in plan["global_user_units"]:
-                    if not list(Path("/etc/systemd/user").glob(f"*.wants/{unit}")):
-                        problems.append(f"Selected global user unit not enabled: {unit}")
-                if plan["default_target"] and run("systemctl", "get-default", required=False) != plan["default_target"]:
-                    problems.append("Default target does not match the graphical desktop plan")
+                problems.extend(enablement_problems(plan))
                 report["static_problems"] = problems
                 report["runtime_acceptance"] = "PENDING: perform and record the manual checks; static success is not certification"
                 print(json.dumps(report, indent=2))

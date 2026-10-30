@@ -5,6 +5,16 @@ modular installation. This is a design reference, **not a tested installer or a
 verified package lockfile**. Verify package availability and hardware support
 against the CachyOS repositories and kernel used for installation.
 
+**Implemented entry-point contract:** plain `make` performs CachyOS system
+setup followed by personal GNU Stow synchronization. `make setup` installs
+packages, prepares the system and enables services for the next boot without
+linking personal preferences; `make dotfiles` only validates/links those
+preferences and applies Adwaita dark/orange, including the bundled Ghostty theme.
+Setup is CachyOS-only, retains review/recovery confirmations and never reboots.
+It also additively generates `en_US.UTF-8` and fills missing rootless subordinate
+ID mappings after conflict checking. These are approved implementation updates
+to the original design below; see [the current installation guide](docs/cachyos-install.md).
+
 ## 1. Goal and non-negotiable behavior
 
 Build a personal, minimal **CachyOS desktop with Niri and GNOME selectable in
@@ -15,8 +25,9 @@ GDM**, with working hardware integration and user-controlled configuration.
 - Keep Ghostty, a small launcher inventory, working hardware integration, and
   optional containers/VMs. No preinstalled browser, GNOME extensions, or Flatpak apps.
 - Offer Flathub per user, not a preconfigured system-wide app collection.
-- User dotfiles take precedence. Do not copy personal configurations, impose a
-  theme, change the login shell, or activate Starship automatically.
+- User dotfiles take precedence over system fallbacks. System setup never links
+  personal preferences; the separate dotfiles stage explicitly opts into the
+  repository's Ghostty/Adwaita/shell preferences. Do not change the login shell.
 - Install explicit package selections and enable only services required by the
   selected modules. Do not silently install every desktop or virtualization backend.
 - Preserve package-signature verification, a working firewall, and deliberate

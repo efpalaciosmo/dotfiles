@@ -1,4 +1,4 @@
-# CachyOS workstation: `make setup`
+# CachyOS workstation: `make`
 
 This implements [the migration design](../cachyos-migration.md) as a separate
 post-install workflow, **not an OS converter, custom ISO or verified lockfile**.
@@ -10,17 +10,22 @@ The design describes selectable modules; this implementation uses them as
 internal review/test boundaries. Normal setup has one fixed workstation
 selection, not a profile or feature menu.
 
-## Normal installation: just `make setup`
+## Normal installation: just `make`
 
 Install the minimal CachyOS base with networking, Git, Make and a sudo-enabled
-regular account, then run `make setup` from this clone **as that user**.
+regular account, then run `make` from this clone **as that user**.
+The default target runs `make setup` first and `make dotfiles` only after it
+succeeds, including under parallel Make. `make help` lists the targets.
 `scripts/setup.sh` bootstraps Python from signed repositories if necessary and
 runs checks; setup installs the fixed workstation defaults, detects hardware
 and preserves an existing UFW/power stack and NetworkManager Wi-Fi backend
 where possible. It performs root read-only preflight, presents the plan,
 collects tested recovery evidence itself (no hand-written JSON needed), then
 requests confirmation and invokes the installer through sudo. After installing,
-it validates again. It does not apply the personal Stow/theme/shell preferences.
+it validates again. Setup alone does not apply personal Stow/theme/shell
+preferences; the full `make` workflow then links them and applies dark/orange
+Adwaita, including Ghostty's bundled theme. `make dotfiles` can also be rerun
+independently without installing packages or changing system services.
 
 Recovery evidence remains an operator attestation: enter actual passed tests
 and their dates, never fabricated results. If Python needs bootstrapping, the
@@ -34,8 +39,9 @@ alongside the user's setup plan and recovery records under
 `$XDG_STATE_HOME/cachyos-desktop` (normally `~/.local/state/cachyos-desktop`).
 
 There are no setup arguments or Make feature variables to pass. `make local`
-is the separate personal dotfiles workflow on every distribution. On non-CachyOS
-systems `make setup` continues to use that configuration-only workflow.
+runs static checks followed by the configuration-only workflow on every
+distribution. On non-CachyOS systems, setup refuses without installing or
+linking anything; use `make dotfiles` explicitly with that system's prerequisites.
 
 ## 1. Standard defaults and hardware detection
 
@@ -44,10 +50,10 @@ Plain `make setup` installs all of the following:
 | Area | Included defaults |
 | --- | --- |
 | Desktop | GDM, minimal usable GNOME and Niri, Ghostty, Files, Settings, Software, Fuzzel, Waybar, Mako and lock/idle tools |
-| Integration | Fonts/CLI tools, portals/keyring/polkit, PipeWire/WirePlumber, camera/phone/input support and hardware diagnostics |
+| Integration | Fonts/CLI tools, en_US.UTF-8 generation (no global language change), portals/keyring/polkit, PipeWire/WirePlumber, camera/phone/input support and hardware diagnostics |
 | Host | Firmware/microcode/AMD or Intel userspace as detected, NetworkManager/OpenVPN, Bluetooth tools, one firewall/power stack, explicit zram policy |
 | Flatpak | Flatpak and deferred per-user Flathub registration; no apps/system remote |
-| Containers | Podman, Distrobox and rootless helpers; ARM/AArch64 static emulation with only those binfmt registrations |
+| Containers | Podman, Distrobox, rootless helpers and missing subordinate-ID mappings; ARM/AArch64 static emulation with only those binfmt registrations |
 | Virtualization | x86 KVM/QEMU, modular libvirt sockets, virt-manager, UEFI/TPM/NAT capabilities, virtio GL/QXL/EGL/SPICE/PipeWire/USB backends, ARM32/AArch64 TCG and firmware |
 | Other tools | Tailscale and U2F/Yubico tools; no automatic authentication, enrollment or PAM changes |
 | Recovery | Inventories, operator-provided tested backup/recovery evidence and acceptance records |
@@ -125,11 +131,10 @@ login shell or personal dotfiles.
    followed by selective installs. Repository metadata is not a package lock.
    Protected configuration is inspected through sudo automatically; no system
    configuration is written by that preflight.
-5. Inspect required locales with `locale -a`. If needed, uncomment the desired
-   UTF-8 locales in the target's existing `/etc/locale.gen` and run `locale-gen`
-   deliberately. The tool installs fonts but does not change language defaults.
-   The optional personal dotfiles expect `en_US.UTF-8`; the system fallback's
-   shortcut labels are English without changing the user's language.
+5. The reviewed preparation plan enables `en_US.UTF-8` in the existing
+   `/etc/locale.gen` and runs `locale-gen` when needed, preserving other enabled
+   locales. It does not change `/etc/locale.conf` or the global language. The
+   personal dotfiles use this locale for messages and Waybar's calendar.
 
 Plan output contains requested/resolved modules, packages, full managed file
 contents/hashes, system and global-user enablement, target/session policy,
@@ -165,6 +170,9 @@ Managed file handling is intentionally strict:
   reconciling a desired change; do not remove distribution-owned files blindly.
 - Only `/etc` and `/usr/local` defaults are managed. User overrides are untouched.
 - Setup does not uninstall applications or discard existing data as cleanup.
+- Locale/subordinate-ID preparation is additive rather than a replacement of
+  entire configuration files. The plan shows before/after content, records it
+  privately in the run inventory and refuses symlinks or changes since review.
 - A failure is **not** rolled back automatically. Packages may already have
   upgraded; inspect the saved before/after inventory and pacman log. Never
   blindly downgrade rolling-system libraries to simulate rollback.
@@ -178,6 +186,9 @@ services. Existing user masks/overrides still take precedence. No blanket
 presets, global dnsmasq, SSH enablement, remote libvirt, Podman daemon or automatic
 upgrade timer is requested. Review vendor presets/other existing units in the
 inventory; this is not a cleanup tool for a previously customized host.
+Before reporting success, the installer verifies persistent enablement for every
+selected system/global-user unit and verifies `graphical.target`; a merely
+running but disabled service does not pass.
 
 Setup uses the invoking regular account automatically. AccountsService
 sets initial `Session=niri`/`SessionType=wayland` **only if Session, legacy
@@ -208,8 +219,12 @@ Fuzzel configuration is not edited. Test these launchers
 from both menus, not just their visibility.
 
 **User Niri configuration replaces this fallback entirely**, including startup
-and idle/locking policy. The optional `make local` dotfiles workflow configures
-Kitty, appearance and shell/prompt preferences; it is not part of installation.
+and idle/locking policy. The `make dotfiles` stage of plain `make` configures
+Ghostty, appearance and shell/prompt preferences through GNU Stow. Its user XDG
+terminal list, Fuzzel, Niri bindings and Waybar actions all select Ghostty.
+Both the terminal configuration and `Adwaita Dark Orange` theme are in the
+`ghostty` Stow package. Old Kitty links owned by this clone are retired only
+after Ghostty is linked; independent Kitty files and packages remain untouched.
 Do not expect its existing personal configuration to become the system fallback.
 
 Run launcher inspection as the actual desktop user after logging into each
@@ -260,9 +275,13 @@ flatpak remote-add --user --if-not-exists flathub \
 
 ## 5. Included tools do not automatically create workloads or credentials
 
-- **Containers:** inspect non-overlapping `/etc/subuid`/`/etc/subgid` ranges for
-  the selected user, then test `podman info` rootlessly. Do not allocate IDs by
-  guessing or copy Podman's entire storage across distributions. No containers,
+- **Containers:** setup validates `/etc/subuid` and `/etc/subgid` and preserves
+  existing valid mappings by account name or UID. Missing mappings get a free
+  65536-ID range, excluding existing ranges and real account/group IDs. Malformed,
+  overlapping or undersized mappings stop for manual review rather than rewriting
+  them. No accounts, group memberships or existing mappings are replaced. After
+  login, test `podman info` rootlessly; actual networking still needs testing.
+  Do not copy Podman's entire storage across distributions. No containers,
   images, networks or volumes are created. ARM installs the signed repository's
   static interpreter package, which may contain other architectures, but manages
   only explicit ARM/AArch64 binfmt entries and rejects other existing QEMU

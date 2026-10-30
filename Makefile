@@ -1,9 +1,9 @@
 SHELL := /bin/bash
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := all
 
 TEST_PYTHON ?= python3
 
-PACKAGES := git shell-container starship vi kitty niri waybar mako fuzzel desktop
+PACKAGES := git shell-container starship vi ghostty niri waybar mako fuzzel desktop
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/niri/.config/niri/scripts/*) \
 	packages/desktop/.local/bin/dotfiles-appearance \
@@ -11,12 +11,16 @@ SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*)
 PYTHON_FILES := $(wildcard scripts/*.py) packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker
 
-.PHONY: help setup local dotfiles stow check doctor verify cachyos-plan
+.PHONY: all help setup local dotfiles stow check doctor verify cachyos-plan
+
+# Keep installation and linking sequential even with make -j.
+all: setup ## Install packages, enable services, then synchronize all dotfiles
+	@$(MAKE) --no-print-directory dotfiles
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-setup: ## Install the CachyOS desktop/tools; on other systems apply local dotfiles
+setup: ## Install CachyOS packages and system configuration; enable services for next boot
 	@bash scripts/setup.sh
 
 local: check ## Validate and link personal dotfiles only (no package installation)
@@ -38,6 +42,7 @@ check: ## Run non-mutating repository syntax checks
 	@if command -v niri >/dev/null 2>&1; then niri validate --config packages/niri/.config/niri/config.kdl; fi
 	@if command -v niri >/dev/null 2>&1; then niri validate --config cachyos/config/niri.kdl; fi
 	@if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config=packages/fuzzel/.config/fuzzel/fuzzel.ini; fi
+	@if command -v ghostty >/dev/null 2>&1; then bash scripts/validate-configs.sh ghostty; fi
 	@if command -v vim >/dev/null 2>&1; then \
 		output=$$(mktemp); \
 		vim -Nu packages/vi/.vimrc -i NONE -es -n -c "redir! > $$output" -c 'set number? relativenumber? shiftwidth?' -c 'redir END' -c 'qa!' </dev/null >/dev/null 2>&1 && \

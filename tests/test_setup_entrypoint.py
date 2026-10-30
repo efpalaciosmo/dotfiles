@@ -84,12 +84,12 @@ class SetupEntrypointTests(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         self.assertFalse(any("local" in call or "dotfiles" in call for call in calls))
 
-    def test_non_cachyos_retains_configuration_only_setup(self):
+    def test_non_cachyos_refuses_without_installing_or_linking(self):
         self.release.write_text("ID=fedora\n")
         result, calls = self.run_entrypoint()
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(len(calls), 1)
-        self.assertTrue(calls[0].endswith(" local"))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("only installed CachyOS", result.stderr)
+        self.assertEqual(calls, [])
 
     def test_missing_python_cannot_trigger_noninteractive_upgrade(self):
         result, calls = self.run_entrypoint()

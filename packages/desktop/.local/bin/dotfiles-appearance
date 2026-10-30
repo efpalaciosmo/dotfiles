@@ -2,6 +2,16 @@
 # Use supported system preferences so GTK/libadwaita and portals agree.
 set -euo pipefail
 
+# The first full install may run from a TTY, before any graphical login. Give
+# dconf a session bus so preferences persist instead of silently failing to save.
+if [[ -z ${DBUS_SESSION_BUS_ADDRESS:-} ]]; then
+    command -v dbus-run-session >/dev/null 2>&1 || {
+        printf 'appearance: dbus-run-session is required outside a desktop session\n' >&2
+        exit 1
+    }
+    exec dbus-run-session -- "$0" "$@"
+fi
+
 schema=org.gnome.desktop.interface
 command -v gsettings >/dev/null 2>&1 || {
     printf 'appearance: gsettings is required\n' >&2
@@ -21,6 +31,10 @@ set_preference() {
     fi
     if [[ $(gsettings get "$schema" "$key") != "$value" ]]; then
         gsettings set "$schema" "$key" "$value"
+        if [[ $(gsettings get "$schema" "$key") != "$value" ]]; then
+            printf 'appearance: failed to persist %s (check the user D-Bus/dconf session)\n' "$key" >&2
+            return 1
+        fi
     fi
 }
 

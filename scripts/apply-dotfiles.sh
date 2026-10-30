@@ -8,6 +8,14 @@ repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
     exit 1
 }
 
+(($#)) || { printf 'dotfiles: select at least one Stow package\n' >&2; exit 1; }
+for package in "$@"; do
+    [[ $package =~ ^[a-zA-Z0-9_-]+$ && -d $repo_root/packages/$package ]] || {
+        printf 'dotfiles: invalid or missing package: %s\n' "$package" >&2
+        exit 1
+    }
+done
+
 bash "$repo_root/scripts/validate-configs.sh" "$@"
 
 command -v stow >/dev/null 2>&1 || {
@@ -23,6 +31,10 @@ backup_conflict() {
     # the repository file through the linked directory.
     if [[ -e $target ]] &&
         [[ $(readlink -f -- "$target") == $(readlink -f -- "$source") ]]; then
+        # Stow does not recognize absolute links, even when they point to us.
+        if [[ -L $target && $(readlink -- "$target") == /* ]]; then
+            ln -sfn -- "$(realpath --relative-to="$(dirname -- "$target")" -- "$source")" "$target"
+        fi
         return
     fi
     [[ -e $target || -L $target ]] || return 0
@@ -36,26 +48,84 @@ backup_conflict() {
     mv -- "$target" "$backup"
 }
 
+# Never back up a file THROUGH an unmanaged directory symlink: that would
+# move somebody else's file outside HOME. Back up the parent link instead.
+prepare_parents() {
+    local package_root=$1 relative=$2 component child parent=$HOME source_parent
+    local -a components
+    source_parent=$package_root
+    IFS=/ read -r -a components <<< "${relative%/*}"
+    [[ $relative == */* ]] || return 0
+    for component in "${components[@]}"; do
+        parent+=/$component
+        source_parent+=/$component
+        if [[ -L $parent ]] &&
+            [[ $(readlink -f -- "$parent") == $(readlink -f -- "$source_parent") ]]; then
+            # Unfold old directory links ourselves, including absolute ones
+            # which Stow would otherwise reject. Preserve every child entry.
+            rm -- "$parent"
+            mkdir -- "$parent"
+            while IFS= read -r -d '' child; do
+                ln -s -- "$(realpath --relative-to="$parent" -- "$child")" "$parent/${child##*/}"
+            done < <(find "$source_parent" -mindepth 1 -maxdepth 1 -print0)
+            continue
+        fi
+        if [[ -L $parent || ( -e $parent && ! -d $parent ) ]]; then
+            backup_conflict "$source_parent" "$parent"
+        fi
+        mkdir -p -- "$parent"
+    done
+}
+
+package_files() {
+    find "$1" -type d -name __pycache__ -prune -o \
+        -type f ! -iname 'README' ! -iname 'README.*' \
+        ! -name '*.pyc' ! -name '*.pyo' -print0
+}
+
 for package in "$@"; do
     package_root=$repo_root/packages/$package
-    [[ -d $package_root ]] || {
-        printf 'dotfiles: package does not exist: %s\n' "$package" >&2
-        exit 1
-    }
     while IFS= read -r -d '' source; do
         relative=${source#"$package_root/"}
+        prepare_parents "$package_root" "$relative"
         backup_conflict "$source" "$HOME/$relative"
-    done < <(find "$package_root" -type f ! -iname 'README' ! -iname 'README.*' -print0)
+    done < <(package_files "$package_root")
 done
 
 stow --restow --no-folding \
     --dir="$repo_root/packages" \
     --target="$HOME" \
-    --ignore='(^|/)(README\.md|README)$' \
+    --ignore='(^|/)(README(\..*)?|__pycache__|[^/]*\.py[co])$' \
     "$@"
+
+# A successful command must mean the requested configuration really is linked.
+for package in "$@"; do
+    while IFS= read -r -d '' source; do
+        relative=${source#"$repo_root/packages/$package/"}
+        target=$HOME/$relative
+        if [[ ! -L $target || ! -e $target ]] ||
+            [[ $(readlink -f -- "$target") != $(readlink -f -- "$source") ]]; then
+            printf 'dotfiles: expected managed symlink was not created: %s\n' "$target" >&2
+            exit 1
+        fi
+    done < <(package_files "$repo_root/packages/$package")
+done
 
 if [[ " $* " == *" desktop "* ]]; then
     "$repo_root/packages/desktop/.local/bin/dotfiles-appearance"
+fi
+
+# Retire only old Kitty links from this clone after Ghostty is safely linked.
+# Independent Kitty files, other clones and installed software are preserved.
+if [[ " $* " == *" ghostty "* ]]; then
+    for relative in .config/kitty .config/kitty/kitty.conf; do
+        target=$HOME/$relative
+        if [[ -L $target ]] &&
+            [[ $(readlink -m -- "$target") == "$repo_root/packages/kitty/$relative" ]]; then
+            printf 'dotfiles: removing old managed Kitty link %s\n' "$target"
+            rm -- "$target"
+        fi
+    done
 fi
 
 # Only after the new package is linked, remove legacy links owned by us.

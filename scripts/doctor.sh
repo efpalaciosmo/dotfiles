@@ -10,14 +10,18 @@ check_command() {
     else printf 'MISS command %s\n' "$1" >&2; failures=$((failures + 1)); fi
 }
 
-for command in stow niri waybar fuzzel kitty vim zsh starship mako swaybg swaylock swayidle wl-copy wl-paste playerctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk pgrep systemctl loginctl python3 xdg-open xdg-mime gsettings busctl; do
+for command in stow niri waybar fuzzel ghostty xdg-terminal-exec vim zsh starship mako swaybg swaylock swayidle wl-copy wl-paste playerctl notify-send wpctl nmcli nm-connection-editor bluetoothctl rfkill ip cal lsblk pgrep systemctl loginctl python3 xdg-open xdg-mime gsettings busctl; do
     check_command "$command"
 done
 
-# The image owns service configuration. Check only desktop runtime availability;
-# socket-activated and image-defined units need not be explicitly enabled.
+# Runtime checks belong after a deliberate reboot/login; setup enables units
+# for the next boot without interrupting the current network or session.
 if command -v systemctl >/dev/null 2>&1; then
     for unit in NetworkManager.service bluetooth.service; do
+        if [[ $unit == bluetooth.service ]] && ! compgen -G '/sys/class/bluetooth/hci*' >/dev/null; then
+            printf 'INFO optional Bluetooth adapter absent; service not required\n'
+            continue
+        fi
         if systemctl is-active --quiet "$unit"; then
             printf 'OK   desktop service active: %s\n' "$unit"
         else
@@ -109,6 +113,11 @@ fi
 
 if command -v niri >/dev/null 2>&1; then niri validate || failures=$((failures + 1)); fi
 if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config="$HOME/.config/fuzzel/fuzzel.ini" || failures=$((failures + 1)); fi
+if command -v ghostty >/dev/null 2>&1; then ghostty +validate-config --config-file="$HOME/.config/ghostty/config" || failures=$((failures + 1)); fi
+if command -v locale >/dev/null 2>&1 && ! locale -a | grep -Eiq '^en_US\.(utf8|utf-8)$'; then
+    printf 'MISS en_US.UTF-8 locale (run make setup on CachyOS)\n' >&2
+    failures=$((failures + 1))
+fi
 
 for package in "$@"; do
     while IFS= read -r -d '' source; do
@@ -123,7 +132,8 @@ for package in "$@"; do
         elif [[ -L "$target" ]]; then printf 'BROKEN %s\n' "$target" >&2; failures=$((failures + 1))
         elif [[ -e "$target" ]]; then printf 'FILE   %s (expected symlink)\n' "$target" >&2; failures=$((failures + 1))
         else printf 'MISS   %s\n' "$target" >&2; failures=$((failures + 1)); fi
-    done < <(find "$repo_root/packages/$package" -type f ! -iname 'README' ! -iname 'README.*' -print0)
+    done < <(find "$repo_root/packages/$package" -type d -name __pycache__ -prune -o \
+        -type f ! -iname 'README' ! -iname 'README.*' ! -name '*.pyc' ! -name '*.pyo' -print0)
 done
 
 if ((failures > 0)); then printf 'doctor: %d missing/failed requirement(s), %d pending check group(s)\n' "$failures" "$pending" >&2; exit 1; fi

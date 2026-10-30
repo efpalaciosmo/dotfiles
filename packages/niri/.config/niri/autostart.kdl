@@ -1,5 +1,5 @@
-// Minimal desktop session startup. Package installation is outside this repo;
-// niri only starts long-running session processes.
+// System packages/services are installed by make setup;
+// Niri starts these processes only inside its own session.
 spawn-at-startup "waybar"
 spawn-at-startup "mako"
 spawn-sh-at-startup "for agent in /usr/libexec/polkit-gnome-authentication-agent-1 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1; do if [ -x \"$agent\" ]; then exec \"$agent\"; fi; done"
