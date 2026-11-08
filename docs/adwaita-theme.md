@@ -46,9 +46,8 @@ The exact requested active window color is **#ff7800**.
    supports alpha-composited progress indicators. A translucent orange fill
    preserves notification readability. Critical notifications remain persistent
    and use an error-colored outline.
-8. The wallpaper is the [official GNOME Adwaita Dark artwork](https://github.com/GNOME/gnome-backgrounds/blob/49.0/backgrounds/adwaita-d.jxl),
-   converted to an eight-bit RGB PNG at 2560×1600 for Swaybg compatibility.
-   Its source and CC BY-SA attribution are recorded beside the image.
+8. Niri and Swaylock use `mountains-clouds.jpg` as their wallpaper. The
+   alternative Adwaita Dark image and its attribution are kept beside it.
 
 ## Palette
 
@@ -152,7 +151,7 @@ For visual acceptance, inspect a real Niri session, reload Mako and open
 ordinary libadwaita widgets without CSS overrides or forcing the style to check
 that the session preference actually reaches apps.
 Swaylock uses the same wallpaper with a visible orange unlock indicator, keyboard
-layout and Caps Lock feedback. Stub-based tests check the lock/suspend handshake,
+layout and Caps Lock feedback. Stub-based tests check the idle suspend command,
 image paths containing spaces or colons, and safe locking when appearance files
 are missing. Visual lock verification is deferred to the next user-initiated lock.
 

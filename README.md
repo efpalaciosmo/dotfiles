@@ -181,17 +181,18 @@ monitoring, disk usage and power.
 `Super+Shift+Y` opens clipboard history, `Super+Shift+S` screenshots,
 `Super+Shift+P` power and `Super+Alt+L`
 locks the session through `~/.config/niri/scripts/lock-screen`. In Niri,
-`swayidle` locks after 5 minutes, powers off monitors after 10 minutes and
-locks before sleep. Swaylock shows the Adwaita wallpaper and a visible orange
+`swayidle` suspends the computer after 30 minutes of inactivity without
+automatically locking the session or turning off monitors beforehand. The session
+is not locked when it resumes unless it was locked manually. Swaylock shows the
+same mountains-and-clouds wallpaper as Niri and a visible orange
 unlock indicator; type your password and press Enter. Caps Lock and the keyboard
-layout are shown while typing. The display wakes on activity and after suspend.
+layout are shown while typing.
 Missing wallpaper or appearance settings fall back to a solid dark lock screen.
 With `swaylock` and `swayidle` installed, apply the dotfiles,
 then **log out and back in** to start the idle daemon. `make doctor` checks the
-script links, wallpaper and running idle daemon. The wallpaper is the
-official GNOME Adwaita Dark wallpaper at
-`packages/niri/.config/niri/backgrounds/adwaita-dark.png`, linked at
-`~/.config/niri/backgrounds/adwaita-dark.png`; no absolute repository path is used.
+script links, wallpaper and running idle daemon. The wallpaper is at
+`packages/niri/.config/niri/backgrounds/mountains-clouds.jpg`, linked at
+`~/.config/niri/backgrounds/mountains-clouds.jpg`; no absolute repository path is used.
 Fuzzel does not support Rofi's in-launcher `?` and
 `Control+Tab` mode switching: use `Super+Shift+D` for file search
 under home, file browsing, windows and commands instead. Search lists only

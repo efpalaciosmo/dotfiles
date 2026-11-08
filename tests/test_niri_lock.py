@@ -30,7 +30,7 @@ class NiriLockTests(unittest.TestCase):
             stub.chmod(0o755)
             config = Path(directory) / "config with spaces:colon"
             lock_config = config / "swaylock/config"
-            wallpaper = config / "niri/backgrounds/adwaita-dark.png"
+            wallpaper = config / "niri/backgrounds/mountains-clouds.jpg"
             for path in (lock_config, wallpaper):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("appearance fixture")
@@ -53,23 +53,14 @@ class NiriLockTests(unittest.TestCase):
             self.assertEqual(args[args.index("-C") + 1], "/dev/null")
             self.assertNotIn("--image", args)
 
-    def test_idle_uses_one_lock_command_for_timeout_sleep_and_logind(self):
+    def test_idle_only_suspends_after_30_minutes(self):
         with tempfile.TemporaryDirectory() as directory:
             stub = Path(directory) / "swayidle"
             stub.write_text('#!/bin/sh\nprintf "%s\\n" "$@"\n')
             stub.chmod(0o755)
-            config = str(Path(directory) / "config with spaces")
-            env = {**os.environ, "PATH": directory + ":" + os.environ["PATH"], "XDG_CONFIG_HOME": config}
+            env = {**os.environ, "PATH": directory + ":" + os.environ["PATH"]}
             args = subprocess.check_output([str(SCRIPTS / "session-idle")], env=env, text=True).splitlines()
-            self.assertEqual(args[0:3], ["-w", "timeout", "300"])
-            lock = args[3]
-            self.assertIn("lock-screen", lock)
-            self.assertIn("\\ ", lock)
-            self.assertEqual(args[-1], lock)
-            self.assertEqual(args[args.index("before-sleep") + 1], lock)
-            self.assertEqual(args[args.index("lock") + 1], lock)
-            self.assertEqual(args[args.index("timeout", 4) + 1], "600")
-            self.assertEqual(args[args.index("after-resume") + 1], "niri msg action power-on-monitors")
+            self.assertEqual(args, ["-w", "timeout", "1800", "systemctl suspend"])
 
 
 if __name__ == "__main__":

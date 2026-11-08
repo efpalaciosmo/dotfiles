@@ -87,7 +87,7 @@ for relative in niri/scripts/lock-screen niri/scripts/session-idle; do
     fi
 done
 
-wallpaper=$HOME/.config/niri/backgrounds/adwaita-dark.png
+wallpaper=${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/mountains-clouds.jpg
 if [[ -s $wallpaper ]]; then
     printf 'OK   wallpaper %s -> %s\n' "$wallpaper" "$(readlink -f -- "$wallpaper")"
 else

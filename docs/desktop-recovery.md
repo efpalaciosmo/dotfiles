@@ -16,7 +16,7 @@ After applying the dotfiles and logging into Niri, run `make doctor` and check:
 | Portals | Doctor checks FileChooser, ScreenCast and Secret interfaces. Pick a file and share a window/screen in an actual application. |
 | Thunar | `xdg-mime query default inode/directory` should be `thunar.desktop`. Open a folder: it should be dark and floating at roughly 1000×720 logical pixels. Test USB, phone and SMB access when available. |
 | Audio/notifications | Play audio, test the microphone and select devices. Run `notify-send 'Desktop test'`. |
-| Locking/sleep | `Super+Alt+L` should lock and accept your password. Confirm idle locking and locking before suspend, then suspend and resume. |
+| Locking/sleep | `Super+Alt+L` should lock and accept your password. Confirm the computer suspends after 30 minutes of inactivity without automatically locking, then resume. |
 | Xwayland | Launch an installed X11 application and check rendering, input and clipboard. |
 | GNOME | Log into GNOME and confirm the desktop works. The `desktop` configuration shares GTK and GSettings appearance preferences across both sessions. |
 
