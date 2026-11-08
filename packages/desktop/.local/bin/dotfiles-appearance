@@ -39,7 +39,10 @@ set_preference() {
 }
 
 set_preference color-scheme "'prefer-dark'"
-set_preference gtk-theme "'Adwaita-dark'"
+# Adwaita is bundled in GTK. The separate Adwaita-dark theme is not installed
+# everywhere and silently falls back to light, even with prefer-dark enabled.
+# Native GTK 3 selects its bundled dark variant through settings.ini instead.
+set_preference gtk-theme "'Adwaita'"
 set_preference icon-theme "'Adwaita'"
 set_preference cursor-theme "'Adwaita'"
 set_preference cursor-size 24
@@ -56,5 +59,22 @@ if keys=$(gsettings list-keys "$schema" 2>/dev/null); then
     set_preference titlebar-uses-system-font true
 else
     printf 'appearance: window-title font preferences unavailable; skipped\n' >&2
+fi
+
+# GTK 3 Flatpaks do not inherit the host's gtk-application-prefer-dark-theme.
+# Use the bundled variant only for known GTK 3 apps, not globally: forcing
+# GTK_THEME on GTK 4/libadwaita can break their supported appearance handling.
+# Overrides merge with existing permissions; no host filesystem access is added.
+if command -v flatpak >/dev/null 2>&1; then
+    installed=$(flatpak list --app --columns=application)
+    while IFS= read -r app; do
+        case "$app" in
+            app.zen_browser.zen|com.brave.Browser|com.bambulab.BambuStudio|\
+            com.orcaslicer.OrcaSlicer|com.dec05eba.gpu_screen_recorder|\
+            org.inkscape.Inkscape|org.libreoffice.LibreOffice)
+                flatpak override --user --env=GTK_THEME=Adwaita:dark "$app"
+                ;;
+        esac
+    done <<< "$(sort -u <<< "$installed")"
 fi
 printf 'appearance: Adwaita dark with orange accent and JetBrains fonts applied\n'

@@ -3,7 +3,7 @@ spawn-at-startup "waybar"
 spawn-at-startup "mako"
 spawn-at-startup "/usr/libexec/kf6/polkit-kde-authentication-agent-1"
 spawn-sh-at-startup "${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/session-idle"
-spawn-sh-at-startup "swaybg -i \"${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/adwaita-dark.png\" -m fill"
+spawn-sh-at-startup "swaybg -i \"${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/mountains-clouds.jpg\" -m fill"
 
 // GDM starts niri-session, which exports the environment to systemd and D-Bus.
 // Supervised watchers restart on failure and stop with the graphical session.

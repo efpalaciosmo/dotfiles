@@ -43,8 +43,8 @@ class Checks:
             self.report('PENDING', 'log in through GDM → Niri to check keyring, portals, audio, notifications and Xwayland')
             return
         association = self.command('directory association', 'xdg-mime', 'query', 'default', 'inode/directory')
-        if association is not None and association != 'org.gnome.Nautilus.desktop':
-            self.report('MISS', 'set Nautilus with: xdg-mime default org.gnome.Nautilus.desktop inode/directory')
+        if association is not None and association != 'thunar.desktop':
+            self.report('MISS', 'set Thunar with: xdg-mime default thunar.desktop inode/directory')
         for interface in ('FileChooser', 'ScreenCast', 'Secret'):
             self.command(f'portal {interface} activation', 'busctl', '--user', 'introspect',
                          'org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop',

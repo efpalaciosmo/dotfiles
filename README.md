@@ -67,7 +67,8 @@ The desktop uses Niri, Waybar, Fuzzel, Mako, Ghostty, Swaybg, Swaylock, Swayidle
 wl-clipboard, Playerctl, PipeWire/WirePlumber, NetworkManager, BlueZ, a polkit
 agent and the GNOME/GTK portals. Niri starts the KDE polkit agent at
 `/usr/libexec/kf6/polkit-kde-authentication-agent-1`; ensure it is installed there.
-GNOME Settings and Nautilus provide desktop integration. Install the tools and
+GNOME Settings and Thunar provide desktop integration. Thunar is the default
+file manager (`thunar.desktop` for `inode/directory`). Install the tools and
 fonts and configure their services through your distribution. **JetBrainsMono
 Nerd Font** is the desktop-wide default: GTK/GNOME interface, document and
 monospace text, window titles, Ghostty, Fuzzel, Waybar, Mako, Swaylock and Zathura.
@@ -138,6 +139,9 @@ chrome. Linking it runs `dotfiles-appearance`, which sets GNOME's supported
 dark preference, native orange accent, Adwaita icons/cursor and JetBrains fonts.
 GTK/libadwaita retain their native styling; GNOME's native orange is `#ed5b00`,
 while compositor focus and shell selections use exactly `#ff7800`.
+GTK 3 uses bundled `Adwaita` with its dark variant, not the optional separate
+`Adwaita-dark` theme. The helper also applies app-specific dark-variant
+overrides to installed legacy GTK 3 Flatpaks; GTK 4/libadwaita keep portal preferences.
 To reapply preferences, run `~/.local/bin/dotfiles-appearance`.
 
 Default interface, document, monospace, notification and Zathura text is 12
@@ -164,7 +168,10 @@ otherwise).
 
 `Super+V` toggles the focused window between tiled and floating; `Super+Shift+V`
 switches focus between those layouts. Niri floats parented dialogs and fixed-size
-windows automatically. Zen and Firefox Picture-in-Picture windows open floating
+windows automatically. Thunar and compact utilities open centered and floating,
+with app-specific starting sizes; browsers, editors and other workspace apps stay
+tiled. See the [installed-app decisions and sizes](docs/application-behavior.md).
+Zen and Firefox Picture-in-Picture windows open floating
 at the bottom right; close and reopen an existing PiP window after changing rules.
 
 `Super+D` opens Fuzzel's native application launcher (desktop icons and launch

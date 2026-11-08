@@ -2,6 +2,7 @@
 // 150% gives a 2560x1440 logical workspace. Other outputs stay automatic.
 output "DP-1" {
     scale 1.5
+    mode "3840x2160@120.000"
 }
 // Leave mode unset to preserve the preferred resolution/refresh rate.
 // GNOME has its own display configuration, applied by dotfiles-gnome.

@@ -4,7 +4,7 @@ set -euo pipefail
 
 config_home=${XDG_CONFIG_HOME:-$HOME/.config}
 lock_config=$config_home/swaylock/config
-wallpaper=$config_home/niri/backgrounds/adwaita-dark.png
+#wallpaper=$config_home/niri/backgrounds/adwaita-dark.png
 
 # Missing appearance files must never prevent the session from locking.
 [[ -r $lock_config ]] || lock_config=/dev/null

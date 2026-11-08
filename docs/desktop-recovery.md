@@ -14,7 +14,7 @@ After applying the dotfiles and logging into Niri, run `make doctor` and check:
 | Settings | Open Settings from Fuzzel. `echo "$XDG_CURRENT_DESKTOP"` should still report Niri. Configure Niri displays, keyboard and workspaces in its KDL files. |
 | Terminal/theme | Open Ghostty with Super+Return, a Terminal=true launcher in Fuzzel and a Waybar action. Check 15-point JetBrainsMono Nerd Font, dark background and orange selection. Both Ghostty config entry points and the theme should be symlinks into this clone. |
 | Portals | Doctor checks FileChooser, ScreenCast and Secret interfaces. Pick a file and share a window/screen in an actual application. |
-| Nautilus | `xdg-mime query default inode/directory` should be `org.gnome.Nautilus.desktop`. Test USB, phone and SMB access when available. |
+| Thunar | `xdg-mime query default inode/directory` should be `thunar.desktop`. Open a folder: it should be dark and floating at roughly 1000×720 logical pixels. Test USB, phone and SMB access when available. |
 | Audio/notifications | Play audio, test the microphone and select devices. Run `notify-send 'Desktop test'`. |
 | Locking/sleep | `Super+Alt+L` should lock and accept your password. Confirm idle locking and locking before suspend, then suspend and resume. |
 | Xwayland | Launch an installed X11 application and check rendering, input and clipboard. |

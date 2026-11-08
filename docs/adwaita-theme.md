@@ -16,7 +16,8 @@ The exact requested active window color is **#ff7800**.
    orange background is `#ed5b00`, and its readable standalone orange is
    `#ff9c5b`. GTK apps use those native values; the shell uses `#ff7800` for
    the requested focus outline and selections. No global GTK CSS overrides
-   or forced `GTK_THEME` environment variable are needed.
+   or globally forced `GTK_THEME` environment variable are needed. Legacy GTK 3
+   Flatpaks get narrowly scoped dark-variant overrides (see below).
 3. JetBrainsMono Nerd Font is the default throughout the managed desktop,
     including GTK/GNOME interface, document and monospace text, window titles,
     Ghostty, Fuzzel, Waybar, Mako, Swaylock and Zathura. Fontconfig aliases prefer
@@ -102,13 +103,14 @@ falling back. Ghostty is 15 points; Fuzzel is 13 points; Waybar is 15 logical pi
 
 | Component | Theme source / limitation |
 | --- | --- |
-| GNOME + GTK/libadwaita | Supported dark preference, Adwaita icons/cursor, 12-point JetBrains fonts and native orange accent via `dotfiles-appearance`; reapplied at GNOME login. |
+| GNOME + GTK/libadwaita | Supported dark preference, Adwaita icons/cursor, 12-point JetBrains fonts and native orange accent via `dotfiles-appearance`; reapplied at GNOME login. GTK 3 uses bundled Adwaita with `gtk-application-prefer-dark-theme=true`. |
 | GNOME Shell | Native GNOME styling, not a separately installed custom Shell CSS theme. Its panel/overview cannot be themed by Waybar CSS. |
 | Ghostty | Bundled `Adwaita Dark Orange` terminal palette, 15-point JetBrainsMono Nerd Font; GTK window chrome follows dark mode. |
 | Niri, Waybar, Fuzzel, Mako | Matching custom Adwaita surfaces and orange focus; JetBrains fonts in Waybar/Fuzzel/Mako. Used only in Niri. |
 | Swaylock, Zathura, Starship, Bash | Matching configured colors; JetBrains fonts in Swaylock/Zathura, terminal font inherited by shell programs. Swaylock is for Niri, not GNOME's lock screen. |
 | Vim | Dark background and terminal palette, not a separate custom Vim colorscheme. |
-| Qt, browser content, Flatpaks and third-party apps | No universal override; apps/sandboxes must support desktop preferences or be configured individually. |
+| Legacy GTK 3 Flatpaks | `dotfiles-appearance` sets `GTK_THEME=Adwaita:dark` only for installed, known GTK 3 apps. It does not grant filesystem access or replace other overrides. |
+| Qt, browser content and third-party apps | No universal override; apps/sandboxes must support desktop preferences or be configured individually. See [application behavior](application-behavior.md). |
 
 `packages/desktop/.config/fontconfig/fonts.conf` provides user-level JetBrains
 defaults for sans-serif, serif, monospace and system-ui families. GTK 3/4 also
@@ -121,6 +123,21 @@ This is a coordinated Adwaita Dark/orange desktop, **not one custom theme file
 applied to every application**. No global `GTK_THEME`, font DPI or toolkit scale
 override is used. GNOME's supported accent differs from the exact shell orange
 as documented above; forcing global CSS would break native libadwaita styling.
+
+### GTK 3 fallback to light
+
+On this machine, GTK 3 bundles `Adwaita` and its dark variant, but no standalone
+`Adwaita-dark` theme is installed. Selecting the latter silently renders light,
+even when `gtk-application-prefer-dark-theme=true`. Use `gtk-theme-name=Adwaita`
+in GTK 3 settings and retain the dark preference. `dotfiles-appearance` uses the
+same theme name in GSettings; the portal still advertises `color-scheme=1` (dark).
+
+GTK 3 Flatpaks do not inherit the host's settings.ini dark flag. The helper
+selects the built-in `Adwaita:dark` variant for Zen, Brave, Bambu Studio,
+OrcaSlicer, GPU Screen Recorder, Inkscape and LibreOffice when installed.
+GTK 4/libadwaita Flatpaks are intentionally excluded. Reopen apps after applying;
+Thunar may keep a background process, so if it remains light, finish any file
+operations, close its windows, run `thunar --quit`, and open it again.
 
 Niri reloads edited configuration automatically. Reload Waybar with
 `pkill -SIGUSR2 -x waybar` and Mako with `makoctl reload`. New Fuzzel and Ghostty

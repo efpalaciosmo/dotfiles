@@ -4,6 +4,105 @@ window-rule {
     clip-to-geometry true
 }
 
+// Utility defaults are logical pixels (4K at 150% is 2560x1440 logical).
+// New floating windows are centered by Niri; keep them freely resizable.
+// Match both native Wayland IDs and legacy Xwayland WM_CLASS where needed.
+// Do not force productive apps tiled: their parented dialogs should still float.
+
+// File/archive browsing is usually a temporary task over the current workspace.
+// Only size Thunar's main windows, not its properties/preferences/progress dialogs.
+window-rule {
+    match app-id=r#"^(org\.xfce\.Thunar|[Tt]hunar)$"# title=" - Thunar$"
+    match app-id=r#"^(io\.github\.peazip\.PeaZip|[Pp]ea[Zz]ip|[Xx]archiver)$"#
+    open-floating true
+    default-column-width { fixed 1000; }
+    default-window-height { fixed 720; }
+}
+
+window-rule {
+    match app-id=r#"^(org\.gnome\.Calculator|gnome-calculator)$"#
+    open-floating true
+    default-column-width { fixed 440; }
+    default-window-height { fixed 600; }
+}
+
+// Earbud controls and ambient sound need little horizontal space.
+window-rule {
+    match app-id=r#"^io\.github\.maniacx\.BudsLink$"#
+    open-floating true
+    default-column-width { fixed 480; }
+    default-window-height { fixed 640; }
+}
+window-rule {
+    match app-id=r#"^(com\.rafaelmardojai\.Blanket|blanket)$"#
+    open-floating true
+    default-column-width { fixed 560; }
+    default-window-height { fixed 660; }
+}
+
+// Sound, Bluetooth and connection editors are transient control panels.
+window-rule {
+    match app-id=r#"^(org\.pulseaudio\.pavucontrol|[Pp]avucontrol)$"#
+    match app-id=r#"^(blueman-manager|blueman-adapters|\.blueman-manager-wrapped)$"#
+    match app-id=r#"^(nm-connection-editor|nm-connection-editor\.desktop)$"#
+    open-floating true
+    default-column-width { fixed 760; }
+    default-window-height { fixed 560; }
+}
+
+window-rule {
+    match app-id=r#"^(org\.localsend\.localsend_app|localsend|localsend_app)$"#
+    open-floating true
+    default-column-width { fixed 760; }
+    default-window-height { fixed 600; }
+}
+window-rule {
+    match app-id=r#"^io\.gitlab\.adhami3310\.Impression$"#
+    open-floating true
+    default-column-width { fixed 640; }
+    default-window-height { fixed 520; }
+}
+window-rule {
+    match app-id=r#"^(com\.vysp3r\.ProtonPlus|protonplus)$"#
+    open-floating true
+    default-column-width { fixed 760; }
+    default-window-height { fixed 640; }
+}
+
+// Camera/video previews benefit from a landscape window; fullscreen still works.
+window-rule {
+    match app-id=r#"^io\.github\.cosmic_utils\.camera$"#
+    match app-id=r#"^(io\.github\.diegopvlk\.Cine|cine)$"#
+    open-floating true
+    default-column-width { fixed 960; }
+    default-window-height { fixed 720; }
+}
+
+// Recorder/benchmark setup only; do not match Steam games or benchmark renderers.
+window-rule {
+    match app-id=r#"^(com\.dec05eba\.gpu_screen_recorder|gpu-screen-recorder-gtk)$"#
+    match app-id=r#"^(com\.geeks3d\.furmark|FurMark_GUI)$"#
+    open-floating true
+    default-column-width { fixed 900; }
+    default-window-height { fixed 700; }
+}
+
+// Settings with a sidebar need more room than simple controls.
+window-rule {
+    match app-id=r#"^com\.github\.tchx84\.Flatseal$"#
+    match app-id=r#"^(org\.gnome\.Settings|gnome-control-center)$"#
+    open-floating true
+    default-column-width { fixed 1000; }
+    default-window-height { fixed 760; }
+}
+window-rule {
+    match app-id=r#"^io\.github\.flattool\.Warehouse$"#
+    match app-id=r#"^(io\.missioncenter\.MissionCenter|missioncenter)$"#
+    open-floating true
+    default-column-width { fixed 1100; }
+    default-window-height { fixed 760; }
+}
+
 // Niri already auto-floats parented dialogs and fixed-size windows.
 // Browser PiP needs an explicit rule (Zen, native/Flatpak Firefox).
 window-rule {

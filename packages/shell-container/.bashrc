@@ -103,3 +103,6 @@ shopt -s checkwinsize globstar histappend
 HISTCONTROL=ignoreboth:erasedups
 HISTSIZE=10000
 HISTFILESIZE=20000
+
+# opencode
+export PATH=/home/efpalaciosmo/.opencode/bin:$PATH

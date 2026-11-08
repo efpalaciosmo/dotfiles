@@ -7,8 +7,8 @@ lock_path="${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/lock-screen"
 printf -v lock_command '%q' "$lock_path"
 
 exec swayidle -w \
-    timeout 300 "$lock_command" \
-    timeout 600 'niri msg action power-off-monitors' \
+    timeout 900 "$lock_command" \
+    timeout 1500 'niri msg action power-off-monitors' \
         resume 'niri msg action power-on-monitors' \
     before-sleep "$lock_command" \
     after-resume 'niri msg action power-on-monitors' \

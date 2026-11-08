@@ -9,6 +9,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class SessionConfigTests(unittest.TestCase):
+    def test_directory_association_check_uses_thunar(self):
+        doctor = (ROOT / "scripts/desktop-check.py").read_text()
+        self.assertIn("association != 'thunar.desktop'", doctor)
+        self.assertIn("xdg-mime default thunar.desktop inode/directory", doctor)
+        self.assertNotIn("Nautilus.desktop", doctor)
+
     def test_portals_route_to_the_configured_desktop_backends(self):
         config = configparser.ConfigParser()
         config.read(ROOT / "packages/niri/.config/xdg-desktop-portal/niri-portals.conf")

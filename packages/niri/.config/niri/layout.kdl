@@ -10,6 +10,8 @@ layout {
 
     // Mod+R / Mod+Shift+R: 2/5, 1/2, 3/5, 2/3, full width.
     preset-column-widths {
+        proportion 0.25
+        proportion 0.3
         proportion 0.4
         proportion 0.5
         proportion 0.6
@@ -18,10 +20,12 @@ layout {
     }
 
     preset-window-heights {
-        proportion 0.2
+        proportion 0.25
+        proportion 0.3
         proportion 0.4
+        proportion 0.5
         proportion 0.6
-        proportion 0.8
+        proportion 0.75
         proportion 1.0
     }
 

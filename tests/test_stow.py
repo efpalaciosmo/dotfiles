@@ -24,7 +24,7 @@ class StowTests(unittest.TestCase):
         shutil.copytree(ROOT / "packages", self.repo / "packages", ignore=shutil.ignore_patterns("__pycache__"))
         binary = self.root / "bin"
         binary.mkdir()
-        for name in ("ghostty", "niri", "fuzzel", "gsettings"):
+        for name in ("ghostty", "niri", "fuzzel", "gsettings", "flatpak"):
             path = binary / name
             path.write_text("#!/bin/sh\nexit 0\n")
             path.chmod(0o755)
