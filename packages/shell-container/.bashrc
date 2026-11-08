@@ -106,3 +106,6 @@ HISTSIZE=10000
 HISTFILESIZE=20000
 
 alias fedora='distrobox enter fedora'
+
+# opencode
+export PATH=/home/efpalaciosmo/Projects/.opencode/bin:$PATH
