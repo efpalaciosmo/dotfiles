@@ -1,5 +1,0 @@
-# Copy to inventory.ini and adjust if needed.
-# Default local automation uses inventory.ini with localhost.
-
-[local]
-localhost ansible_connection=local ansible_python_interpreter=auto_silent

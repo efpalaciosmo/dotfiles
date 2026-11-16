@@ -21,3 +21,9 @@ inventory.ini
 
 # Backups should never be committed
 .dotfiles-backup/
+auth.json
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+package-lock.json
