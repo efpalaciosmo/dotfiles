@@ -4,6 +4,26 @@ window-rule {
     clip-to-geometry true
 }
 
+// Gamescope supplies its own game presentation and MangoHud overlay.
+// Keep it fullscreen and opaque, and activate the monitor's on-demand FreeSync.
+window-rule {
+    match app-id=r#"^gamescope$"#
+    open-fullscreen true
+    variable-refresh-rate true
+    opacity 1.0
+    geometry-corner-radius 0
+    clip-to-geometry false
+    border { off; }
+    focus-ring { off; }
+    shadow { off; }
+}
+
+// Also allow FreeSync for Steam games launched without Gamescope.
+window-rule {
+    match app-id=r#"^steam_app_[0-9]+$"#
+    variable-refresh-rate true
+}
+
 // Utility defaults are logical pixels (4K at 150% is 2560x1440 logical).
 // New floating windows are centered by Niri; keep them freely resizable.
 // Match both native Wayland IDs and legacy Xwayland WM_CLASS where needed.

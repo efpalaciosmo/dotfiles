@@ -1,8 +1,10 @@
-// ASUS VG27UQ1A 4K display, detected on DP-1 in the GNOME session.
+// ASUS VG27UQ1A 4K display (currently DP-2).
+// Match the monitor identity so connector renumbering cannot drop back to 60 Hz.
 // 150% gives a 2560x1440 logical workspace. Other outputs stay automatic.
-output "DP-1" {
+output "ASUSTek COMPUTER INC VG27UQ1A T2LMQS015744" {
     scale 1.5
     mode "3840x2160@120.000"
+    // Enable FreeSync for windows with the matching VRR rule in rules.kdl.
+    variable-refresh-rate on-demand=true
 }
-// Leave mode unset to preserve the preferred resolution/refresh rate.
 // GNOME has its own display configuration, applied by dotfiles-gnome.

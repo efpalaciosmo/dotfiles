@@ -156,7 +156,12 @@ visual certification.
 
 Niri uses 150% scaling on the ASUS 4K display at `DP-1`; other monitors remain
 automatic. Windows open at half width so two fit side by side; `Super+F`
-maximizes a column. See [4K scaling](docs/desktop-recovery.md#4k-display-scaling):
+maximizes a column. `Super+Alt+R` resets the focused column to 50% (use it on
+both columns for an equal split). Width presets include complementary 25/75,
+30/70 and 40/60 pairs. Columns do not auto-center on overflow, and 16-pixel gaps
+keep quarter/half splits pixel-aligned on the 150% 4K display.
+Applications with large minimum widths can still require more space.
+See [4K scaling](docs/desktop-recovery.md#4k-display-scaling):
 150% gives a 2560×1440 logical workspace at 3840×2160 physical resolution.
 Waybar, the launcher and notifications follow the compositor's output scale;
 no global GTK scale is forced. The bar sits at the

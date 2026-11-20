@@ -70,19 +70,6 @@ if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init zsh)"
 fi
 
-# Use Claude CLI with the DeepSeek backend; the key stays in the environment.
-claude() {
-    ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic" \
-        ANTHROPIC_AUTH_TOKEN="${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY must be set}" \
-        ANTHROPIC_MODEL="deepseek-v4-pro[1m]" \
-        ANTHROPIC_DEFAULT_OPUS_MODEL="deepseek-v4-pro[1m]" \
-        ANTHROPIC_DEFAULT_SONNET_MODEL="deepseek-v4-pro[1m]" \
-        ANTHROPIC_DEFAULT_HAIKU_MODEL="deepseek-v4-flash" \
-        CLAUDE_CODE_SUBAGENT_MODEL="deepseek-v4-flash" \
-        CLAUDE_CODE_EFFORT_LEVEL="max" \
-        command claude "$@"
-}
-
 alias fedora='distrobox enter fedora -- zsh'
 
 # Syntax highlighting must load after widgets, completion, and aliases.

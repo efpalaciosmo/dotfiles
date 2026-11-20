@@ -1,20 +1,24 @@
 // ~/.config/niri/layout.kdl
 
 layout {
-    center-focused-column "on-overflow"
+    // Do not hide a neighbor by centering when rounding or app minimums overflow.
+    center-focused-column "never"
     always-center-single-column
 
     // Two useful columns on desktop monitors; Mod+F still maximizes when needed.
     default-column-width { proportion 0.5; }
-    gaps 12
+    // At 2560 logical pixels / 150%, 16 keeps quarter/half widths pixel-aligned.
+    // With 12, a 25% + 75% pair rounds up to one physical pixel too wide.
+    gaps 16
 
-    // Mod+R / Mod+Shift+R: 2/5, 1/2, 3/5, 2/3, full width.
+    // Mod+R / Mod+Shift+R: complementary 25/75, 30/70, 40/60, 50/50.
     preset-column-widths {
         proportion 0.25
         proportion 0.3
         proportion 0.4
         proportion 0.5
         proportion 0.6
+        proportion 0.7
         proportion 0.75
         proportion 1.0
     }

@@ -44,6 +44,7 @@ binds {
     // Size / layout
     Mod+R       { switch-preset-column-width; }
     Mod+Shift+R { switch-preset-column-width-back; }
+    Mod+Alt+R hotkey-overlay-title="Reset column to half width" { set-column-width "50%"; }
 
     Mod+Ctrl+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R       { reset-window-height; }
