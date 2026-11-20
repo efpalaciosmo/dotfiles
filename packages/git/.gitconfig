@@ -11,9 +11,34 @@
 
 [pull]
     rebase = false
-[credential "https://github.com"]
-	helper = 
-	helper = !/tmp/opencode/github-cli/gh auth git-credential
-[credential "https://gist.github.com"]
-	helper = 
-	helper = !/tmp/opencode/github-cli/gh auth git-credential
+
+[push]
+    # `git push` on a new branch creates the remote branch.
+    autoSetupRemote = true
+
+[fetch]
+    prune = true
+
+[merge]
+    # Shows the common ancestor inside conflict markers.
+    conflictStyle = zdiff3
+
+[diff]
+    algorithm = histogram
+    colorMoved = default
+
+[rerere]
+    enabled = true
+
+[branch]
+    sort = -committerdate
+
+[alias]
+    st = status --short --branch
+    lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold #ff9c5b)%h%C(reset) %C(#99c1f1)%ar%C(reset) %C(bold white)%s%C(reset) %C(#9a9996)%an%C(reset)%C(auto)%d%C(reset)'
+    last = log -1 --stat
+    undo = reset --soft HEAD~1
+
+# GitHub credentials: run `gh auth setup-git` on a machine that has the GitHub CLI.
+# (opencode once wrote a helper pointing at /tmp/opencode/github-cli/gh here; that path
+# disappears, so it was removed.)

@@ -39,7 +39,8 @@ To apply only selected configurations:
 make PACKAGES="niri fuzzel waybar mako ghostty desktop gnome"
 ```
 
-The default Stow packages are `git shell-container starship vi ghostty niri waybar
+The default Stow packages are `git shell-container starship vi fastfetch btop
+yazi claude opencode ghostty niri waybar
 mako fuzzel desktop gnome`. These are configuration directories under `packages/`,
 not software packages to install. They include Ghostty, its bundled Adwaita theme,
 desktop appearance, shell and Starship preferences. No software packages are
@@ -67,8 +68,9 @@ The desktop uses Niri, Waybar, Fuzzel, Mako, Ghostty, Swaybg, Swaylock, Swayidle
 wl-clipboard, Playerctl, PipeWire/WirePlumber, NetworkManager, BlueZ, a polkit
 agent and the GNOME/GTK portals. Niri starts the KDE polkit agent at
 `/usr/libexec/kf6/polkit-kde-authentication-agent-1`; ensure it is installed there.
-GNOME Settings and Thunar provide desktop integration. Thunar is the default
-file manager (`thunar.desktop` for `inode/directory`). Install the tools and
+GNOME Settings provides desktop integration. Yazi (a terminal file manager running in
+Ghostty) is the default file manager: `Super+E` opens it and `yazi.desktop`, linked by the
+`desktop` package, handles `inode/directory`. Install the tools and
 fonts and configure their services through your distribution. **JetBrainsMono
 Nerd Font** is the desktop-wide default: GTK/GNOME interface, document and
 monospace text, window titles, Ghostty, Fuzzel, Waybar, Mako, Swaylock and Zathura.
@@ -108,13 +110,17 @@ session checks and restoring configuration backups.
 ## Desktop controls
 
 The desktop follows vanilla **Adwaita Dark**, with the requested `#ff7800`
-active window border, tab indicator, workspace selection and launcher selection.
+active window border, tab indicator and workspace selection. The launcher's selected row is a calm raised gray (`#4b4b50`); orange marks only the matching letters.
 Niri uses quiet gray inactive borders, 12-pixel corners and soft shadows.
-Fuzzel and Mako use Adwaita's raised `#36363a` surface; Waybar uses solid
-`#222226` chrome at 41 logical pixels high, with 15-pixel JetBrains labels and 19-pixel tray
-icons. Soft blue network, yellow audio, orange CPU, purple memory and green
-playback icons add color without changing the backgrounds or coloring entire
-labels. Amber and red still communicate warnings and urgency.
+Fuzzel and Mako use Adwaita's raised `#36363a` surface; Waybar is a single solid
+`#222226` bar (workspaces, focused window with app icon, media pill, tray/privacy/
+do-not-disturb/idle, Bluetooth/network/audio/CPU/memory, clock, power; thin dividers
+between sections; the NetworkManager and Blueman tray icons are hidden because the
+bar has its own network and Bluetooth modules, and the privacy indicator shows only
+screen sharing and microphone use) 41 logical pixels high, with 15-pixel JetBrains labels and 19-pixel tray
+icons. Color is semantic: orange marks focus and selection, soft blue connectivity,
+green playing/charging, amber warnings and red errors or urgency; every other
+icon is neutral so state changes stand out.
 `Super+Return`, Fuzzel, XDG terminal launchers and Waybar actions open Ghostty.
 Its canonical `config.ghostty` and `Adwaita Dark Orange` theme are both in the
 `ghostty` Stow package. The legacy `config` includes that same file for older
@@ -129,8 +135,9 @@ orange directory accents. Vim inherits the editing
 essentials (relative numbers, four-space indentation, search and a matching
 bracket indicator) in `packages/vi/.vimrc`.
 
-Fuzzel uses 13-point JetBrains type, 36-logical-pixel rows, a 52-character width,
-ten results and increased padding. These sizes and Waybar's dimensions are
+Fuzzel uses 14-point JetBrains type, 40-logical-pixel rows, a 56-character width,
+nine results, a match counter and generous padding. It is anchored near the top
+so the prompt does not jump while results filter. These sizes and Waybar's dimensions are
 logical; the configured 150% output scale provides the additional 4K scaling
 without global font DPI or GTK scale overrides.
 
@@ -173,34 +180,53 @@ otherwise).
 
 `Super+V` toggles the focused window between tiled and floating; `Super+Shift+V`
 switches focus between those layouts. Niri floats parented dialogs and fixed-size
-windows automatically. Thunar and compact utilities open centered and floating,
+windows automatically. Yazi (opened with `Super+E`) and compact utilities open centered and floating,
 with app-specific starting sizes; browsers, editors and other workspace apps stay
 tiled. See the [installed-app decisions and sizes](docs/application-behavior.md).
 Zen and Firefox Picture-in-Picture windows open floating
 at the bottom right; close and reopen an existing PiP window after changing rules.
 
-`Super+D` opens Fuzzel's native application launcher (desktop icons and launch
-history); `Super+Shift+D` opens quick actions for windows, recursive file
-search, file browsing, commands, clipboard, screenshots, connections, system
-monitoring, disk usage and power.
-`Super+Shift+Y` opens clipboard history, `Super+Shift+S` screenshots,
-`Super+Shift+P` power and `Super+Alt+L`
+Shortcuts share one grammar: `Super+<key>` is a frequent action,
+`Super+Shift+<initial>` opens the menu of one subsystem, `Super+Ctrl+<key>` moves
+instead of focusing, and `Super+Alt+L` locks (`Super+L` is focus right). Press
+`Super+Shift+/` for the list. Direct menu shortcuts:
+
+| Shortcut | Opens |
+| --- | --- |
+| `Super+D` | Applications (icons and launch history) |
+| `Super+X` | Run a command |
+| `Super+/` | Search files under home |
+| `Super+E` | Yazi (file manager) |
+| `Super+Shift+W` | Window list |
+| `Super+Shift+B` | Bluetooth |
+| `Super+Shift+N` | Wi-Fi |
+| `Super+Shift+S` | Screenshots (`Print`, `Ctrl+Print`, `Alt+Print` also work) |
+| `Super+Shift+Y` | Clipboard history (yank) |
+| `Super+Shift+M` | System monitor |
+| `Super+Shift+P` | Power menu |
+| `Super+Shift+Z` | Toggle do not disturb (bell icon appears in Waybar while on; critical notifications still show) |
+| `Super+Backspace` | Dismiss the newest notification (`Super+Shift+Backspace`: all) |
+| `Super+Alt+L` | Lock screen |
+| `Alt+Tab` | Previous window |
+| `Super+Shift+D` | Quick actions hub: everything above plus file browsing, connections and disk usage, each entry showing its direct shortcut |
+
+`Super+Alt+L`
 locks the session through `~/.config/niri/scripts/lock-screen`. In Niri,
-`swayidle` suspends the computer after 30 minutes of inactivity without
-automatically locking the session or turning off monitors beforehand. The session
-is not locked when it resumes unless it was locked manually. Swaylock shows the
-same mountains-and-clouds wallpaper as Niri and a visible orange
+`swayidle` locks the session after 10 minutes of inactivity and suspends the
+computer after 30; it also locks before any suspend (power menu, power button), so
+resuming always asks for your password. Swaylock shows the
+same Bluesky wallpaper as Niri and a visible orange
 unlock indicator; type your password and press Enter. Caps Lock and the keyboard
 layout are shown while typing.
 Missing wallpaper or appearance settings fall back to a solid dark lock screen.
 With `swaylock` and `swayidle` installed, apply the dotfiles,
 then **log out and back in** to start the idle daemon. `make doctor` checks the
 script links, wallpaper and running idle daemon. The wallpaper is at
-`packages/niri/.config/niri/backgrounds/mountains-clouds.jpg`, linked at
-`~/.config/niri/backgrounds/mountains-clouds.jpg`; no absolute repository path is used.
+`packages/niri/.config/niri/backgrounds/bluesky.png`, linked at
+`~/.config/niri/backgrounds/bluesky.png`; no absolute repository path is used.
 Fuzzel does not support Rofi's in-launcher `?` and
-`Control+Tab` mode switching: use `Super+Shift+D` for file search
-under home, file browsing, windows and commands instead. Search lists only
+`Control+Tab` mode switching: use `Super+/` (file search), `Super+Shift+W` (windows),
+`Super+X` (commands) or the `Super+Shift+D` hub instead. Search lists only
 files inside home; it skips hidden directory trees (except `~/.config`), caches,
 dependencies and generated build files for responsiveness. The file browser
 can navigate hidden folders, but cannot leave home. Clipboard history
@@ -221,13 +247,14 @@ Normal apps use `Ctrl+C`/`Ctrl+V`; Ghostty uses `Ctrl+Shift+C`/`Ctrl+Shift+V`.
 Clipboard sharing with VMs additionally needs the guest's SPICE agent; host
 clipboard packages alone cannot provide that.
 
-`Super+Shift+N` opens a Wi-Fi menu in Fuzzel, also available under quick actions.
+`Super+Shift+N` (N for network) opens a Wi-Fi menu in Fuzzel, also available under quick actions.
 It lists nearby networks and signal strength, connects with a password prompt
 when needed, and can refresh, disconnect, or toggle Wi-Fi. It uses the installed
 NetworkManager `nmcli` and Python's standard library.
 
-`Ctrl+B` opens the Bluetooth menu in Fuzzel (also available under quick actions
-with `Super+Shift+D`). It reports an inactive Bluetooth service and points to
+`Super+Shift+B` opens the Bluetooth menu in Fuzzel (also available under quick actions
+with `Super+Shift+D`). The former bare `Ctrl+B` was removed: it is
+Bash/Vim's cursor-left. It reports an inactive Bluetooth service and points to
 `systemctl status bluetooth.service` for diagnosis, detects hardware blocks and can power on a soft-blocked
 adapter, search for nearby devices, pair/connect, disconnect, and forget them.
 It uses `bluetoothctl` (BlueZ) and `rfkill`; no additional Bluetooth
@@ -235,14 +262,23 @@ interface is needed. Pairing that requires a PIN may need an interactive
 Bluetooth agent. This menu is part of the `fuzzel` Stow package and is linked
 automatically by the dotfiles task.
 
+## Developer tools
+
+Vim (Adwaita-orange colorscheme), fastfetch, btop, yazi, Claude Code and
+opencode follow the same palette and are linked by `make`. Claude Code gets a palette-colored
+status line, desktop notifications when it needs you and protection for credential files.
+See [developer tools](docs/dev-tools.md).
+
 ## Shell
 
 With Zsh and Starship installed, Stow links
 `~/.zshrc`, `~/.bashrc`, `~/.profile`,
 `~/.config/starship.toml` and the optional `~/.local/bin/fedora-terminal`.
-Zsh loads Starship and standard completions; Oh My Zsh, its plugins, fnm,
-uv, pnpm, and zoxide are only used if already installed. The Fedora Distrobox
-aliases and tmux hook activate only in that container. No login shell is
+`make` also installs Oh My Zsh with `zsh-autosuggestions` and `zsh-syntax-highlighting` into
+`~/.oh-my-zsh` using plain `git`: nothing is layered with `rpm-ostree` and nothing is written
+outside `$HOME`. The commits are pinned in `scripts/install-zsh.sh`; offline runs keep the links and
+report what is missing. fnm, uv, pnpm and zoxide are only used if already installed. The Fedora
+Distrobox alias and `fedora-terminal` helper are optional. No login shell is
 changed automatically; start `zsh` manually if you want to use it.
 
 ## Bootstrap

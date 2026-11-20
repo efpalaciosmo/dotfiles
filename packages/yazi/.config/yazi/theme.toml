@@ -1,0 +1,422 @@
+# Adwaita Dark with the desktop's orange accent (matches Ghostty, Fuzzel, Waybar).
+# surface #1d1d20, raised #36363a, selected row #4b4b50, line #45454a,
+# accent #ff7800, text orange #ff9c5b, blue #99c1f1, green #8ff0a4, amber #ffc252, red #ff938c.
+
+[mgr]
+cwd = { fg = "#ff9c5b", bold = true }
+hovered = { fg = "#ffffff", bg = "#4b4b50", bold = true }
+preview_hovered = { bg = "#36363a" }
+find_keyword = { fg = "#ffc252", bold = true, underline = true }
+find_position = { fg = "#ff9c5b", bg = "#36363a", bold = true }
+symlink_target = { fg = "#7bdff4", italic = true }
+marker_copied = { fg = "#8ff0a4", bg = "#8ff0a4" }
+marker_cut = { fg = "#ff938c", bg = "#ff938c" }
+marker_marked = { fg = "#7bdff4", bg = "#7bdff4" }
+marker_selected = { fg = "#ff7800", bg = "#ff7800" }
+count_copied = { fg = "#1d1d20", bg = "#8ff0a4" }
+count_cut = { fg = "#1d1d20", bg = "#ff938c" }
+count_selected = { fg = "#1d1d20", bg = "#ff7800" }
+border_symbol = "│"
+border_style = { fg = "#45454a" }
+
+[tabs]
+active = { fg = "#1d1d20", bg = "#ff7800", bold = true }
+inactive = { fg = "#c0bfbc", bg = "#36363a" }
+
+[mode]
+normal_main = { fg = "#1d1d20", bg = "#ff7800", bold = true }
+normal_alt = { fg = "#ff9c5b", bg = "#36363a" }
+select_main = { fg = "#1d1d20", bg = "#8ff0a4", bold = true }
+select_alt = { fg = "#8ff0a4", bg = "#36363a" }
+unset_main = { fg = "#1d1d20", bg = "#ff938c", bold = true }
+unset_alt = { fg = "#ff938c", bg = "#36363a" }
+
+[status]
+overall = { bg = "#222226" }
+perm_sep = { fg = "#45454a" }
+perm_type = { fg = "#99c1f1" }
+perm_read = { fg = "#ffc252" }
+perm_write = { fg = "#ff938c" }
+perm_exec = { fg = "#8ff0a4" }
+progress_label = { fg = "#ffffff", bold = true }
+progress_normal = { fg = "#ff7800", bg = "#36363a" }
+progress_error = { fg = "#ff938c", bg = "#36363a" }
+
+[which]
+cols = 3
+mask = { bg = "#222226" }
+cand = { fg = "#ff9c5b" }
+rest = { fg = "#9a9996" }
+desc = { fg = "#c0bfbc" }
+separator = "  "
+separator_style = { fg = "#45454a" }
+
+[confirm]
+border = { fg = "#ff7800" }
+title = { fg = "#ff9c5b", bold = true }
+content = { fg = "#ffffff" }
+list = { fg = "#c0bfbc" }
+btn_yes = { fg = "#1d1d20", bg = "#ff7800" }
+btn_no = { fg = "#c0bfbc", bg = "#36363a" }
+
+[spot]
+border = { fg = "#ff7800" }
+title = { fg = "#ff9c5b", bold = true }
+tbl_col = { fg = "#99c1f1" }
+tbl_cell = { fg = "#1d1d20", bg = "#ff7800" }
+
+[notify]
+title_info = { fg = "#99c1f1" }
+title_warn = { fg = "#ffc252" }
+title_error = { fg = "#ff938c" }
+
+[pick]
+border = { fg = "#ff7800" }
+active = { fg = "#ffffff", bg = "#4b4b50", bold = true }
+inactive = { fg = "#c0bfbc" }
+
+[input]
+border = { fg = "#ff7800" }
+title = { fg = "#ff9c5b" }
+value = { fg = "#ffffff" }
+selected = { fg = "#1d1d20", bg = "#ff7800" }
+
+[cmp]
+border = { fg = "#ff7800" }
+active = { fg = "#ffffff", bg = "#4b4b50", bold = true }
+inactive = { fg = "#c0bfbc" }
+
+[tasks]
+border = { fg = "#ff7800" }
+title = { fg = "#ff9c5b", bold = true }
+hovered = { fg = "#ffffff", bg = "#4b4b50", bold = true }
+
+[help]
+on = { fg = "#ff9c5b" }
+run = { fg = "#7bdff4" }
+desc = { fg = "#c0bfbc" }
+hovered = { fg = "#ffffff", bg = "#4b4b50", bold = true }
+footer = { fg = "#c0bfbc", bg = "#36363a" }
+
+[filetype]
+rules = [
+    { url = "*/", fg = "#99c1f1" },
+    { url = "*", is = "exec", fg = "#8ff0a4" },
+    { url = "*", is = "link", fg = "#7bdff4" },
+    { url = "*", is = "orphan", fg = "#ff938c" },
+    { url = "*", is = "dummy", fg = "#ff938c" },
+    { mime = "image/*", fg = "#dc8add" },
+    { mime = "{audio,video}/*", fg = "#ffc252" },
+    { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#ffbe6f" },
+    { mime = "application/pdf", fg = "#ff938c" },
+    { url = ".*", fg = "#9a9996" },
+]
+
+# File icons. yazi's built-in icon table colors every type from its own 221-color set, which
+# ignores this palette, so icons are redefined here with the same glyphs. Color is semantic,
+# like Waybar: blue code and folders, orange configuration, green scripts and executables,
+# purple images, amber audio/video, gold archives, red PDF, quiet gray for lock/cache files.
+# A name that is not listed falls back to the generic file/folder icon below.
+[icon]
+dirs = [
+    # Folders: blue like the names; places that hold configuration are orange.
+    { name = "Desktop", text = "\uf108", fg = "#99c1f1" },
+    { name = "Development", text = "\ue70c", fg = "#99c1f1" },
+    { name = "Documents", text = "\uf401", fg = "#99c1f1" },
+    { name = "Downloads", text = "\uf498", fg = "#99c1f1" },
+    { name = "Library", text = "\ueb9c", fg = "#99c1f1" },
+    { name = "Movies", text = "\uf447", fg = "#99c1f1" },
+    { name = "Music", text = "\uf025", fg = "#99c1f1" },
+    { name = "Pictures", text = "\ue244", fg = "#99c1f1" },
+    { name = "Public", text = "\uf42b", fg = "#99c1f1" },
+    { name = "Videos", text = "\uf447", fg = "#99c1f1" },
+    { name = ".npm", text = "\ue5fa", fg = "#99c1f1" },
+    # Configuration folders
+    { name = ".config", text = "\ue5fc", fg = "#ff9c5b" },
+    { name = ".git", text = "\ue5fb", fg = "#ff9c5b" },
+    { name = ".github", text = "\ue5fd", fg = "#ff9c5b" },
+]
+files = [
+    # Source code
+    { name = "go.mod", text = "\ue627", fg = "#99c1f1" },
+    { name = "go.sum", text = "\ue627", fg = "#99c1f1" },
+    { name = "gradlew", text = "\ue660", fg = "#99c1f1" },
+    { name = "cmakelists.txt", text = "\ue794", fg = "#99c1f1" },
+    { name = "pom.xml", text = "\ue674", fg = "#99c1f1" },
+    # Configuration and data
+    { name = ".editorconfig", text = "\ue652", fg = "#ff9c5b" },
+    { name = ".env", text = "\uf462", fg = "#ff9c5b" },
+    { name = ".gitattributes", text = "\ue702", fg = "#ff9c5b" },
+    { name = ".gitconfig", text = "\ue615", fg = "#ff9c5b" },
+    { name = ".gitignore", text = "\ue702", fg = "#ff9c5b" },
+    { name = ".gitmodules", text = "\ue702", fg = "#ff9c5b" },
+    { name = ".npmrc", text = "\ue71e", fg = "#ff9c5b" },
+    { name = ".nvmrc", text = "\ue718", fg = "#ff9c5b" },
+    { name = ".prettierrc", text = "\ue6b4", fg = "#ff9c5b" },
+    { name = ".eslintrc", text = "\ue655", fg = "#ff9c5b" },
+    { name = ".gvimrc", text = "\ue62b", fg = "#ff9c5b" },
+    { name = ".vimrc", text = "\ue62b", fg = "#ff9c5b" },
+    { name = ".zshrc", text = "\ue615", fg = "#ff9c5b" },
+    { name = ".bashrc", text = "\ue615", fg = "#ff9c5b" },
+    { name = ".bash_profile", text = "\ue615", fg = "#ff9c5b" },
+    { name = ".zprofile", text = "\ue615", fg = "#ff9c5b" },
+    { name = ".zshenv", text = "\ue615", fg = "#ff9c5b" },
+    { name = ".xinitrc", text = "\uf369", fg = "#ff9c5b" },
+    { name = ".Xresources", text = "\uf369", fg = "#ff9c5b" },
+    { name = "mpv.conf", text = "\uf36e", fg = "#ff9c5b" },
+    { name = "makefile", text = "\ue779", fg = "#ff9c5b" },
+    { name = "gnumakefile", text = "\ue779", fg = "#ff9c5b" },
+    { name = "dockerfile", text = "\U000f0868", fg = "#ff9c5b" },
+    { name = "containerfile", text = "\U000f0868", fg = "#ff9c5b" },
+    { name = "docker-compose.yml", text = "\U000f0868", fg = "#ff9c5b" },
+    { name = "docker-compose.yaml", text = "\U000f0868", fg = "#ff9c5b" },
+    { name = "compose.yml", text = "\U000f0868", fg = "#ff9c5b" },
+    { name = "compose.yaml", text = "\U000f0868", fg = "#ff9c5b" },
+    { name = "package.json", text = "\ue71e", fg = "#ff9c5b" },
+    { name = "tsconfig.json", text = "\ue69d", fg = "#ff9c5b" },
+    { name = "Jenkinsfile", text = "\uf2ec", fg = "#ff9c5b" },
+    { name = "justfile", text = "\uf0ad", fg = "#ff9c5b" },
+    { name = ".justfile", text = "\uf0ad", fg = "#ff9c5b" },
+    { name = "Gemfile", text = "\ue791", fg = "#ff9c5b" },
+    { name = "PKGBUILD", text = "\uf303", fg = "#ff9c5b" },
+    { name = "vercel.json", text = "\ue8d3", fg = "#ff9c5b" },
+    { name = "hyprland.conf", text = "\uf359", fg = "#ff9c5b" },
+    { name = "config", text = "\ue615", fg = "#ff9c5b" },
+    # Scripts
+    { name = ".xsession", text = "\uf369", fg = "#8ff0a4" },
+    # Documents
+    { name = "readme", text = "\U000f00ba", fg = "#c0bfbc" },
+    { name = "readme.md", text = "\U000f00ba", fg = "#c0bfbc" },
+    { name = "license", text = "\ue60a", fg = "#c0bfbc" },
+    { name = "license.md", text = "\ue60a", fg = "#c0bfbc" },
+    { name = "copying", text = "\ue60a", fg = "#c0bfbc" },
+    { name = "copying.lesser", text = "\ue60a", fg = "#c0bfbc" },
+    { name = "unlicense", text = "\ue60a", fg = "#c0bfbc" },
+    { name = "AUTHORS", text = "\uedca", fg = "#c0bfbc" },
+    { name = "AUTHORS.txt", text = "\uedca", fg = "#c0bfbc" },
+    { name = "security", text = "\U000f0483", fg = "#c0bfbc" },
+    { name = "security.md", text = "\U000f0483", fg = "#c0bfbc" },
+    { name = "code_of_conduct", text = "\uf4ae", fg = "#c0bfbc" },
+    { name = "code_of_conduct.md", text = "\uf4ae", fg = "#c0bfbc" },
+    # Images
+    { name = "favicon.ico", text = "\ue623", fg = "#dc8add" },
+    # Lock files, backups and caches fade into the background
+    { name = "pnpm-lock.yaml", text = "\ue865", fg = "#9a9996" },
+    { name = "package-lock.json", text = "\ue71e", fg = "#9a9996" },
+    { name = "bun.lock", text = "\ue76f", fg = "#9a9996" },
+    { name = "bun.lockb", text = "\ue76f", fg = "#9a9996" },
+    { name = "mix.lock", text = "\ue62d", fg = "#9a9996" },
+    { name = ".ds_store", text = "\ue615", fg = "#9a9996" },
+    { name = "node_modules", text = "\ue718", fg = "#9a9996" },
+    { name = "py.typed", text = "\ue606", fg = "#9a9996" },
+]
+exts = [
+    # Source code
+    { name = "py", text = "\ue606", fg = "#99c1f1" },
+    { name = "pyi", text = "\ue606", fg = "#99c1f1" },
+    { name = "pyw", text = "\ue606", fg = "#99c1f1" },
+    { name = "js", text = "\ue60c", fg = "#99c1f1" },
+    { name = "mjs", text = "\ue60c", fg = "#99c1f1" },
+    { name = "cjs", text = "\ue60c", fg = "#99c1f1" },
+    { name = "ts", text = "\ue628", fg = "#99c1f1" },
+    { name = "mts", text = "\ue628", fg = "#99c1f1" },
+    { name = "cts", text = "\ue628", fg = "#99c1f1" },
+    { name = "jsx", text = "\ue625", fg = "#99c1f1" },
+    { name = "tsx", text = "\ue7ba", fg = "#99c1f1" },
+    { name = "d.ts", text = "\ue628", fg = "#99c1f1" },
+    { name = "c", text = "\ue61e", fg = "#99c1f1" },
+    { name = "h", text = "\uf0fd", fg = "#99c1f1" },
+    { name = "cpp", text = "\ue61d", fg = "#99c1f1" },
+    { name = "cc", text = "\ue61d", fg = "#99c1f1" },
+    { name = "cxx", text = "\ue61d", fg = "#99c1f1" },
+    { name = "hpp", text = "\uf0fd", fg = "#99c1f1" },
+    { name = "hh", text = "\uf0fd", fg = "#99c1f1" },
+    { name = "c++", text = "\ue61d", fg = "#99c1f1" },
+    { name = "cs", text = "\U000f031b", fg = "#99c1f1" },
+    { name = "go", text = "\ue627", fg = "#99c1f1" },
+    { name = "rs", text = "\ue68b", fg = "#99c1f1" },
+    { name = "java", text = "\ue738", fg = "#99c1f1" },
+    { name = "kt", text = "\ue634", fg = "#99c1f1" },
+    { name = "kts", text = "\ue634", fg = "#99c1f1" },
+    { name = "scala", text = "\ue737", fg = "#99c1f1" },
+    { name = "swift", text = "\ue755", fg = "#99c1f1" },
+    { name = "rb", text = "\ue791", fg = "#99c1f1" },
+    { name = "php", text = "\ue608", fg = "#99c1f1" },
+    { name = "lua", text = "\ue620", fg = "#99c1f1" },
+    { name = "vim", text = "\ue62b", fg = "#99c1f1" },
+    { name = "nix", text = "\uf313", fg = "#99c1f1" },
+    { name = "zig", text = "\ue6a9", fg = "#99c1f1" },
+    { name = "dart", text = "\ue798", fg = "#99c1f1" },
+    { name = "hs", text = "\ue61f", fg = "#99c1f1" },
+    { name = "ml", text = "\ue67a", fg = "#99c1f1" },
+    { name = "ex", text = "\ue62d", fg = "#99c1f1" },
+    { name = "exs", text = "\ue62d", fg = "#99c1f1" },
+    { name = "erl", text = "\ue7b1", fg = "#99c1f1" },
+    { name = "clj", text = "\ue768", fg = "#99c1f1" },
+    { name = "sql", text = "\ue706", fg = "#99c1f1" },
+    { name = "r", text = "\U000f07d4", fg = "#99c1f1" },
+    { name = "R", text = "\U000f07d4", fg = "#99c1f1" },
+    { name = "jl", text = "\ue624", fg = "#99c1f1" },
+    { name = "vue", text = "\ue6a0", fg = "#99c1f1" },
+    { name = "svelte", text = "\ue697", fg = "#99c1f1" },
+    { name = "astro", text = "\ue6b3", fg = "#99c1f1" },
+    { name = "html", text = "\ue736", fg = "#99c1f1" },
+    { name = "htm", text = "\ue60e", fg = "#99c1f1" },
+    { name = "css", text = "\ue6b8", fg = "#99c1f1" },
+    { name = "scss", text = "\ue603", fg = "#99c1f1" },
+    { name = "sass", text = "\ue603", fg = "#99c1f1" },
+    { name = "less", text = "\ue614", fg = "#99c1f1" },
+    { name = "tex", text = "\ue69b", fg = "#99c1f1" },
+    { name = "typ", text = "\uf37f", fg = "#99c1f1" },
+    { name = "sol", text = "\ue656", fg = "#99c1f1" },
+    { name = "gd", text = "\ue65f", fg = "#99c1f1" },
+    { name = "glsl", text = "\ue855", fg = "#99c1f1" },
+    { name = "frag", text = "\ue855", fg = "#99c1f1" },
+    { name = "vert", text = "\ue855", fg = "#99c1f1" },
+    { name = "asm", text = "\ue637", fg = "#99c1f1" },
+    { name = "s", text = "\ue637", fg = "#99c1f1" },
+    { name = "v", text = "\U000f035b", fg = "#99c1f1" },
+    { name = "sv", text = "\U000f035b", fg = "#99c1f1" },
+    { name = "vhd", text = "\U000f035b", fg = "#99c1f1" },
+    { name = "vhdl", text = "\U000f035b", fg = "#99c1f1" },
+    { name = "qml", text = "\uf375", fg = "#99c1f1" },
+    { name = "ipynb", text = "\ue80f", fg = "#99c1f1" },
+    { name = "cmake", text = "\ue794", fg = "#99c1f1" },
+    # Configuration and data
+    { name = "json", text = "\ue60b", fg = "#ff9c5b" },
+    { name = "jsonc", text = "\ue60b", fg = "#ff9c5b" },
+    { name = "json5", text = "\ue60b", fg = "#ff9c5b" },
+    { name = "toml", text = "\ue6b2", fg = "#ff9c5b" },
+    { name = "yaml", text = "\ue615", fg = "#ff9c5b" },
+    { name = "yml", text = "\ue615", fg = "#ff9c5b" },
+    { name = "ini", text = "\ue615", fg = "#ff9c5b" },
+    { name = "conf", text = "\ue615", fg = "#ff9c5b" },
+    { name = "cfg", text = "\ue615", fg = "#ff9c5b" },
+    { name = "xml", text = "\U000f05c0", fg = "#ff9c5b" },
+    { name = "env", text = "\uf462", fg = "#ff9c5b" },
+    { name = "csv", text = "\ue64a", fg = "#ff9c5b" },
+    { name = "desktop", text = "\uf108", fg = "#ff9c5b" },
+    { name = "rasi", text = "\uebf6", fg = "#ff9c5b" },
+    { name = "makefile", text = "\ue779", fg = "#ff9c5b" },
+    { name = "mk", text = "\ue779", fg = "#ff9c5b" },
+    { name = "Dockerfile", text = "\U000f0868", fg = "#ff9c5b" },
+    { name = "tf", text = "\ue69a", fg = "#ff9c5b" },
+    { name = "tfvars", text = "\uf15b", fg = "#ff9c5b" },
+    { name = "gql", text = "\uf20e", fg = "#ff9c5b" },
+    { name = "graphql", text = "\uf20e", fg = "#ff9c5b" },
+    { name = "prisma", text = "\ue684", fg = "#ff9c5b" },
+    # Scripts
+    { name = "sh", text = "\ue795", fg = "#8ff0a4" },
+    { name = "bash", text = "\ue760", fg = "#8ff0a4" },
+    { name = "zsh", text = "\ue795", fg = "#8ff0a4" },
+    { name = "fish", text = "\ue795", fg = "#8ff0a4" },
+    { name = "ksh", text = "\ue795", fg = "#8ff0a4" },
+    { name = "csh", text = "\ue795", fg = "#8ff0a4" },
+    { name = "nu", text = "\uf054", fg = "#8ff0a4" },
+    { name = "ps1", text = "\U000f0a0a", fg = "#8ff0a4" },
+    { name = "bat", text = "\ue615", fg = "#8ff0a4" },
+    { name = "awk", text = "\ue795", fg = "#8ff0a4" },
+    # Documents
+    { name = "md", text = "\uf48a", fg = "#c0bfbc" },
+    { name = "markdown", text = "\ue609", fg = "#c0bfbc" },
+    { name = "txt", text = "\U000f0219", fg = "#c0bfbc" },
+    { name = "org", text = "\ue633", fg = "#c0bfbc" },
+    { name = "log", text = "\U000f0331", fg = "#c0bfbc" },
+    { name = "nfo", text = "\uf129", fg = "#c0bfbc" },
+    { name = "epub", text = "\ue28b", fg = "#c0bfbc" },
+    { name = "mobi", text = "\ue28b", fg = "#c0bfbc" },
+    { name = "doc", text = "\U000f022c", fg = "#c0bfbc" },
+    { name = "docx", text = "\U000f022c", fg = "#c0bfbc" },
+    { name = "odt", text = "\uf37c", fg = "#c0bfbc" },
+    { name = "xls", text = "\U000f021b", fg = "#c0bfbc" },
+    { name = "xlsx", text = "\U000f021b", fg = "#c0bfbc" },
+    { name = "ods", text = "\uf378", fg = "#c0bfbc" },
+    { name = "ppt", text = "\U000f0227", fg = "#c0bfbc" },
+    { name = "pptx", text = "\U000f0227", fg = "#c0bfbc" },
+    { name = "odp", text = "\uf37a", fg = "#c0bfbc" },
+    { name = "ics", text = "\uf073", fg = "#c0bfbc" },
+    # PDF
+    { name = "pdf", text = "\ueaeb", fg = "#ff938c" },
+    # Images
+    { name = "png", text = "\ue60d", fg = "#dc8add" },
+    { name = "jpg", text = "\ue60d", fg = "#dc8add" },
+    { name = "jpeg", text = "\ue60d", fg = "#dc8add" },
+    { name = "gif", text = "\ue60d", fg = "#dc8add" },
+    { name = "webp", text = "\ue60d", fg = "#dc8add" },
+    { name = "avif", text = "\ue60d", fg = "#dc8add" },
+    { name = "bmp", text = "\ue60d", fg = "#dc8add" },
+    { name = "ico", text = "\ue60d", fg = "#dc8add" },
+    { name = "svg", text = "\U000f0721", fg = "#dc8add" },
+    { name = "svgz", text = "\U000f0721", fg = "#dc8add" },
+    { name = "jxl", text = "\ue60d", fg = "#dc8add" },
+    { name = "psd", text = "\ue7b8", fg = "#dc8add" },
+    { name = "xcf", text = "\uf338", fg = "#dc8add" },
+    { name = "ai", text = "\ue7b4", fg = "#dc8add" },
+    { name = "kra", text = "\uf33d", fg = "#dc8add" },
+    # Audio and video
+    { name = "mp3", text = "\uf001", fg = "#ffc252" },
+    { name = "flac", text = "\uf001", fg = "#ffc252" },
+    { name = "wav", text = "\uf001", fg = "#ffc252" },
+    { name = "ogg", text = "\uf001", fg = "#ffc252" },
+    { name = "opus", text = "\uf001", fg = "#ffc252" },
+    { name = "m4a", text = "\uf001", fg = "#ffc252" },
+    { name = "aac", text = "\uf001", fg = "#ffc252" },
+    { name = "aif", text = "\uf001", fg = "#ffc252" },
+    { name = "aiff", text = "\uf001", fg = "#ffc252" },
+    { name = "ape", text = "\uf001", fg = "#ffc252" },
+    { name = "wma", text = "\uf001", fg = "#ffc252" },
+    { name = "oga", text = "\uf001", fg = "#ffc252" },
+    { name = "mp4", text = "\ue69f", fg = "#ffc252" },
+    { name = "mkv", text = "\ue69f", fg = "#ffc252" },
+    { name = "mov", text = "\ue69f", fg = "#ffc252" },
+    { name = "webm", text = "\ue69f", fg = "#ffc252" },
+    { name = "m4v", text = "\ue69f", fg = "#ffc252" },
+    { name = "wmv", text = "\ue69f", fg = "#ffc252" },
+    { name = "ogv", text = "\ue69f", fg = "#ffc252" },
+    { name = "m3u", text = "\U000f0cb9", fg = "#ffc252" },
+    { name = "m3u8", text = "\U000f0cb9", fg = "#ffc252" },
+    { name = "srt", text = "\U000f0a16", fg = "#ffc252" },
+    { name = "ass", text = "\U000f0a16", fg = "#ffc252" },
+    { name = "sub", text = "\U000f0a16", fg = "#ffc252" },
+    { name = "avi", text = "\ue69f", fg = "#ffc252" },
+    # Archives and packages
+    { name = "zip", text = "\uf410", fg = "#ffbe6f" },
+    { name = "7z", text = "\uf410", fg = "#ffbe6f" },
+    { name = "rar", text = "\uf410", fg = "#ffbe6f" },
+    { name = "gz", text = "\uf410", fg = "#ffbe6f" },
+    { name = "tgz", text = "\uf410", fg = "#ffbe6f" },
+    { name = "bz2", text = "\uf410", fg = "#ffbe6f" },
+    { name = "xz", text = "\uf410", fg = "#ffbe6f" },
+    { name = "txz", text = "\uf410", fg = "#ffbe6f" },
+    { name = "zst", text = "\uf410", fg = "#ffbe6f" },
+    { name = "iso", text = "\ue271", fg = "#ffbe6f" },
+    { name = "img", text = "\ue271", fg = "#ffbe6f" },
+    { name = "jar", text = "\ue738", fg = "#ffbe6f" },
+    { name = "apk", text = "\ue70e", fg = "#ffbe6f" },
+    { name = "tar", text = "\uf410", fg = "#ffbe6f" },
+    # Lock files, backups and caches fade into the background
+    { name = "lock", text = "\ue672", fg = "#9a9996" },
+    { name = "bak", text = "\U000f006f", fg = "#9a9996" },
+    { name = "cache", text = "\uf49b", fg = "#9a9996" },
+    { name = "part", text = "\uf019", fg = "#9a9996" },
+    { name = "crdownload", text = "\uf019", fg = "#9a9996" },
+    { name = "download", text = "\uf019", fg = "#9a9996" },
+    { name = "o", text = "\ueae8", fg = "#9a9996" },
+    { name = "pyc", text = "\ue606", fg = "#9a9996" },
+    { name = "pyo", text = "\ue606", fg = "#9a9996" },
+    { name = "lck", text = "\ue672", fg = "#9a9996" },
+]
+conds = [
+    { if = "orphan", text = "\uf127", fg = "#ff938c" },
+    { if = "link", text = "\uf481", fg = "#7bdff4" },
+    { if = "block", text = "\uf0c9", fg = "#ffc252" },
+    { if = "char", text = "\uf1c0", fg = "#ffc252" },
+    { if = "fifo", text = "\uf1d1", fg = "#ffc252" },
+    { if = "sock", text = "\uf1e4", fg = "#ffc252" },
+    { if = "sticky", text = "\uf08d", fg = "#ffc252" },
+    { if = "dummy", text = "\uf057", fg = "#ff938c" },
+    { if = "dir & hovered", text = "\ue5fe", fg = "#99c1f1" },
+    { if = "dir", text = "\ue5ff", fg = "#99c1f1" },
+    { if = "exec", text = "\uf489", fg = "#8ff0a4" },
+    { if = "!dir", text = "\uf15b", fg = "#c0bfbc" },
+]

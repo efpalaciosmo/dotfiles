@@ -121,6 +121,14 @@ if [[ " $* " == *" desktop "* ]]; then
     "$repo_root/packages/desktop/.local/bin/dotfiles-appearance"
 fi
 
+# ~/.zshrc loads Oh My Zsh and two plugins from $HOME. Fetch them user-locally (no
+# system packages). A network failure must not undo the links that already succeeded.
+# DOTFILES_SKIP_ZSH_INSTALL=1 skips the download (used by the test-suite).
+if [[ " $* " == *" shell-container "* && -z ${DOTFILES_SKIP_ZSH_INSTALL:-} ]]; then
+    bash "$repo_root/scripts/install-zsh.sh" ||
+        printf 'dotfiles: Oh My Zsh was not fully installed; the links are in place, rerun make when online\n' >&2
+fi
+
 # GNOME's settings are separate from Niri. Also reapplied at GNOME login.
 if [[ " $* " == *" gnome "* ]]; then
     "$repo_root/packages/gnome/.local/bin/dotfiles-gnome"
@@ -153,6 +161,21 @@ if [[ " $* " == *" fuzzel "* ]]; then
         fi
     done
 fi
+
+# Neovim and tmux are no longer managed. Their links would now dangle, so remove
+# exactly the ones this clone created; independent files and other clones stay.
+for retired in nvim:.config/nvim/init.lua tmux:.tmux.conf; do
+    relative=${retired#*:}
+    target=$HOME/$relative
+    if [[ -L $target ]] &&
+        [[ $(readlink -m -- "$target") == "$repo_root/packages/${retired%%:*}/$relative" ]]; then
+        printf 'dotfiles: removing retired link %s\n' "$target"
+        rm -- "$target"
+        # Tidy an emptied ~/.config/nvim, but never HOME itself.
+        [[ ${target%/*} == "$HOME" ]] ||
+            rmdir --ignore-fail-on-non-empty -- "${target%/*}" 2>/dev/null || true
+    fi
+done
 
 # Vim uses ~/.vimrc instead of the former ~/.virc. Remove only the old link
 # installed by this repository; never delete an independent user's file.

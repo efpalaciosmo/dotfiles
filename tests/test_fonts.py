@@ -36,11 +36,11 @@ class FontTests(unittest.TestCase):
         config = configparser.ConfigParser()
         config.read(ROOT / "packages/fuzzel/.config/fuzzel/fuzzel.ini")
         main = config["main"]
-        self.assertEqual(main["font"], "JetBrainsMono Nerd Font:size=13,JetBrains Mono:size=13")
+        self.assertEqual(main["font"], "JetBrainsMono Nerd Font:size=14,JetBrains Mono:size=14")
         self.assertEqual(main["dpi-aware"], "no")
-        self.assertEqual(main["width"], "52")
-        self.assertEqual(main["lines"], "10")
-        self.assertEqual(main["line-height"], "36px")
+        self.assertEqual(main["width"], "56")
+        self.assertEqual(main["lines"], "9")
+        self.assertEqual(main["line-height"], "40px")
         self.assertEqual(config["colors"]["background"], "36363aff")
 
     def test_desktop_and_other_managed_apps_default_to_jetbrains(self):

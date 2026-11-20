@@ -30,7 +30,7 @@ class NiriLockTests(unittest.TestCase):
             stub.chmod(0o755)
             config = Path(directory) / "config with spaces:colon"
             lock_config = config / "swaylock/config"
-            wallpaper = config / "niri/backgrounds/mountains-clouds.jpg"
+            wallpaper = config / "niri/backgrounds/bluesky.png"
             for path in (lock_config, wallpaper):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("appearance fixture")
@@ -53,14 +53,18 @@ class NiriLockTests(unittest.TestCase):
             self.assertEqual(args[args.index("-C") + 1], "/dev/null")
             self.assertNotIn("--image", args)
 
-    def test_idle_only_suspends_after_30_minutes(self):
+    def test_idle_locks_after_10_minutes_suspends_after_30_and_locks_before_sleep(self):
         with tempfile.TemporaryDirectory() as directory:
             stub = Path(directory) / "swayidle"
             stub.write_text('#!/bin/sh\nprintf "%s\\n" "$@"\n')
             stub.chmod(0o755)
-            env = {**os.environ, "PATH": directory + ":" + os.environ["PATH"]}
+            config = Path(directory) / "config"
+            env = {**os.environ, "PATH": directory + ":" + os.environ["PATH"],
+                   "XDG_CONFIG_HOME": str(config)}
             args = subprocess.check_output([str(SCRIPTS / "session-idle")], env=env, text=True).splitlines()
-            self.assertEqual(args, ["-w", "timeout", "1800", "systemctl suspend"])
+            lock = f'pgrep -x swaylock >/dev/null || "{config}/niri/scripts/lock-screen"'
+            self.assertEqual(args, ["-w", "timeout", "600", lock, "timeout", "1800",
+                                    "systemctl suspend", "before-sleep", lock])
 
 
 if __name__ == "__main__":

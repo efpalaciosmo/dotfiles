@@ -7,20 +7,24 @@ mode=${1:-drun}
 . "$script_dir/common"
 
 if [[ "$mode" == actions ]]; then
+    # Each entry shows its direct shortcut so the hub teaches the faster path.
+    entry() { if [[ -n ${2:-} ]]; then printf '%-16s  %s\n' "$1" "$2"; else printf '%s\n' "$1"; fi; }
     choice=$(menu "Actions" \
-        "Applications" \
-        "Windows" \
-        "Search files" \
-        "Browse files" \
-        "Commands" \
-        "Clipboard" \
-        "Screenshots" \
-        "Wi-Fi" \
-        "Connections" \
-        "Bluetooth" \
-        "System monitor" \
-        "Disk usage" \
-        "Power" || true)
+        "$(entry "Applications" "Super+D")" \
+        "$(entry "Windows" "Super+Shift+W")" \
+        "$(entry "Search files" "Super+/")" \
+        "$(entry "Browse files")" \
+        "$(entry "Commands" "Super+X")" \
+        "$(entry "Clipboard" "Super+Shift+Y")" \
+        "$(entry "Screenshots" "Super+Shift+S")" \
+        "$(entry "Wi-Fi" "Super+Shift+N")" \
+        "$(entry "Connections")" \
+        "$(entry "Bluetooth" "Super+Shift+B")" \
+        "$(entry "System monitor" "Super+Shift+M")" \
+        "$(entry "Disk usage")" \
+        "$(entry "Power" "Super+Shift+P")" || true)
+    # Labels never contain two consecutive spaces; drop the shortcut column.
+    choice=${choice%%  *}
     case "$choice" in
         "Applications") mode=drun ;;
         "Windows") mode=window ;;

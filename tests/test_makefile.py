@@ -9,7 +9,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_PACKAGES = "git shell-container starship vi ghostty niri waybar mako fuzzel desktop gnome"
+DEFAULT_PACKAGES = ("git shell-container starship vi fastfetch btop yazi claude opencode "
+                    "ghostty niri waybar mako fuzzel desktop gnome")
 
 
 class MakefileTests(unittest.TestCase):

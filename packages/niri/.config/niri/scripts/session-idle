@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# Suspend after 30 minutes of inactivity without automatically locking.
+# Lock after 10 minutes idle, suspend after 30, and always lock before sleeping
+# (also covers suspend from the power menu or the lid/power button).
+# pgrep avoids starting a second locker when the session is already locked.
 set -euo pipefail
 
+config_home=${XDG_CONFIG_HOME:-$HOME/.config}
+lock="pgrep -x swaylock >/dev/null || \"$config_home/niri/scripts/lock-screen\""
+
 exec swayidle -w \
-    timeout 1800 'systemctl suspend'
+    timeout 600 "$lock" \
+    timeout 1800 'systemctl suspend' \
+    before-sleep "$lock"

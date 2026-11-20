@@ -32,21 +32,25 @@ The exact requested active window color is **#ff7800**.
 5. [Waybar's Niri states](https://github.com/Alexays/Waybar/wiki/Module:-Niri)
    distinguish the focused workspace from workspaces visible on other outputs.
    Only the focused workspace gets a solid orange selection. The bottom bar
-    keeps the existing modules and controls, with neutral labels and softly
-    colored icons: blue network, yellow audio, orange CPU/clock, purple memory
-    and green playback. Warning/error/charging states retain distinct colors.
-    The bar is 41 logical pixels high with 15-pixel JetBrains type and 19-pixel tray icons;
+    keeps the existing modules and controls, with neutral labels and icons.
+    Color is reserved for meaning: orange focus/selection, blue network,
+    green playback, amber warning/privacy and red error. Previously audio was
+    yellow (indistinguishable from the warning amber), CPU orange (confused with
+    the focus accent), memory purple and Power always red; decoration like this
+    made real warnings harder to notice.
+    The bar is a single solid surface with a faint top highlight, 41 logical pixels high with 15-pixel JetBrains type and 19-pixel tray icons;
     compositor scaling handles HiDPI rather than hard-coded physical pixels.
 6. Fuzzel's installed `fuzzel.ini(5)` manual supports proportional fonts and
    font fallback, RGBA colors, fixed line heights, and rounded selections.
-    The launcher uses 13-point JetBrains type, 36-pixel rows, ten results,
-    a 52-character width and an opaque popover with more padding.
-   Search matches use readable light orange, with dark text in selected rows.
+    The launcher uses 14-point JetBrains type, 40-pixel rows, nine results, a match counter,
+    a 56-character width, top anchoring and an opaque popover with more padding.
+   The selected row is a neutral raised gray (`#4b4b50`, white text, 8.2:1) so the launcher
+   is not the loudest thing on screen; search matches stay light orange (`#ff9c5b`).
 7. [Mako's configuration reference](https://github.com/emersion/mako/blob/master/doc/mako.5.scd)
    supports alpha-composited progress indicators. A translucent orange fill
    preserves notification readability. Critical notifications remain persistent
    and use an error-colored outline.
-8. Niri and Swaylock use `mountains-clouds.jpg` as their wallpaper. The
+8. Niri and Swaylock use `bluesky.png` as their wallpaper. The
    alternative Adwaita Dark image and its attribution are kept beside it.
 
 ## Palette
@@ -56,21 +60,25 @@ The exact requested active window color is **#ff7800**.
 | Text view / selection text | `#1d1d20` | Ghostty, Zathura, text on orange |
 | Window surface | `#222226` | Waybar, lock screen |
 | Raised surface | `#36363a` | Fuzzel, Mako, tooltips |
+| Selected row | `#4b4b50` | Fuzzel selection |
 | Quiet outline | `#45454a` | Inactive borders and separators |
 | Popover outline | `#505055` | Launcher and notification edges |
 | Text | `#ffffff` | Primary labels |
 | Secondary text | `#c0bfbc` | Window title, supporting text |
-| Dim text | `#9a9996` | Placeholders and empty workspaces |
-| Exact focus accent | `#ff7800` | Focus border, selected workspace/row/tab |
+| Dim text | `#a8a7a4` | Placeholders and empty workspaces (5.00:1 on the raised surface; `#9a9996` was 4.22:1) |
+| Exact focus accent | `#ff7800` | Focus border, selected workspace/tab |
 | Standalone orange | `#ff9c5b` | Search matches and accent text |
 | Warning | `#ffc252` | Low battery and high CPU |
 | Error | `#ff938c` | Critical status and urgent windows |
 | Success | `#78e9ab` | Charging/full battery |
-| Soft blue | `#99c1f1` | Network, Bluetooth audio and idle icons |
-| Soft yellow | `#f9f06b` | Audio icon |
-| Soft orange | `#ffbe6f` | CPU icon |
-| Soft purple | `#dc8add` | Memory icon |
+| Soft blue | `#99c1f1` | Network and Bluetooth audio icons |
+| Neutral icon | `#c0bfbc` | Audio, CPU, memory, clock and power icons |
 | Soft green | `#8ff0a4` | Playing media icon |
+
+The Ghostty ANSI palette was adjusted for readability on `#1d1d20`: black
+(`#1d1d20`, identical to the background) is now `#5e5c64`, red `#f66151`
+(was 3.48:1, now 5.40:1), blue `#62a0ea`, purple `#c061cb` (was 2.85:1),
+cyan `#2aa9bd`, bright black `#9a9996` (for comments) and bright red `#ff7b63`.
 
 Computed sRGB contrast ratios: dark text on `#ff7800` is **6.36:1**;
 white on that orange is only **2.65:1**, so orange selections use dark text.
@@ -96,7 +104,7 @@ Applying the Ghostty package also runs `ghostty +validate-config` without an
 explicit file after linking, checking the actual default entry points rather
 than only the repository file. `make doctor` checks the effective configuration
 and verifies that fontconfig resolves the requested Nerd Font instead of silently
-falling back. Ghostty is 15 points; Fuzzel is 13 points; Waybar is 15 logical pixels.
+falling back. Ghostty is 15 points; Fuzzel is 14 points; Waybar is 15 logical pixels.
 
 ## Theme coverage audit
 
@@ -134,9 +142,7 @@ same theme name in GSettings; the portal still advertises `color-scheme=1` (dark
 GTK 3 Flatpaks do not inherit the host's settings.ini dark flag. The helper
 selects the built-in `Adwaita:dark` variant for Zen, Brave, Bambu Studio,
 OrcaSlicer, GPU Screen Recorder, Inkscape and LibreOffice when installed.
-GTK 4/libadwaita Flatpaks are intentionally excluded. Reopen apps after applying;
-Thunar may keep a background process, so if it remains light, finish any file
-operations, close its windows, run `thunar --quit`, and open it again.
+GTK 4/libadwaita Flatpaks are intentionally excluded. Reopen apps after applying.
 
 Niri reloads edited configuration automatically. Reload Waybar with
 `pkill -SIGUSR2 -x waybar` and Mako with `makoctl reload`. New Fuzzel and Ghostty

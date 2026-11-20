@@ -2,22 +2,29 @@
     "layer": "top",
     "position": "bottom",
     "height": 41,
-    "spacing": 4,
+    "spacing": 2,
     "margin-bottom": 8,
     "margin-left": 12,
     "margin-right": 12,
     "modules-left": ["niri/workspaces", "niri/window"],
     "modules-center": ["custom/media"],
-    "modules-right": ["tray", "privacy", "idle_inhibitor", "custom/network-speed", "pulseaudio", "custom/cpu", "memory", "clock", "custom/power"],
+    "modules-right": ["tray", "privacy", "custom/dnd", "idle_inhibitor", "custom/sep1", "bluetooth", "custom/network-speed", "pulseaudio", "custom/cpu", "memory", "custom/sep2", "clock", "custom/power"],
 
+
+    "custom/sep1": { "format": "│", "tooltip": false },
+    "custom/sep2": { "format": "│", "tooltip": false },
     "niri/workspaces": {
         "format": "{index}",
         "tooltip": false
     },
     "niri/window": {
-        "format": "{}",
-        "max-length": 26,
-        "separate-outputs": true
+        "format": "{title}",
+        "icon": false,
+        "max-length": 42,
+        "separate-outputs": true,
+        "rewrite": {
+            "(.*) [—–-] (Zen Browser|Mozilla Firefox|Brave)$": "$1"
+        }
     },
     "custom/media": {
         "exec": "~/.config/waybar/scripts/media-status",
@@ -26,7 +33,7 @@
         "format-icons": {
             "playing": "<span color='#8ff0a4'></span>",
             "paused": "<span color='#c0bfbc'></span>",
-            "stopped": "<span color='#9a9996'></span>"
+            "stopped": "<span color='#a8a7a4'></span>"
         },
         "hide-empty-text": true,
         "interval": 3,
@@ -37,14 +44,18 @@
         "on-scroll-up": "playerctl next",
         "on-scroll-down": "playerctl previous"
     },
-    "tray": { "icon-size": 19, "spacing": 8 },
+    "tray": {
+        "icon-size": 19,
+        "spacing": 8,
+        "show-passive-items": false,
+        "ignore-list": ["nm-applet", "Network", "blueman", "blueman-applet"]
+    },
     "privacy": {
         "icon-spacing": 4,
         "icon-size": 17,
         "transition-duration": 250,
         "modules": [
             { "type": "screenshare", "tooltip": true },
-            { "type": "audio-out", "tooltip": true },
             { "type": "audio-in", "tooltip": true }
         ]
     },
@@ -53,6 +64,33 @@
         "format-icons": { "activated": "󰅶", "deactivated": "󰾪" },
         "tooltip-format-activated": "Idle inhibited · click to allow",
         "tooltip-format-deactivated": "Idle allowed · click to inhibit"
+    },
+    "bluetooth": {
+        "format": "<span color='#a8a7a4'>󰂲</span>",
+        "format-off": "<span color='#a8a7a4'>󰂲</span>",
+        "format-disabled": "<span color='#a8a7a4'>󰂲</span>",
+        "format-on": "<span color='#c0bfbc'>󰂯</span>",
+        "format-connected": "<span color='#99c1f1'>󰂱</span>  {num_connections}",
+        "format-connected-battery": "<span color='#99c1f1'>󰂱</span>  {device_battery_percentage}%",
+        "tooltip-format": "Bluetooth · {status}\nClick: devices",
+        "tooltip-format-connected": "{device_enumerate}\n\nClick: devices",
+        "tooltip-format-enumerate-connected": "{device_alias}",
+        "tooltip-format-enumerate-connected-battery": "{device_alias} · {device_battery_percentage}%",
+        "on-click": "~/.config/fuzzel/scripts/bluetooth"
+    },
+    "custom/dnd": {
+        "exec": "~/.config/waybar/scripts/dnd",
+        "return-type": "json",
+        "format": "{icon}  {text}",
+        "format-icons": {
+            "on": "<span color='#ffc252'>󰂛</span>",
+            "off": "<span color='#c0bfbc'>󰂚</span>"
+        },
+        "hide-empty-text": true,
+        "escape": true,
+        "interval": 30,
+        "signal": 8,
+        "on-click": "~/.config/waybar/scripts/dnd toggle"
     },
     "custom/network-speed": {
         "exec": "~/.config/waybar/scripts/network-speed",
@@ -69,9 +107,9 @@
         "on-click-right": "nm-connection-editor"
     },
     "pulseaudio": {
-        "format": "<span color='#f9f06b'>{icon}</span>  {volume}%",
+        "format": "<span color='#c0bfbc'>{icon}</span>  {volume}%",
         "format-bluetooth": "<span color='#99c1f1'>{icon}</span>  {volume}%",
-        "format-muted": "󰝟  muted",
+        "format-muted": "<span color='#a8a7a4'>󰝟</span>  muted",
         "format-icons": { "headphone": "", "default": ["", "", ""] },
         "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ -l 1.0",
         "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-",
@@ -83,16 +121,16 @@
         "return-type": "json",
         "format": "{icon}  {text}",
         "format-icons": {
-            "normal": "<span color='#ffbe6f'></span>",
-            "warning": "<span color='#ffc252'></span>",
-            "critical": "<span color='#1d1d20'></span>"
+            "normal": "<span color='#c0bfbc'>󰓅</span>",
+            "warning": "<span color='#ffc252'>󰓅</span>",
+            "critical": "<span color='#1d1d20'>󰓅</span>"
         },
         "escape": true,
         "interval": 5,
         "on-click": "~/.config/waybar/scripts/terminal-tool monitor"
     },
     "memory": {
-        "format": "<span color='#dc8add'>󰍛</span>  {}%",
+        "format": "<span color='#c0bfbc'>󰍛</span>  {}%",
         "format-critical": "󰍛  {}%",
         "interval": 10,
         "states": { "critical": 85 },
@@ -101,9 +139,13 @@
     },
     "clock": {
         "locale": "en_US.UTF-8",
-        "format": "<span color='#ff9c5b'></span>  {:%a %d · %H:%M}",
-        "format-alt": "<span color='#ff9c5b'></span>  {:%d/%m/%Y · %H:%M}",
+        "format": "<span color='#c0bfbc'></span>  {:%a %d · %H:%M}",
         "on-click": "~/.config/waybar/scripts/open-calendar",
+        "actions": {
+            "on-click-right": "mode",
+            "on-scroll-up": "shift_up",
+            "on-scroll-down": "shift_down"
+        },
         "tooltip-format": "<tt>{calendar}</tt>",
         "calendar": {
             "mode": "month",
@@ -112,7 +154,7 @@
             "format": {
                 "months": "<span color='#ff9c5b'><b>{}</b></span>",
                 "weekdays": "<span color='#c0bfbc'><b>{}</b></span>",
-                "weeks": "<span color='#9a9996'>{}</span>",
+                "weeks": "<span color='#a8a7a4'>{}</span>",
                 "days": "<span color='#ffffff'>{}</span>",
                 "today": "<span color='#1d1d20' bgcolor='#ff7800'><b>{}</b></span>"
             }

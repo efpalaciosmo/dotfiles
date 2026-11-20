@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Do-not-disturb state for Waybar and toggle for Niri/Waybar clicks.
+# Mako hides non-critical notifications in this mode (see mako/config).
+set -u
+
+mode=do-not-disturb
+
+if ! command -v makoctl >/dev/null 2>&1; then
+    printf '{"text":"","alt":"off","class":"off","tooltip":"makoctl is not installed"}\n'
+    exit 0
+fi
+
+if [[ ${1:-} == toggle ]]; then
+    makoctl mode -t "$mode" >/dev/null 2>&1 || exit 1
+    # Waybar listens for SIGRTMIN+8 (signal 8 in config.jsonc).
+    pkill -RTMIN+8 -x waybar 2>/dev/null || true
+    exit 0
+fi
+
+if makoctl mode 2>/dev/null | grep -qx "$mode"; then
+    printf '{"text":"DND","alt":"on","class":"on","tooltip":"Do not disturb is on\\nClick or Super+Shift+Z to turn it off"}\n'
+else
+    printf '{"text":"","alt":"off","class":"off","tooltip":"Do not disturb is off\\nClick or Super+Shift+Z to silence notifications"}\n'
+fi

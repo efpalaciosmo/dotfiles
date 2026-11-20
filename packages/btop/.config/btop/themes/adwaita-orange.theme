@@ -1,0 +1,62 @@
+# Adwaita Dark with the desktop's orange accent (matches Ghostty, Waybar and Fuzzel).
+# Surface #1d1d20, raised #36363a, selected row #4b4b50, accent #ff7800, text orange #ff9c5b.
+
+# Main background, empty means terminal default
+theme[main_bg]="#1d1d20"
+# Main text color
+theme[main_fg]="#deddda"
+# Title color for boxes
+theme[title]="#ffffff"
+# Highlight color for keyboard shortcuts
+theme[hi_fg]="#ff9c5b"
+# Background and foreground color for selected item in processes box
+theme[selected_bg]="#4b4b50"
+theme[selected_fg]="#ffffff"
+# Inactive/disabled text
+theme[inactive_fg]="#77767b"
+# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
+theme[proc_misc]="#99c1f1"
+# Cpu, Memory, Network, Proc box outline colors
+theme[cpu_box]="#5e5c64"
+theme[mem_box]="#5e5c64"
+theme[net_box]="#5e5c64"
+theme[proc_box]="#5e5c64"
+# Box divider line and small boxes line color
+theme[div_line]="#45454a"
+# Text color for CPU, Memory, Network and Proc graph legends
+theme[graph_text]="#c0bfbc"
+# Meter background
+theme[meter_bg]="#36363a"
+
+# Temperature graph: cool to hot
+theme[temp_start]="#8ff0a4"
+theme[temp_mid]="#ffc252"
+theme[temp_end]="#ff938c"
+# CPU graph and meters: idle to busy
+theme[cpu_start]="#8ff0a4"
+theme[cpu_mid]="#ffc252"
+theme[cpu_end]="#ff938c"
+# Mem/Disk meters
+theme[free_start]="#8ff0a4"
+theme[free_mid]="#78e9ab"
+theme[free_end]="#7bdff4"
+theme[cached_start]="#99c1f1"
+theme[cached_mid]="#99c1f1"
+theme[cached_end]="#dc8add"
+theme[available_start]="#7bdff4"
+theme[available_mid]="#99c1f1"
+theme[available_end]="#99c1f1"
+theme[used_start]="#ffc252"
+theme[used_mid]="#ff9c5b"
+theme[used_end]="#ff938c"
+# Network graphs: download is blue, upload is the orange accent
+theme[download_start]="#62a0ea"
+theme[download_mid]="#99c1f1"
+theme[download_end]="#7bdff4"
+theme[upload_start]="#ff7800"
+theme[upload_mid]="#ff9c5b"
+theme[upload_end]="#ffbe6f"
+# Process CPU/memory columns
+theme[process_start]="#99c1f1"
+theme[process_mid]="#ff9c5b"
+theme[process_end]="#ff938c"

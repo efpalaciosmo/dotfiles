@@ -1,0 +1,191 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "source": "fedora_small",
+    "padding": {
+      "top": 1,
+      "right": 3
+    },
+    "color": {
+      "1": "38;2;255;120;0",
+      "2": "38;2;255;255;255"
+    }
+  },
+  "display": {
+    "separator": "  ",
+    "color": {
+      "keys": "38;2;255;156;91",
+      "title": "38;2;255;120;0",
+      "separator": "38;2;154;153;150",
+      "output": "38;2;255;255;255"
+    },
+    "size": {
+      "binaryPrefix": "iec"
+    },
+    "percent": {
+      "type": 3
+    },
+    "bar": {
+      "char": {
+        "elapsed": "■",
+        "total": "·"
+      },
+      "width": 10
+    }
+  },
+  "modules": [
+    {
+      "type": "title",
+      "format": "{#38;2;255;120;0}{user-name}{#38;2;154;153;150}@{#38;2;255;156;91}{host-name}{#}"
+    },
+    {
+      "type": "custom",
+      "format": "{#38;2;255;120;0}╭─ {#1;37}System{#}"
+    },
+    {
+      "type": "os",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  OS       {#}",
+      "format": "{pretty-name}"
+    },
+    {
+      "type": "kernel",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  Kernel   {#}",
+      "format": "{release}"
+    },
+    {
+      "type": "uptime",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  Uptime   {#}"
+    },
+    {
+      "type": "packages",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  Packages {#}"
+    },
+    {
+      "type": "shell",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  Shell    {#}"
+    },
+    {
+      "type": "custom",
+      "format": "{#38;2;255;120;0}╰─{#}"
+    },
+    {
+      "type": "custom",
+      "format": "{#38;2;255;120;0}╭─ {#1;37}Desktop{#}"
+    },
+    {
+      "type": "wm",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  WM       {#}",
+      "format": "{pretty-name} {version}"
+    },
+    {
+      "type": "terminal",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  Terminal {#}"
+    },
+    {
+      "type": "display",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}󰍹  Display  {#}",
+      "format": "{width}x{height} @ {refresh-rate} Hz · {scale-factor}x"
+    },
+    {
+      "type": "custom",
+      "format": "{#38;2;255;120;0}╰─{#}"
+    },
+    {
+      "type": "custom",
+      "format": "{#38;2;255;120;0}╭─ {#1;37}Hardware{#}"
+    },
+    {
+      "type": "host",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  Board    {#}",
+      "format": "{name}"
+    },
+    {
+      "type": "cpu",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  CPU      {#}",
+      "format": "{name} · {cores-logical}T @ {freq-max}"
+    },
+    {
+      "type": "gpu",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}󰢮  GPU      {#}",
+      "format": "{name} ({type})"
+    },
+    {
+      "type": "memory",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}󰍛  Memory   {#}",
+      "percent": {
+        "type": [
+          "num",
+          "bar"
+        ],
+        "green": 50,
+        "yellow": 75
+      }
+    },
+    {
+      "type": "swap",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}󰍛  Swap     {#}",
+      "percent": {
+        "type": [
+          "num",
+          "bar"
+        ],
+        "green": 50,
+        "yellow": 75
+      }
+    },
+    {
+      "type": "disk",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}󰋊  Disk     {#}",
+      "hideFolders": "/:/boot:/boot/efi",
+      "percent": {
+        "type": [
+          "num",
+          "bar"
+        ],
+        "green": 50,
+        "yellow": 80
+      },
+      "format": "{size-used} / {size-total} ({size-percentage})"
+    },
+    {
+      "type": "custom",
+      "format": "{#38;2;255;120;0}╰─{#}"
+    },
+    {
+      "type": "custom",
+      "format": "{#38;2;255;120;0}╭─ {#1;37}Appearance{#}"
+    },
+    {
+      "type": "theme",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}󰏘  Theme    {#}"
+    },
+    {
+      "type": "icons",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}󰏘  Icons    {#}"
+    },
+    {
+      "type": "font",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  Font     {#}"
+    },
+    {
+      "type": "cursor",
+      "key": "{#38;2;154;153;150}│ {#38;2;255;156;91}  Cursor   {#}"
+    },
+    {
+      "type": "custom",
+      "format": "{#38;2;255;120;0}╰─{#}"
+    },
+    "break",
+    {
+      "type": "colors",
+      "symbol": "circle",
+      "paddingLeft": 2,
+      "block": {
+        "range": [
+          0,
+          15
+        ]
+      }
+    }
+  ]
+}

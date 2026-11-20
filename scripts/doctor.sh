@@ -87,7 +87,7 @@ for relative in niri/scripts/lock-screen niri/scripts/session-idle; do
     fi
 done
 
-wallpaper=${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/mountains-clouds.jpg
+wallpaper=${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/bluesky.png
 if [[ -s $wallpaper ]]; then
     printf 'OK   wallpaper %s -> %s\n' "$wallpaper" "$(readlink -f -- "$wallpaper")"
 else
@@ -111,6 +111,19 @@ if [[ -x $polkit_agent ]]; then
 else
     printf 'MISS KDE polkit agent (%s)\n' "$polkit_agent" >&2
     failures=$((failures + 1))
+fi
+
+if [[ " $* " == *" shell-container "* ]]; then
+    omz_dir=${ZSH:-$HOME/.oh-my-zsh}
+    for relative in oh-my-zsh.sh custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh \
+        custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh; do
+        if [[ -r $omz_dir/$relative ]]; then
+            printf 'OK   zsh %s\n' "$relative"
+        else
+            printf 'MISS zsh %s under %s (run make while online)\n' "$relative" "$omz_dir" >&2
+            failures=$((failures + 1))
+        fi
+    done
 fi
 
 if command -v niri >/dev/null 2>&1; then niri validate || failures=$((failures + 1)); fi

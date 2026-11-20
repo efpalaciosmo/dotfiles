@@ -1,0 +1,56 @@
+{
+  "model": "sonnet",
+  "theme": "dark-ansi",
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.claude/statusline.sh",
+    "padding": 0
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          { "type": "command", "command": "$HOME/.claude/hooks/notify.sh" }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(make check)",
+      "Bash(make doctor)",
+      "Bash(niri validate:*)"
+    ],
+    "deny": [
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.config/opencode/service.json)",
+      "Read(~/.ssh/**)",
+      "Read(~/.gnupg/**)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  },
+  "enabledPlugins": {
+    "model-apps@power-platform-skills": true,
+    "canvas-apps@power-platform-skills": true,
+    "power-automate@power-platform-skills": true,
+    "mcp-apps@power-platform-skills": true,
+    "dataverse@power-platform-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "power-platform-skills": {
+      "source": {
+        "source": "github",
+        "repo": "microsoft/power-platform-skills"
+      }
+    }
+  },
+  "modelSettings": {
+    "claude-sonnet-5-5": {
+      "effortLevel": "high"
+    }
+  }
+}

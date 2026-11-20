@@ -1,4 +1,6 @@
-/* Adwaita dark: unchanged surfaces, orange focus, soft colored status icons.
+/* Adwaita dark: one solid bar, orange focus, semantic status colors.
+ * Color is semantic: orange = focus/selection, blue = connectivity,
+ * green = ok/playing, yellow = warning, red = error/urgent; everything else is neutral.
  * Dimensions are logical pixels: Niri handles per-output HiDPI scaling.
  * Icon-only accents live in config.jsonc; labels stay neutral and readable. */
 @define-color surface #222226;
@@ -6,7 +8,7 @@
 @define-color line #45454a;
 @define-color text #ffffff;
 @define-color muted #c0bfbc;
-@define-color dim #9a9996;
+@define-color dim #a8a7a4;
 @define-color accent #ff7800;
 @define-color accent_text #ff9c5b;
 @define-color warning #ffc252;
@@ -24,10 +26,12 @@
     color: @text;
 }
 
+/* One bar: solid surface, hairline border and a faint top highlight for depth. */
 window#waybar {
     background: @surface;
     border: 1px solid @line;
     border-radius: 12px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 tooltip {
@@ -37,12 +41,24 @@ tooltip {
 }
 tooltip label { padding: 8px; color: @text; }
 
+/* Every interactive item shares one pill shape and a 150 ms fade
+ * (the monitor refreshes at 120 Hz, so the fade is visible and smooth). */
+#workspaces button, #tray, #privacy, #idle_inhibitor, #custom-dnd, #bluetooth,
+#custom-network-speed, #pulseaudio, #custom-cpu, #memory, #clock, #custom-power,
+#custom-media {
+    margin: 4px 1px;
+    padding: 0 9px;
+    border-radius: 8px;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+/* Left: workspaces, then the focused window with its app icon. */
 #workspaces { padding: 0 5px; }
 #workspaces button {
-    min-width: 24px;
-    padding: 3px 5px;
-    margin: 4px 1px;
-    border-radius: 8px;
+    /* Symmetric padding keeps the digit centered (min-width left-aligned it). */
+    min-width: 0;
+    padding: 0 11px;
+    margin: 4px 2px;
     color: @muted;
     background: transparent;
     box-shadow: none;
@@ -55,48 +71,42 @@ tooltip label { padding: 8px; color: @text; }
 #workspaces button.urgent { color: #1d1d20; background: @error; }
 
 #window {
-    padding: 0 10px;
+    margin: 7px 0 7px 6px;
+    padding: 0 14px;
     color: @muted;
     border-left: 1px solid @line;
 }
-#window.empty { border: none; }
+#window.empty { border: none; padding: 0; margin: 0; }
 
-#custom-media {
-    padding: 0 12px;
-    color: @text;
-}
+/* Center: media is a quiet raised pill; it disappears when nothing plays. */
+#custom-media { padding: 0 14px; background: @raised; color: @text; }
 #custom-media.paused { color: @muted; }
-#custom-media.stopped { color: transparent; }
+#custom-media.stopped { background: transparent; color: transparent; }
 
-.modules-right { padding: 0 4px; }
-#tray, #privacy, #idle_inhibitor, #custom-network-speed,
-#backlight, #pulseaudio, #custom-cpu, #memory, #custom-battery, #clock, #custom-power {
-    padding: 0 8px;
-    border-radius: 8px;
-}
+/* Right: thin dividers separate utilities, status and clock. */
+#custom-sep1, #custom-sep2 { margin: 0 5px; padding: 0; color: @line; font-weight: 400; }
 #tray { padding: 0 4px; }
-#privacy { color: @error; }
-#idle_inhibitor { color: @blue; }
-#idle_inhibitor.activated { color: @accent_text; background: @raised; }
+#privacy { color: @warning; }
+/* Inactive inhibitor stays clickable but recedes; active one takes the accent. */
+#idle_inhibitor { color: @muted; opacity: 0.45; }
+#idle_inhibitor:hover { opacity: 1; }
+#idle_inhibitor.activated { color: @accent_text; background: @raised; opacity: 1; }
+#custom-dnd.on { background: @raised; }
+#bluetooth.connected { color: @blue; }
 #custom-network-speed.disconnected { color: @error; }
 #pulseaudio.muted { color: @dim; }
-#custom-cpu, #memory { color: @text; }
-#custom-cpu.warning, #custom-battery.warning { color: @warning; background: @raised; }
-#custom-cpu.critical, #memory.critical, #custom-battery.critical {
-    color: #1d1d20;
-    background: @error;
-}
-#custom-battery.charging, #custom-battery.full { color: @success; }
-#clock {
-    color: @text;
-    background: @raised;
-    margin: 4px 3px;
-    padding: 0 10px;
-    font-weight: 600;
-}
-#custom-power { color: @error; }
-#idle_inhibitor:hover, #custom-network-speed:hover, #backlight:hover, #pulseaudio:hover,
-#custom-cpu:hover, #memory:hover, #clock:hover, #custom-battery:hover, #custom-power:hover {
+#custom-cpu.warning { color: @warning; background: @raised; }
+#custom-cpu.critical, #memory.critical { color: #1d1d20; background: @error; }
+
+#idle_inhibitor:hover, #custom-dnd:hover, #bluetooth:hover, #custom-network-speed:hover,
+#pulseaudio:hover, #custom-cpu:hover, #memory:hover, #custom-media:hover {
     background: @raised;
 }
-#custom-power:hover { color: @error; }
+
+#custom-media:hover { background: @line; }
+
+/* Clock is the one emphasized item; power stays quiet until hovered. */
+#clock { padding: 0 14px; margin: 4px 3px; background: @raised; font-weight: 600; }
+#clock:hover { background: @line; }
+#custom-power { padding: 0 12px; margin: 4px 6px 4px 1px; color: @muted; }
+#custom-power:hover { background: @raised; color: @error; }

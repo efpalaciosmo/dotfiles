@@ -1,32 +1,52 @@
-    animations {
-        workspace-switch {
-            spring damping-ratio=1.0 stiffness=1000 epsilon=0.0001
-        }
-        window-open {
-            duration-ms 200
-            curve "ease-out-quad"
-        }
-        window-close {
-            duration-ms 200
-            curve "ease-out-cubic"
-        }
-        horizontal-view-movement {
-            spring damping-ratio=1.0 stiffness=900 epsilon=0.0001
-        }
-        window-movement {
-            spring damping-ratio=1.0 stiffness=800 epsilon=0.0001
-        }
-        window-resize {
-            spring damping-ratio=1.0 stiffness=1000 epsilon=0.0001
-        }
-        config-notification-open-close {
-            spring damping-ratio=0.6 stiffness=1200 epsilon=0.001
-        }
-        screenshot-ui-open {
-            duration-ms 300
-            curve "ease-out-quad"
-        }
-        overview-open-close {
-            spring damping-ratio=1.0 stiffness=900 epsilon=0.0001
-        }
+// Tuned for a 120 Hz display (8.3 ms frames) and for *smoothness* over snappiness.
+// Niri renders on the RX 9060 XT at 3840x2160@120, so these are not GPU-bound.
+//
+// Springs are critically damped (damping-ratio=1.0: no overshoot). Stiffness is the
+// speed knob: settle time is about 5.8 / sqrt(stiffness) seconds, so
+//   stiffness 1000 ~ 180 ms (default Niri, abrupt start)
+//   stiffness  650 ~ 230 ms
+//   stiffness  500 ~ 260 ms
+// Lower = slower and softer; raise a value if an animation feels sluggish.
+// The old global `slowdown 0.75` was removed: it silently sped up every value.
+animations {
+    // Switching workspaces (Mod+U/I, Mod+1..9).
+    workspace-switch {
+        spring damping-ratio=1.0 stiffness=700 epsilon=0.00005
     }
+    // Scrolling the column strip (Mod+H/L).
+    horizontal-view-movement {
+        spring damping-ratio=1.0 stiffness=600 epsilon=0.00005
+    }
+    // Windows rearranging when others open/close or move.
+    window-movement {
+        spring damping-ratio=1.0 stiffness=600 epsilon=0.00005
+    }
+    window-resize {
+        spring damping-ratio=1.0 stiffness=650 epsilon=0.00005
+    }
+    // Opening: a gentle bezier (slow start, long soft landing) instead of ease-out-expo,
+    // whose first frames do almost all the movement and read as a "pop".
+    window-open {
+        duration-ms 240
+        curve "cubic-bezier" 0.2 0.8 0.2 1.0
+    }
+    window-close {
+        duration-ms 180
+        curve "ease-out-cubic"
+    }
+    overview-open-close {
+        spring damping-ratio=1.0 stiffness=700 epsilon=0.00005
+    }
+    // Small confirmation toasts may bounce; they are not part of your workflow.
+    config-notification-open-close {
+        spring damping-ratio=0.6 stiffness=1000 epsilon=0.001
+    }
+    exit-confirmation-open-close {
+        spring damping-ratio=0.6 stiffness=500 epsilon=0.01
+    }
+    // Screenshot UI should still feel immediate.
+    screenshot-ui-open {
+        duration-ms 180
+        curve "ease-out-quad"
+    }
+}

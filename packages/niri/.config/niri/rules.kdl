@@ -30,9 +30,10 @@ window-rule {
 // Do not force productive apps tiled: their parented dialogs should still float.
 
 // File/archive browsing is usually a temporary task over the current workspace.
-// Only size Thunar's main windows, not its properties/preferences/progress dialogs.
+// Yazi runs in Ghostty; Super+E and yazi.desktop give it this app-id, so terminals
+// started any other way (including the `y` shell function) keep tiling normally.
 window-rule {
-    match app-id=r#"^(org\.xfce\.Thunar|[Tt]hunar)$"# title=" - Thunar$"
+    match app-id=r#"^org\.dotfiles\.Yazi$"#
     match app-id=r#"^(io\.github\.peazip\.PeaZip|[Pp]ea[Zz]ip|[Xx]archiver)$"#
     open-floating true
     default-column-width { fixed 1000; }
@@ -132,4 +133,33 @@ window-rule {
     default-column-width { fixed 480; }
     default-window-height { fixed 270; }
     default-floating-position x=12 y=12 relative-to="bottom-right"
+}
+
+// Bitwarden (browser extension): the unlock/autofill pop-out opens as its own
+// browser window titled "Bitwarden". Make it a compact, centered, floating
+// panel and keep it out of screen recordings and screen sharing.
+// To adjust: `niri msg pick-window` on the open pop-out shows its app-id/title.
+window-rule {
+    match app-id=r#"^(app\.zen_browser\.zen|zen|org\.mozilla\.firefox|firefox|com\.brave\.Browser|brave-browser|Brave-browser)$"# title="^Bitwarden( [—–-] .*)?$"
+    open-floating true
+    open-focused true
+    default-column-width { fixed 420; }
+    default-window-height { fixed 680; }
+    block-out-from "screencast"
+}
+
+// Firefox/Zen extension permission prompts ("Extension: (Name) - ...").
+window-rule {
+    match app-id=r#"^(app\.zen_browser\.zen|zen|org\.mozilla\.firefox|firefox)$"# title="^Extension: "
+    open-floating true
+    open-focused true
+    default-column-width { fixed 520; }
+    default-window-height { fixed 420; }
+}
+
+// Authentication prompts from the KDE polkit agent should never tile.
+window-rule {
+    match app-id=r#"^org\.kde\.polkit-kde-authentication-agent-1$"#
+    open-floating true
+    open-focused true
 }

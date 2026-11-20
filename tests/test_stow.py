@@ -29,7 +29,9 @@ class StowTests(unittest.TestCase):
             path.write_text("#!/bin/sh\nexit 0\n")
             path.chmod(0o755)
         self.environment = {**os.environ, "HOME": str(self.home), "PATH": f"{binary}:{os.environ['PATH']}",
-                            "XDG_CURRENT_DESKTOP": "niri"}
+                            "XDG_CURRENT_DESKTOP": "niri",
+                            # The Oh My Zsh download is covered by test_zsh_install with local repos.
+                            "DOTFILES_SKIP_ZSH_INSTALL": "1"}
 
     def apply(self, *packages):
         return subprocess.run(["bash", str(self.repo / "scripts/apply-dotfiles.sh"), *packages],
@@ -151,3 +153,22 @@ exit 0
         file.write_text("independent config")
         self.successful("ghostty")
         self.assertEqual(file.read_text(), "independent config")
+
+    def test_retired_neovim_and_tmux_links_are_removed_but_independent_files_stay(self):
+        nvim = self.home / ".config/nvim/init.lua"
+        nvim.parent.mkdir(parents=True)
+        nvim.symlink_to(self.repo / "packages/nvim/.config/nvim/init.lua")
+        tmux = self.home / ".tmux.conf"
+        tmux.symlink_to(self.repo / "packages/tmux/.tmux.conf")
+        self.successful("vi")
+        self.assertFalse(nvim.is_symlink())
+        self.assertFalse(nvim.parent.exists(), "emptied ~/.config/nvim is tidied up")
+        self.assertFalse(tmux.is_symlink())
+        self.assertTrue(self.home.is_dir())
+        # Anything the user wrote themselves is never touched.
+        tmux.write_text("my own tmux config")
+        nvim.parent.mkdir(parents=True)
+        nvim.write_text("my own init")
+        self.successful("vi")
+        self.assertEqual(tmux.read_text(), "my own tmux config")
+        self.assertEqual(nvim.read_text(), "my own init")

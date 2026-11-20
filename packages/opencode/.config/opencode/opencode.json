@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "update": "notify",
+  "permissions": [
+    { "action": "shell", "resource": "git status *", "effect": "allow" },
+    { "action": "shell", "resource": "git diff *", "effect": "allow" },
+    { "action": "shell", "resource": "git log *", "effect": "allow" },
+    { "action": "shell", "resource": "make check", "effect": "allow" },
+    { "action": "shell", "resource": "niri validate *", "effect": "allow" },
+    { "action": "shell", "resource": "git push *", "effect": "ask" }
+  ]
+}

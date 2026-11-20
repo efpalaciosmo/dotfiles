@@ -20,8 +20,7 @@ def matching_rules(app_id, title=""):
 class WindowRuleTests(unittest.TestCase):
     def test_installed_utilities_float_at_the_chosen_logical_size(self):
         cases = {
-            ("thunar", "Home - Thunar"): (1000, 720),
-            ("Thunar", "Downloads - Thunar"): (1000, 720),
+            ("org.dotfiles.Yazi", "Files"): (1000, 720),
             ("io.github.peazip.PeaZip", ""): (1000, 720),
             ("xarchiver", ""): (1000, 720),
             ("org.gnome.Calculator", ""): (440, 600),
@@ -52,6 +51,21 @@ class WindowRuleTests(unittest.TestCase):
                 self.assertNotIn("max-width", rules)
                 self.assertNotIn("max-height", rules)
 
+    def test_bitwarden_popout_floats_compact_and_is_hidden_from_screencasts(self):
+        for app in ("app.zen_browser.zen", "com.brave.Browser", "firefox"):
+            for title in ("Bitwarden", "Bitwarden — Zen Browser", "Bitwarden - Brave"):
+                with self.subTest(app=app, title=title):
+                    rules = "\n".join(matching_rules(app, title))
+                    self.assertIn("open-floating true", rules)
+                    self.assertIn("default-column-width { fixed 420; }", rules)
+                    self.assertIn("default-window-height { fixed 680; }", rules)
+                    self.assertIn('block-out-from "screencast"', rules)
+
+    def test_bitwarden_rule_does_not_catch_the_web_vault_or_other_tabs(self):
+        for title in ("Bitwarden Web Vault", "My Vault | Bitwarden", "Zen Browser", ""):
+            with self.subTest(title=title):
+                self.assertEqual(list(matching_rules("app.zen_browser.zen", title)), [])
+
     def test_workspace_apps_and_unrelated_titles_keep_default_tiling(self):
         for app in ("app.zen_browser.zen", "com.brave.Browser", "com.mitchellh.ghostty",
                     "com.bambulab.BambuStudio", "com.orcaslicer.OrcaSlicer",
@@ -60,13 +74,20 @@ class WindowRuleTests(unittest.TestCase):
                     "org.gnome.Boxes", "com.github.marhkb.Pods", "io.github.kolunmi.Bazaar",
                     "com.usebruno.Bruno", "md.obsidian.Obsidian", "com.valvesoftware.Steam",
                     "net.pcsx2.PCSX2", "org.qbittorrent.qBittorrent", "com.rtosta.zapzap",
-                    "org.telegram.desktop", "dev.vencord.Vesktop", "steam_app_1234"):
+                    "org.telegram.desktop", "dev.vencord.Vesktop"):
             with self.subTest(app=app):
                 self.assertEqual(list(matching_rules(app, "Calculator — Volume Control")), [])
 
-    def test_thunar_dialogs_keep_their_natural_size(self):
-        for title in ("Properties", "Thunar Preferences", "File Operation Progress"):
-            self.assertEqual(list(matching_rules("thunar", title)), [])
+    def test_steam_games_only_get_adaptive_sync_and_still_tile(self):
+        rules = "\n".join(matching_rules("steam_app_1234", "Calculator — Volume Control"))
+        self.assertIn("variable-refresh-rate true", rules)
+        for forbidden in ("open-floating", "default-column-width", "default-window-height"):
+            self.assertNotIn(forbidden, rules)
+
+    def test_only_the_dedicated_yazi_app_id_floats_not_every_ghostty_window(self):
+        for app in ("com.mitchellh.ghostty", "org.dotfiles.Yazi.other", "thunar", "Thunar"):
+            with self.subTest(app=app):
+                self.assertEqual(list(matching_rules(app, "Files")), [])
 
     def test_pip_remains_small_quiet_and_bottom_right(self):
         for app in ("app.zen_browser.zen", "firefox", "org.mozilla.firefox"):

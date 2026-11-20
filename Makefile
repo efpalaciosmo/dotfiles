@@ -3,12 +3,13 @@ SHELL := /bin/bash
 
 TEST_PYTHON ?= python3
 
-PACKAGES := git shell-container starship vi ghostty niri waybar mako fuzzel desktop gnome
+PACKAGES := git shell-container starship vi fastfetch btop yazi claude opencode ghostty niri waybar mako fuzzel desktop gnome
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/niri/.config/niri/scripts/*) \
 	packages/desktop/.local/bin/dotfiles-appearance \
 	$(filter-out packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker,$(shell find packages/fuzzel/.config/fuzzel/scripts -maxdepth 1 -type f)) \
-	$(wildcard packages/waybar/.config/waybar/scripts/*)
+	$(wildcard packages/waybar/.config/waybar/scripts/*) \
+	$(wildcard packages/claude/.claude/*.sh packages/claude/.claude/hooks/*)
 PYTHON_FILES := $(wildcard scripts/*.py) packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker packages/gnome/.local/bin/dotfiles-gnome
 
 .PHONY: dotfiles check doctor help
@@ -16,7 +17,7 @@ PYTHON_FILES := $(wildcard scripts/*.py) packages/fuzzel/.config/fuzzel/scripts/
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-dotfiles: ## Default: configure dotfiles for both Niri and GNOME; no software installation
+dotfiles: ## Default: configure dotfiles for both Niri and GNOME; no system packages (Oh My Zsh is cloned into ~)
 	@bash scripts/apply-dotfiles.sh $(PACKAGES)
 
 check: ## Run non-mutating repository syntax checks
@@ -24,11 +25,15 @@ check: ## Run non-mutating repository syntax checks
 	@if command -v zsh >/dev/null 2>&1; then zsh -n packages/shell-container/.zshrc; fi
 	@python3 -c 'import pathlib, tomllib; tomllib.loads(pathlib.Path("packages/starship/.config/starship.toml").read_text())'
 	@python3 -m json.tool packages/waybar/.config/waybar/config.jsonc >/dev/null
+	@python3 -c 'import pathlib, tomllib; [tomllib.loads(p.read_text()) for p in pathlib.Path("packages/yazi/.config/yazi").glob("*.toml")]'
+	@for file in packages/fastfetch/.config/fastfetch/config.jsonc packages/claude/.claude/settings.json packages/opencode/.config/opencode/opencode.json packages/opencode/.config/opencode/cli.json packages/opencode/.config/opencode/themes/*.json; do python3 -m json.tool "$$file" >/dev/null || exit 1; done
 	@python3 -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text()) for p in "$(PYTHON_FILES)".split()]'
 	@PYTHONDONTWRITEBYTECODE=1 "$(TEST_PYTHON)" -m unittest discover -s tests -p 'test_*.py'
 	@if command -v niri >/dev/null 2>&1; then niri validate --config packages/niri/.config/niri/config.kdl; fi
 	@if command -v fuzzel >/dev/null 2>&1; then fuzzel --check-config --log-no-syslog --config=packages/fuzzel/.config/fuzzel/fuzzel.ini; fi
 	@if command -v ghostty >/dev/null 2>&1; then bash scripts/validate-configs.sh ghostty; fi
+	@if command -v fastfetch >/dev/null 2>&1; then bash scripts/validate-configs.sh fastfetch; fi
+	@if command -v vim >/dev/null 2>&1; then bash scripts/validate-configs.sh vi; fi
 	@if command -v desktop-file-validate >/dev/null 2>&1; then desktop-file-validate packages/desktop/.local/share/applications/*.desktop packages/gnome/.config/autostart/*.desktop; fi
 	@if command -v vim >/dev/null 2>&1; then \
 		output=$$(mktemp); \

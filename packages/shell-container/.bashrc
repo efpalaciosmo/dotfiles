@@ -4,8 +4,8 @@
 [[ $- != *i* ]] && return
 
 # Distrobox may launch Bash even when the container user's login shell is zsh.
-# Keep non-interactive commands and Bash inside tmux untouched.
-if [[ ${CONTAINER_ID:-} == fedora && -z ${TMUX:-} && -z ${BASH_EXECUTION_STRING:-} && -t 0 && -t 1 ]] \
+# Keep non-interactive commands untouched.
+if [[ ${CONTAINER_ID:-} == fedora && -z ${BASH_EXECUTION_STRING:-} && -t 0 && -t 1 ]] \
     && command -v zsh >/dev/null 2>&1; then
     exec zsh -l
 fi
@@ -25,13 +25,8 @@ if command -v fnm >/dev/null 2>&1; then
     fnm use >/dev/null 2>&1
 fi
 
-if command -v nvim >/dev/null 2>&1; then
-    export EDITOR=nvim
-    export VISUAL=nvim
-else
-    export EDITOR=vim
-    export VISUAL=vim
-fi
+export EDITOR=vim
+export VISUAL=vim
 
 if command -v uv >/dev/null 2>&1; then
     eval "$(uv generate-shell-completion bash)"
@@ -40,6 +35,19 @@ fi
 if command -v pnpm >/dev/null 2>&1; then
     alias npm="pnpm"
     alias npx="pnpm dlx"
+fi
+
+# Yazi: `y` opens it and, on quit, changes this shell to the directory you ended in.
+if command -v yazi >/dev/null 2>&1; then
+    y() {
+        local tmp cwd
+        tmp=$(mktemp -t yazi-cwd.XXXXXX) || return
+        yazi "$@" --cwd-file="$tmp"
+        if cwd=$(<"$tmp") && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+            builtin cd -- "$cwd"
+        fi
+        rm -f -- "$tmp"
+    }
 fi
 
 # Native developer prompt: location, Git state, virtual environment and errors.

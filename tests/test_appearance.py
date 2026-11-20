@@ -91,7 +91,8 @@ esac
                      "packages/mako/.config/mako/config"):
             self.assertIn("#ff7800", (ROOT / file).read_text(), file)
         fuzzel = (ROOT / "packages/fuzzel/.config/fuzzel/fuzzel.ini").read_text()
-        self.assertIn("selection=ff7800ff", fuzzel)
+        self.assertIn("selection=4b4b50ff", fuzzel)
+        self.assertIn("selection-match=ff9c5bff", fuzzel)
         self.assertIn("dpi-aware=no", fuzzel)
 
     def test_only_installed_gtk3_flatpaks_get_a_scoped_dark_variant(self):

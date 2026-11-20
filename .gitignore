@@ -19,3 +19,9 @@ node_modules/
 
 # Backups should never be committed
 .dotfiles-backup/
+
+# Credentials and tool state must never enter the repository
+.credentials.json
+service.json
+*.bak
+*.bak.[0-9]*

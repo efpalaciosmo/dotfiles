@@ -1,29 +1,56 @@
 // ~/.config/niri/keybinds.kdl
 
 binds {
-    Mod+Shift+Slash repeat=false { show-hotkey-overlay; }
+    // Shortcut grammar
+    //   Mod+<key>           frequent action (launch, close, layout)
+    //   Mod+Shift+<initial> open the menu of one subsystem:
+    //                       B luetooth, N etwork, S creenshot, Y ank (clipboard),
+    //                       M onitor, W indows, P ower, Z (do not disturb), D = hub
+    //   Mod+Ctrl+<key>     move instead of focus; Mod+Alt+L locks (Mod+L is focus)
+    //   Mod+Shift+/        shows this list; the Quick actions hub prints each shortcut.
+    Mod+Shift+Slash repeat=false hotkey-overlay-title="Show shortcuts" { show-hotkey-overlay; }
 
-    Mod+Return repeat=false hotkey-overlay-title="Open Ghostty" { spawn "ghostty"; }
-    Mod+D repeat=false hotkey-overlay-title="Application launcher" {
+    // Launch
+    Mod+Return repeat=false hotkey-overlay-title="Terminal" { spawn "ghostty"; }
+    // Yazi in its own Ghostty app-id so rules.kdl can float it like the other utilities.
+    // No close confirmation: yazi is a running process, so Mod+Q would otherwise always ask.
+    Mod+E repeat=false hotkey-overlay-title="Files" { spawn "ghostty" "--class=org.dotfiles.Yazi" "--title=Files" "--confirm-close-surface=false" "-e" "yazi"; }
+    Mod+D repeat=false hotkey-overlay-title="Applications" {
       spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/launcher"
     }
-    Mod+Shift+D repeat=false hotkey-overlay-title="Quick actions" {
+    Mod+X repeat=false hotkey-overlay-title="Run command" {
+      spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/launcher run"
+    }
+    Mod+Slash repeat=false hotkey-overlay-title="Search files" {
+      spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/launcher recursivebrowser"
+    }
+
+    // Menus (Mod+Shift+<initial>)
+    Mod+Shift+D repeat=false hotkey-overlay-title="Quick actions hub" {
       spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/launcher actions"
     }
-    Mod+Shift+P repeat=false hotkey-overlay-title="Power menu" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/power-menu"; }
+    Mod+Shift+B repeat=false hotkey-overlay-title="Bluetooth" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/bluetooth"; }
+    Mod+Shift+N repeat=false hotkey-overlay-title="Wi-Fi networks" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/wifi"; }
     Mod+Shift+S repeat=false hotkey-overlay-title="Screenshot" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/screenshot"; }
     Mod+Shift+Y repeat=false hotkey-overlay-title="Clipboard history" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/clipboard"; }
-    Ctrl+B repeat=false hotkey-overlay-title="Bluetooth devices" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/bluetooth"; }
-    Mod+Shift+N repeat=false hotkey-overlay-title="Wi-Fi networks" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/wifi"; }
+    Mod+Shift+M repeat=false hotkey-overlay-title="System monitor" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/terminal-tool monitor"; }
+    Mod+Shift+W repeat=false hotkey-overlay-title="Window list" {
+      spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/launcher window"
+    }
+    Mod+Shift+P repeat=false hotkey-overlay-title="Power menu" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/power-menu"; }
+    Mod+Shift+Z repeat=false hotkey-overlay-title="Do not disturb" { spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/scripts/dnd toggle"; }
+    Mod+Backspace repeat=false hotkey-overlay-title="Dismiss notification" { spawn "makoctl" "dismiss"; }
+    Mod+Shift+Backspace repeat=false hotkey-overlay-title="Dismiss all notifications" { spawn "makoctl" "dismiss" "--all"; }
     Mod+Alt+L repeat=false hotkey-overlay-title="Lock screen" {
       spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/lock-screen"
     }
 
-    Mod+O repeat=false { toggle-overview; }
-    Mod+Q repeat=false { close-window; }
-    Mod+Shift+E repeat=false { quit; }
+    Mod+O repeat=false hotkey-overlay-title="Overview" { toggle-overview; }
+    Mod+Q repeat=false hotkey-overlay-title="Close window" { close-window; }
+    Mod+Shift+E repeat=false hotkey-overlay-title="Log out" { quit; }
+    Alt+Tab repeat=false hotkey-overlay-title="Previous window" { focus-window-previous; }
 
-    // Vim / Tmux navigation
+    // Vim-style navigation
     Mod+H { focus-column-left; }
     Mod+J { focus-window-or-workspace-down; }
     Mod+K { focus-window-or-workspace-up; }

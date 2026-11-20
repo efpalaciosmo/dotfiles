@@ -39,3 +39,11 @@ progress-color=over #ff780033
 [app-name=Spotify]
 border-color=#505055
 progress-color=over #ff780033
+
+# Do not disturb (Super+Shift+Z): hide everything except critical notifications.
+# Hidden notifications stay in history; `makoctl restore` brings back the last one.
+[mode=do-not-disturb]
+invisible=1
+
+[mode=do-not-disturb urgency=critical]
+invisible=0

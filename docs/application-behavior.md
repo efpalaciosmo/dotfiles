@@ -15,7 +15,7 @@ opening rules. `Super+V` still toggles any window between floating and tiled.
 
 | Installed app | Starting size | Reason |
 | --- | --- | --- |
-| Thunar | 1000×720 | Quick file browsing/copying over the current task; enough space for two panes. Main windows only; dialogs keep natural sizing. |
+| Yazi (`Super+E`, `yazi.desktop`) | 1000×720 | Quick file browsing/copying over the current task; enough space for three panes. Matched by the Ghostty app-id `org.dotfiles.Yazi`, so other terminals, including `y` in a shell, stay tiled. |
 | PeaZip, native Xarchiver | 1000×720 | Archive browsing and extraction. |
 | Calculator | 440×600 | Compact keypad; resizable for advanced modes. |
 | BudsLink | 480×640 | Earbud controls. Applies to either installed copy. |
@@ -31,6 +31,9 @@ opening rules. `Super+V` still toggles any window between floating and tiled.
 | Flatseal, GNOME Settings launcher | 1000×760 | Settings with navigation sidebars. |
 | Warehouse, Mission Center | 1100×760 | Utility tables/graphs need more horizontal space. |
 | Zen/Firefox Picture-in-Picture | 480×270, bottom right | Passive video; does not take focus on opening. |
+| Bitwarden extension pop-out (Zen, Firefox, Brave) | 420×680, centered | Unlock/autofill panel titled exactly `Bitwarden`; hidden from screencasts. The Web Vault tab stays a normal tab. |
+| Firefox/Zen `Extension: …` prompts | 520×420 | Permission prompts from extensions. |
+| KDE polkit authentication prompt | natural size | Password prompt must never tile. |
 
 Parented dialogs, authentication prompts and fixed-size windows already float
 automatically in Niri. There is no title-only rule that might float an unrelated
@@ -59,10 +62,11 @@ application minimum sizes. `Super+F` maximizes a column. No blanket
 
 ## Appearance
 
-Thunar is already the default file manager: `xdg-mime query default inode/directory`
-returns `thunar.desktop`. The doctor and recovery documentation use that same
-association. File chooser dialogs still use the GTK portal, not Thunar; this is
-independent of the folder-opening default.
+Yazi is the default file manager: `xdg-mime query default inode/directory` returns
+`yazi.desktop`, which the `desktop` package links into `~/.local/share/applications`. If it
+reports another handler, run `xdg-mime default yazi.desktop inode/directory`. The doctor and
+recovery documentation use that same association. File chooser dialogs still use the GTK
+portal, not Yazi; this is independent of the folder-opening default.
 
 Run `~/.local/bin/dotfiles-appearance` to reapply dark preferences. Native GTK 3
 uses **Adwaita + prefer-dark**, avoiding the missing standalone `Adwaita-dark`
@@ -81,3 +85,18 @@ theme. No global GTK/Qt override is imposed on those different toolkits.
 To investigate a rule that does not match, use `niri msg pick-window` and compare
 the actual app ID with the rule. Launcher/class aliases are fallbacks, not proof
 that every installed app has been visually tested.
+
+## Animations (120 Hz)
+
+`packages/niri/.config/niri/animation.kdl` is tuned for the 120 Hz monitor:
+critically damped springs (stiffness 600–700, about 230 ms) for scrolling, workspace
+switching, moving and resizing, a 240 ms soft-bezier window open, a 180 ms close and a
+180 ms screenshot UI. Niri renders on the RX 9060 XT, so smoothness is a tuning matter,
+not a GPU limit; the comments in `animation.kdl` explain how to speed any of them up. The former global `slowdown 0.75` was removed so the values in
+the file are the real ones. Waybar hover/state changes fade over 150 ms.
+
+## Bitwarden pop-out does not float?
+
+Open the pop-out and run `niri msg pick-window`. If the reported `App ID` or
+`Title` differs from the pattern in the Bitwarden rule of `rules.kdl`, adjust that
+rule (the browser's popup windows can report different IDs per browser/version).
