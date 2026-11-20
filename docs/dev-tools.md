@@ -9,7 +9,7 @@ JetBrainsMono Nerd Font. Packages are linked by `make` like the others.
 | `vi` | `~/.vimrc`, `~/.vim/colors/adwaita-orange.vim` | Vim options plus the Adwaita-orange colorscheme. |
 | `fastfetch` | `~/.config/fastfetch/config.jsonc` | System / Desktop / Hardware / Appearance sections with Nerd Font icons and orange accents. |
 | `btop` | `~/.config/btop/btop.conf`, `themes/adwaita-orange.theme` | Same palette, vi keys. btop may rewrite `btop.conf` when you change settings inside it. |
-| `yazi` | `~/.config/yazi/theme.toml`, `yazi.toml` | File manager with the palette: orange tabs/mode/cwd, `#4b4b50` hovered row, blue folders, colored file types. Icons keep yazi's glyphs but are recolored by category (see below). Type `y` in Bash/Zsh to open it and change directory on quit. |
+| `yazi` | `~/.config/yazi/theme.toml`, `yazi.toml`, `keymap.toml`, `package.toml`, `plugins/mount.yazi/`, `~/.local/bin/yazi-smb` | File manager with the palette: orange tabs/mode/cwd, `#4b4b50` hovered row, blue folders, colored file types. Icons keep yazi's glyphs but are recolored by category (see below). Type `y` in Bash/Zsh to open it and change directory on quit. |
 | `shell-container` | `~/.zshrc`, `~/.bashrc`, `~/.profile` | Zsh with Oh My Zsh, `zsh-autosuggestions` and `zsh-syntax-highlighting` under `~/.oh-my-zsh`, plus Starship (see below). |
 | `claude` | `~/.claude/settings.json`, `CLAUDE.md`, `statusline.sh`, `hooks/notify.sh` | See below. |
 | `opencode` | `~/.config/opencode/opencode.json`, `cli.json`, `themes/adwaita-orange.json` | Theme, read-only permission rules, update notices. |
@@ -28,6 +28,25 @@ script reports what is missing; run `make` again later.
   The installer never overwrites a directory that is not a Git checkout or has local edits.
 - `zstyle ':omz:update' mode disabled` in `.zshrc` stops `omz update` from fighting the pins.
 - `make doctor` reports `MISS zsh ...` when any of the three is absent.
+
+## Mounting disks and shares in Yazi
+
+Yazi has no mount interface of its own. The image already provides the parts that mount
+(`udisks2`, `gvfs-smb`, `gvfs-fuse` and the KDE polkit agent), so the `yazi` package only adds
+the glue, with nothing installed on the system:
+
+| Keys | What it does |
+| --- | --- |
+| `M` | Opens the **Mount** list (the official [mount.yazi](https://github.com/yazi-rs/plugins) plugin, which calls `udisksctl`). Inside it: `j`/`k` move, `m` mounts, `u` unmounts, `e` ejects, `l` enters the mount point, `q` closes. USB sticks mount under `/run/media/<user>/`. |
+| `g` `s` | Asks for `server/share` (also `//server/share`, `\\server\share` or `smb://server/share`), mounts it with `gio mount` (GVfs asks for user name and password in the terminal) and jumps into it. |
+| `g` `u` | Unmounts an SMB share (a menu appears when several are mounted) and returns to your home directory. |
+
+- SMB shares appear under `/run/user/<uid>/gvfs/`. Yazi does not discover servers; type the address.
+- The plugin is vendored in `plugins/mount.yazi` and pinned in `package.toml` (commit and hash). To
+  update it run `YAZI_CONFIG_HOME=$(mktemp -d) ya pkg add yazi-rs/plugins:mount` and copy the
+  resulting `package.toml` and `plugins/mount.yazi/` into `packages/yazi/.config/yazi/`.
+- Prefer automatic mounting? `udiskie` would mount USB sticks as you plug them in, but it has to be
+  added to the image and started with Niri, so it is not part of these dotfiles.
 
 ## yazi icons
 

@@ -1,0 +1,21 @@
+# Mounting. Yazi has no mount UI of its own, so disks and shares go through udisks and GVfs
+# (both already provide polkit prompts and /run/media or /run/user/<uid>/gvfs paths).
+
+# USB sticks and other disks: mount.yazi (vendored in plugins/, pinned in package.toml).
+# Inside it: j/k move, m mount, u unmount, e eject, l enter the mount point, q quit.
+[[mgr.prepend_keymap]]
+on   = "M"
+run  = "plugin mount"
+desc = "Mount manager (USB and disks)"
+
+# SMB shares: ask for server/share, mount it with `gio mount` and jump into it.
+# The helper lives in ~/.local/bin (linked by this package); $HOME keeps it independent of PATH.
+[[mgr.prepend_keymap]]
+on   = [ "g", "s" ]
+run  = 'shell --block -- "$HOME/.local/bin/yazi-smb" mount'
+desc = "Go to an SMB share (mounts it with gio)"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "u" ]
+run  = 'shell --block -- "$HOME/.local/bin/yazi-smb" unmount'
+desc = "Unmount an SMB share"

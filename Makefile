@@ -6,7 +6,7 @@ TEST_PYTHON ?= python3
 PACKAGES := git shell-container starship vi fastfetch btop yazi claude opencode ghostty niri waybar mako fuzzel desktop gnome
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/niri/.config/niri/scripts/*) \
-	packages/desktop/.local/bin/dotfiles-appearance \
+	packages/desktop/.local/bin/dotfiles-appearance packages/yazi/.local/bin/yazi-smb \
 	$(filter-out packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker,$(shell find packages/fuzzel/.config/fuzzel/scripts -maxdepth 1 -type f)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*) \
 	$(wildcard packages/claude/.claude/*.sh packages/claude/.claude/hooks/*)
