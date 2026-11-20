@@ -30,6 +30,21 @@ PNPM_HOME="$HOME/.local/share/pnpm"
 _prepend_path "$PNPM_HOME/bin"
 export PNPM_HOME
 
+# .NET SDK + PAC CLI (Power Platform)
+DOTNET_ROOT="$HOME/.dotnet"
+_prepend_path "$DOTNET_ROOT"
+_prepend_path "$DOTNET_ROOT/tools"
+export DOTNET_ROOT
+
+# fnm binary; the per-shell `fnm env` hook lives in .bashrc and .zshrc.
+_prepend_path "$HOME/.local/share/fnm"
+
+# libatomic for Node.js (not in the base image; extracted from the Fedora RPM)
+if [ -d "$HOME/.local/lib" ]; then
+    LD_LIBRARY_PATH="$HOME/.local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH
+fi
+
 _append_path /opt/Sidra
 
 export PATH

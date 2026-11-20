@@ -111,20 +111,3 @@ shopt -s checkwinsize globstar histappend
 HISTCONTROL=ignoreboth:erasedups
 HISTSIZE=10000
 HISTFILESIZE=20000
-
-# opencode
-export PATH=/home/efpalaciosmo/.opencode/bin:$PATH
-
-# .NET SDK + PAC CLI (Power Platform)
-export DOTNET_ROOT="$HOME/.dotnet"
-export PATH="$HOME/.dotnet:$HOME/.dotnet/tools:$PATH"
-
-# fnm
-FNM_PATH="/home/efpalaciosmo/.local/share/fnm"
-if [ -d "$FNM_PATH" ]; then
-  export PATH="$FNM_PATH:$PATH"
-  eval "$(fnm env --shell bash)"
-fi
-
-# libatomic for Node.js (not in the base image; extracted from the Fedora RPM)
-export LD_LIBRARY_PATH="$HOME/.local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
