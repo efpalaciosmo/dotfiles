@@ -59,8 +59,8 @@ esac
         self.assertIn("color-scheme='prefer-dark'", calls)
         self.assertIn("accent-color='orange'", calls)
         self.assertIn("monospace-font-name='JetBrainsMono Nerd Font 12'", calls)
-        self.assertIn("document-font-name='JetBrainsMono Nerd Font 12'", calls)
-        self.assertIn("titlebar-font='JetBrainsMono Nerd Font Bold 12'", calls)
+        self.assertIn("document-font-name='Adwaita Sans 12'", calls)
+        self.assertIn("titlebar-font='Adwaita Sans Bold 12'", calls)
         self.assertIn("titlebar-uses-system-font=true", calls)
 
     def test_existing_session_bus_is_reused(self):
@@ -77,13 +77,13 @@ esac
         result, calls = self.run_helper()
         self.assertEqual(result.returncode, 0, result.stderr)
         for value in ("gtk-theme='Adwaita'", "icon-theme='Adwaita'",
-                      "cursor-theme='Adwaita'", "font-name='JetBrainsMono Nerd Font 12'"):
+                      "cursor-theme='Adwaita'", "font-name='Adwaita Sans 12'"):
             self.assertIn(value, calls)
         gtk = configparser.ConfigParser()
         gtk.read(ROOT / "packages/desktop/.config/gtk-3.0/settings.ini")
         self.assertEqual(gtk["Settings"]["gtk-theme-name"], "Adwaita")
         self.assertTrue(gtk["Settings"].getboolean("gtk-application-prefer-dark-theme"))
-        self.assertEqual(gtk["Settings"]["gtk-font-name"], "JetBrainsMono Nerd Font 12")
+        self.assertEqual(gtk["Settings"]["gtk-font-name"], "Adwaita Sans 12")
         for file in ("packages/niri/.config/niri/layout.kdl",
                      "packages/waybar/.config/waybar/style.css",
                      "packages/ghostty/.config/ghostty/themes/Adwaita Dark Orange",

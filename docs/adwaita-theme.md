@@ -18,13 +18,14 @@ The exact requested active window color is **#ff7800**.
    the requested focus outline and selections. No global GTK CSS overrides
    or globally forced `GTK_THEME` environment variable are needed. Legacy GTK 3
    Flatpaks get narrowly scoped dark-variant overrides (see below).
-3. JetBrainsMono Nerd Font is the default throughout the managed desktop,
-    including GTK/GNOME interface, document and monospace text, window titles,
-    Ghostty, Fuzzel, Waybar, Mako, Swaylock and Zathura. Fontconfig aliases prefer
-    it (then JetBrains Mono) for generic families without replacing explicit
-    document fonts or disabling emoji/language fallback. The Adwaita palette,
-    icons and cursor remain unchanged; a matching palette does not require
-    Adwaita's original font families.
+3. Fonts are split by role. Adwaita Sans (Inter-based, GNOME's default UI font)
+    is used for proportional UI text: GTK/GNOME interface, document text and
+    window titles, plus the fontconfig `sans-serif`/`system-ui` families that
+    browsers and Electron apps (Zen, Obsidian) resolve. JetBrainsMono Nerd Font
+    stays for monospace and for Ghostty, Fuzzel, Waybar, Mako, Swaylock and
+    Zathura, where its wide, code-style glyphs read well. Fontconfig aliases do
+    not replace explicit document fonts or disable emoji/language fallback.
+    Adwaita Mono is deliberately not used.
 4. [Niri borders](https://niri-wm.github.io/niri/Configuration:-Layout.html)
    identify focused, inactive and urgent windows. A two-pixel orange border
    and neutral inactive border preserve the existing geometry and keybindings.
@@ -110,7 +111,7 @@ falling back. Ghostty is 15 points; Fuzzel is 14 points; Waybar is 15 logical pi
 
 | Component | Theme source / limitation |
 | --- | --- |
-| GNOME + GTK/libadwaita | Supported dark preference, Adwaita icons/cursor, 12-point JetBrains fonts and native orange accent via `dotfiles-appearance`; reapplied at GNOME login. GTK 3 uses bundled Adwaita with `gtk-application-prefer-dark-theme=true`. |
+| GNOME + GTK/libadwaita | Supported dark preference, Adwaita icons/cursor, 12-point Adwaita Sans UI font, 12-point JetBrains monospace and native orange accent via `dotfiles-appearance`; reapplied at GNOME login. GTK 3 uses bundled Adwaita with `gtk-application-prefer-dark-theme=true`. |
 | GNOME Shell | Native GNOME styling, not a separately installed custom Shell CSS theme. Its panel/overview cannot be themed by Waybar CSS. |
 | Ghostty | Bundled `Adwaita Dark Orange` terminal palette, 15-point JetBrainsMono Nerd Font; GTK window chrome follows dark mode. |
 | Niri, Waybar, Fuzzel, Mako | Matching custom Adwaita surfaces and orange focus; JetBrains fonts in Waybar/Fuzzel/Mako. Used only in Niri. |
@@ -119,9 +120,10 @@ falling back. Ghostty is 15 points; Fuzzel is 14 points; Waybar is 15 logical pi
 | Legacy GTK 3 Flatpaks | `dotfiles-appearance` sets `GTK_THEME=Adwaita:dark` only for installed, known GTK 3 apps. It does not grant filesystem access or replace other overrides. |
 | Qt, browser content and third-party apps | No universal override; apps/sandboxes must support desktop preferences or be configured individually. See [application behavior](application-behavior.md). |
 
-`packages/desktop/.config/fontconfig/fonts.conf` provides user-level JetBrains
-defaults for sans-serif, serif, monospace and system-ui families. GTK 3/4 also
-have explicit JetBrains settings. Mako/Zathura use 12-point text; Swaylock uses
+`packages/desktop/.config/fontconfig/fonts.conf` provides user-level defaults:
+Adwaita Sans (then Cantarell) for sans-serif and system-ui, JetBrains for
+monospace; serif keeps the system default. GTK 3/4 explicitly use Adwaita Sans
+12. Mako/Zathura use 12-point text; Swaylock uses
 19-point text. Make and other command-line programs use the terminal's font;
 they have no separate font preference. Apps that request explicit fonts or run
 in isolated sandboxes can still ignore the desktop defaults.

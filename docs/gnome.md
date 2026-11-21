@@ -18,7 +18,7 @@ The GNOME helper intentionally uses `/usr/bin/python3`, not a virtual environmen
 
 `~/.config/autostart/dotfiles-gnome.desktop` runs only in GNOME. It reapplies:
 
-- Native Adwaita Dark, orange accent, Adwaita icons/cursor and JetBrains fonts.
+- Native Adwaita Dark, orange accent, Adwaita icons/cursor, Adwaita Sans UI font and JetBrains monospace font.
 - **Four fixed workspaces** instead of dynamic workspaces.
 - **Super+1–4** to switch workspaces. GNOME's conflicting application shortcuts
   for those four keys are disabled; Super+5–9 remain untouched.
@@ -104,10 +104,10 @@ can still override defaults. See the [theme coverage audit](adwaita-theme.md#the
 for the distinction between custom app palettes and native GNOME styling.
 
 Ghostty selects **JetBrainsMono Nerd Font at 15 points**, with JetBrains Mono as
-a fallback. GTK/GNOME interface, document and monospace preferences use the same
-Nerd Font at 12 points; window titles follow the interface font. Fontconfig
-preferences also cover generic sans-serif, serif, monospace and system-ui fonts.
-Install the Nerd Font
+a fallback. GTK/GNOME interface, document and window-title preferences use
+**Adwaita Sans at 12 points**; the monospace preference stays JetBrains at 12.
+Fontconfig maps sans-serif and system-ui to Adwaita Sans (Cantarell fallback) and
+monospace to JetBrains; serif keeps the system default. Install both fonts
 through your distribution; `make doctor` reports silent font substitution.
 After linking, setup validates the actual auto-loaded Ghostty configuration too.
 If Ghostty still appears unconfigured, check that

@@ -16,7 +16,7 @@ class FontTests(unittest.TestCase):
     def check_font(self, matched):
         with tempfile.TemporaryDirectory() as directory:
             command = Path(directory) / "fc-match"
-            command.write_text('#!/bin/sh\nprintf "%s\\n" "$MATCHED_FONT"\n')
+            command.write_text('#!/bin/sh\ncase "$*" in *JetBrains*) printf "%s\\n" "$MATCHED_FONT";; *) printf "%s\\n" "${*: -1}";; esac\n')
             command.chmod(0o755)
             return subprocess.run(["bash", str(ROOT / "scripts/check-fonts.sh")],
                                   env={**os.environ, "PATH": f"{directory}:{os.environ['PATH']}",
@@ -43,11 +43,22 @@ class FontTests(unittest.TestCase):
         self.assertEqual(main["line-height"], "40px")
         self.assertEqual(config["colors"]["background"], "36363aff")
 
-    def test_desktop_and_other_managed_apps_default_to_jetbrains(self):
+    def test_missing_adwaita_sans_is_reported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            command = Path(directory) / "fc-match"
+            command.write_text('#!/bin/sh\nprintf "Noto Sans\\n"\n')
+            command.chmod(0o755)
+            result = subprocess.run(["bash", str(ROOT / "scripts/check-fonts.sh")],
+                                    env={**os.environ, "PATH": f"{directory}:{os.environ['PATH']}"},
+                                    capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("substitutes Noto Sans", result.stderr)
+
+    def test_gtk_uses_adwaita_sans_and_other_managed_apps_keep_jetbrains(self):
         for version in ("3.0", "4.0"):
             config = configparser.ConfigParser()
             config.read(ROOT / f"packages/desktop/.config/gtk-{version}/settings.ini")
-            self.assertEqual(config["Settings"]["gtk-font-name"], "JetBrainsMono Nerd Font 12")
+            self.assertEqual(config["Settings"]["gtk-font-name"], "Adwaita Sans 12")
         for file, setting in (
             ("packages/mako/.config/mako/config", "font=JetBrainsMono Nerd Font 12"),
             ("packages/desktop/.config/swaylock/config", "font=JetBrainsMono Nerd Font"),
@@ -55,20 +66,28 @@ class FontTests(unittest.TestCase):
         ):
             self.assertIn(setting, (ROOT / file).read_text(), file)
 
-    def test_fontconfig_defaults_cover_generic_families_without_forced_replacement(self):
+    def test_fontconfig_splits_proportional_and_monospace_families(self):
         root = ET.parse(ROOT / "packages/desktop/.config/fontconfig/fonts.conf").getroot()
         self.assertEqual(root.tag, "fontconfig")
         aliases = {alias.findtext("family"): [family.text for family in alias.findall("prefer/family")]
                    for alias in root.findall("alias")}
-        self.assertEqual(set(aliases), {"sans-serif", "serif", "monospace", "system-ui"})
-        for preferred in aliases.values():
-            self.assertEqual(preferred, ["JetBrainsMono Nerd Font", "JetBrains Mono"])
+        self.assertEqual(set(aliases), {"sans-serif", "monospace", "system-ui"})
+        for generic in ("sans-serif", "system-ui"):
+            self.assertEqual(aliases[generic], ["Adwaita Sans", "Cantarell"])
+        self.assertEqual(aliases["monospace"], ["JetBrainsMono Nerd Font", "JetBrains Mono"])
         self.assertIsNone(root.find("match"))
 
-    def test_no_managed_text_config_explicitly_selects_adwaita_fonts(self):
+    def test_adwaita_mono_and_jetbrains_scope(self):
+        """Adwaita Sans is only for proportional UI text; terminal-style tools stay JetBrains."""
+        sans_allowed = {"packages/desktop/.config/fontconfig/fonts.conf",
+                        "packages/desktop/.config/gtk-3.0/settings.ini",
+                        "packages/desktop/.config/gtk-4.0/settings.ini",
+                        "packages/desktop/.local/bin/dotfiles-appearance"}
         for file in (ROOT / "packages").rglob("*"):
             if not file.is_file() or "backgrounds" in file.parts or "__pycache__" in file.parts:
                 continue
+            relative = str(file.relative_to(ROOT))
             text = file.read_text()
-            self.assertNotIn("Adwaita Sans", text, str(file.relative_to(ROOT)))
-            self.assertNotIn("Adwaita Mono", text, str(file.relative_to(ROOT)))
+            self.assertNotIn("Adwaita Mono", text, relative)
+            if relative not in sans_allowed:
+                self.assertNotIn("Adwaita Sans", text, relative)

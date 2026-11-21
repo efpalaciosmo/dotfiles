@@ -71,13 +71,15 @@ agent and the GNOME/GTK portals. Niri starts the KDE polkit agent at
 GNOME Settings provides desktop integration. Yazi (a terminal file manager running in
 Ghostty) is the default file manager: `Super+E` opens it and `yazi.desktop`, linked by the
 `desktop` package, handles `inode/directory`. Install the tools and
-fonts and configure their services through your distribution. **JetBrainsMono
-Nerd Font** is the desktop-wide default: GTK/GNOME interface, document and
-monospace text, window titles, Ghostty, Fuzzel, Waybar, Mako, Swaylock and Zathura.
-Fontconfig also prefers it for generic font families, with JetBrains Mono as a
-fallback. Install the Nerd Font family through your distribution so status
-symbols render as well as text. `make doctor` detects fontconfig silently
-substituting another family. Terminal programs such as Make, Vim, Bash and
+fonts and configure their services through your distribution. Fonts are split by
+role. **Adwaita Sans** (GNOME's default UI font, `adwaita-sans-fonts`) covers
+everyday apps: GTK/GNOME interface and document text, window titles, and the
+generic `sans-serif`/`system-ui` families that Zen, Obsidian and other
+Electron/browser apps resolve through fontconfig (Cantarell is the fallback).
+**JetBrainsMono Nerd Font** covers monospace text and the shell tools: Ghostty,
+Fuzzel, Waybar, Mako, Swaylock and Zathura. Install the Nerd Font family through
+your distribution so status symbols render as well as text. `make doctor` detects
+fontconfig silently substituting either family. Terminal programs such as Make, Vim, Bash and
 Starship inherit their font from the terminal rather than selecting one themselves.
 
 Select **Niri** at the login screen after applying the configuration, then run
@@ -143,7 +145,7 @@ without global font DPI or GTK scale overrides.
 
 The `desktop` Stow package adds GTK settings, Swaylock colors and Zathura
 chrome. Linking it runs `dotfiles-appearance`, which sets GNOME's supported
-dark preference, native orange accent, Adwaita icons/cursor and JetBrains fonts.
+dark preference, native orange accent, Adwaita icons/cursor, Adwaita Sans UI font and JetBrains monospace font.
 GTK/libadwaita retain their native styling; GNOME's native orange is `#ed5b00`,
 while compositor focus and shell selections use exactly `#ff7800`.
 GTK 3 uses bundled `Adwaita` with its dark variant, not the optional separate
@@ -151,8 +153,8 @@ GTK 3 uses bundled `Adwaita` with its dark variant, not the optional separate
 overrides to installed legacy GTK 3 Flatpaks; GTK 4/libadwaita keep portal preferences.
 To reapply preferences, run `~/.local/bin/dotfiles-appearance`.
 
-Default interface, document, monospace, notification and Zathura text is 12
-points; window-title settings follow the same interface font. Swaylock uses a
+Default interface, document and window-title text is Adwaita Sans at 12 points;
+monospace, notification and Zathura text is JetBrains at 12 points. Swaylock uses a
 19-point font. Ghostty, Fuzzel and Waybar retain their app-specific larger sizes
 listed above. Fontconfig preferences do not replace embedded PDF fonts, explicit
 website fonts or emoji/language fallback fonts.

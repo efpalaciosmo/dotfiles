@@ -46,8 +46,9 @@ set_preference gtk-theme "'Adwaita'"
 set_preference icon-theme "'Adwaita'"
 set_preference cursor-theme "'Adwaita'"
 set_preference cursor-size 24
-set_preference font-name "'JetBrainsMono Nerd Font 12'"
-set_preference document-font-name "'JetBrainsMono Nerd Font 12'"
+# Proportional UI text uses Adwaita Sans; JetBrains is kept for monospace.
+set_preference font-name "'Adwaita Sans 12'"
+set_preference document-font-name "'Adwaita Sans 12'"
 set_preference monospace-font-name "'JetBrainsMono Nerd Font 12'"
 # Native Adwaita orange is #ed5b00; compositor focus is exactly #ff7800.
 set_preference accent-color "'orange'"
@@ -55,7 +56,7 @@ set_preference accent-color "'orange'"
 # Server-decorated titles should agree with GTK client-side titlebars too.
 schema=org.gnome.desktop.wm.preferences
 if keys=$(gsettings list-keys "$schema" 2>/dev/null); then
-    set_preference titlebar-font "'JetBrainsMono Nerd Font Bold 12'"
+    set_preference titlebar-font "'Adwaita Sans Bold 12'"
     set_preference titlebar-uses-system-font true
 else
     printf 'appearance: window-title font preferences unavailable; skipped\n' >&2
@@ -77,4 +78,4 @@ if command -v flatpak >/dev/null 2>&1; then
         esac
     done <<< "$(sort -u <<< "$installed")"
 fi
-printf 'appearance: Adwaita dark with orange accent and JetBrains fonts applied\n'
+printf 'appearance: Adwaita dark with orange accent, Adwaita Sans UI and JetBrains monospace fonts applied\n'
