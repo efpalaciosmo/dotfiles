@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PACKAGES = ("git shell-container starship vi fastfetch btop claude opencode "
-                    "ghostty niri waybar mako fuzzel desktop gnome")
+                    "ghostty niri waybar mako fuzzel desktop gnome thunar")
 
 
 class MakefileTests(unittest.TestCase):

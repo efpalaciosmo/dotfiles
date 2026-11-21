@@ -68,6 +68,13 @@ Thunar is the default file manager: `xdg-mime query default inode/directory` ret
 that same association. File chooser dialogs still use the GTK portal, not Thunar; this is
 independent of the folder-opening default.
 
+The `thunar` package links `~/.config/Thunar/uca.xml`, which adds a **Mount ISO** custom
+action for `.iso`/`.img` files (right-click → *Mount ISO*). It runs
+`udisksctl loop-setup --read-only` and `udisksctl mount`, so it needs only `udisks2`, which the
+system already provides. The image is mounted under `/run/media/$USER/<label>`; unmount it from
+the Thunar sidebar. Editing actions in Thunar's GUI rewrites the file, so make changes in the
+repository instead.
+
 Run `~/.local/bin/dotfiles-appearance` to reapply dark preferences. Native GTK 3
 uses **Adwaita + prefer-dark**, avoiding the missing standalone `Adwaita-dark`
 theme. Known installed GTK 3 Flatpaks get a per-app `GTK_THEME=Adwaita:dark`

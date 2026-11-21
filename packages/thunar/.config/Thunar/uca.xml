@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Open Terminal Here</name>
+	<submenu></submenu>
+	<unique-id>1794102382182631-1</unique-id>
+	<command>exo-open --working-directory %f --launch TerminalEmulator</command>
+	<description>Example for a custom action</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>media-optical</icon>
+	<name>Mount ISO</name>
+	<submenu></submenu>
+	<unique-id>1794102382182631-2</unique-id>
+	<command>sh -c 'dev=$(udisksctl loop-setup --read-only -f "$1" | sed -n "s/.*as \(\/dev\/loop[0-9]*\)\..*/\1/p") &amp;&amp; [ -n "$dev" ] &amp;&amp; udisksctl mount -b "$dev"' sh %f</command>
+	<description>Mount the disk image read-only through UDisks; unmount it from the Thunar sidebar</description>
+	<range></range>
+	<patterns>*.iso;*.ISO;*.img;*.IMG</patterns>
+	<other-files/>
+</action>
+</actions>

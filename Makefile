@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 TEST_PYTHON ?= python3
 
-PACKAGES := git shell-container starship vi fastfetch btop claude opencode ghostty niri waybar mako fuzzel desktop gnome
+PACKAGES := git shell-container starship vi fastfetch btop claude opencode ghostty niri waybar mako fuzzel desktop gnome thunar
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/niri/.config/niri/scripts/*) \
 	packages/desktop/.local/bin/dotfiles-appearance \
