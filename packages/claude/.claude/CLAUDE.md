@@ -11,7 +11,7 @@ edit `packages/claude/.claude/CLAUDE.md` there, not this link.
 
 ## Environment
 - Fedora atomic desktop (`/home` is a symlink to `/var/home`); Niri + Waybar + Fuzzel +
-  Mako, Ghostty terminal, Vim, Yazi as file manager, Zsh with Starship. A Fedora Distrobox holds
+  Mako, Ghostty terminal, Vim, Thunar as file manager, Zsh with Starship. A Fedora Distrobox holds
   development toolchains.
 - Visual identity everywhere: Adwaita Dark with orange accent `#ff7800`
   (surface `#1d1d20`, raised `#36363a`, text orange `#ff9c5b`) and JetBrainsMono Nerd Font.

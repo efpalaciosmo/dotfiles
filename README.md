@@ -40,7 +40,7 @@ make PACKAGES="niri fuzzel waybar mako ghostty desktop gnome"
 ```
 
 The default Stow packages are `git shell-container starship vi fastfetch btop
-yazi claude opencode ghostty niri waybar
+claude opencode ghostty niri waybar
 mako fuzzel desktop gnome`. These are configuration directories under `packages/`,
 not software packages to install. They include Ghostty, its bundled Adwaita theme,
 desktop appearance, shell and Starship preferences. No software packages are
@@ -69,9 +69,9 @@ wl-clipboard, Playerctl, PipeWire/WirePlumber, NetworkManager, BlueZ, a polkit
 agent and the GNOME/GTK portals. The KDE polkit agent at
 `/usr/libexec/kf6/polkit-kde-authentication-agent-1` must be installed. On Gniri it runs as
 `gniri-polkit-agent.service`; elsewhere Niri starts it directly.
-GNOME Settings provides desktop integration. Yazi (a terminal file manager running in
-Ghostty) is the default file manager: `Super+E` opens it and `yazi.desktop`, linked by the
-`desktop` package, handles `inode/directory`. Install the tools and
+GNOME Settings provides desktop integration. Thunar is the default file manager: `Super+E`
+opens it and the system `thunar.desktop` handles `inode/directory` (set it with
+`xdg-mime default thunar.desktop inode/directory`). Install the tools and
 fonts and configure their services through your distribution. Fonts are split by
 role. **Adwaita Sans** (GNOME's default UI font, `adwaita-sans-fonts`) covers
 everyday apps: GTK/GNOME interface and document text, window titles, and the
@@ -183,7 +183,7 @@ otherwise).
 
 `Super+V` toggles the focused window between tiled and floating; `Super+Shift+V`
 switches focus between those layouts. Niri floats parented dialogs and fixed-size
-windows automatically. Yazi (opened with `Super+E`) and compact utilities open centered and floating,
+windows automatically. Thunar (opened with `Super+E`) and compact utilities open centered and floating,
 with app-specific starting sizes; browsers, editors and other workspace apps stay
 tiled. See the [installed-app decisions and sizes](docs/application-behavior.md).
 Zen and Firefox Picture-in-Picture windows open floating
@@ -199,7 +199,7 @@ instead of focusing, and `Super+Alt+L` locks (`Super+L` is focus right). Press
 | `Super+D` | Applications (icons and launch history) |
 | `Super+X` | Run a command |
 | `Super+/` | Search files under home |
-| `Super+E` | Yazi (file manager) |
+| `Super+E` | Thunar (file manager) |
 | `Super+Shift+W` | Window list |
 | `Super+Shift+B` | Bluetooth |
 | `Super+Shift+N` | Wi-Fi |
@@ -267,7 +267,7 @@ automatically by the dotfiles task.
 
 ## Developer tools
 
-Vim (Adwaita-orange colorscheme), fastfetch, btop, yazi, Claude Code and
+Vim (Adwaita-orange colorscheme), fastfetch, btop, Claude Code and
 opencode follow the same palette and are linked by `make`. Claude Code gets a palette-colored
 status line, desktop notifications when it needs you and protection for credential files.
 See [developer tools](docs/dev-tools.md).

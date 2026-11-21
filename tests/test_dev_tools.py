@@ -1,4 +1,4 @@
-"""Claude Code, opencode, Vim, fastfetch, btop, yazi and git share the desktop's palette."""
+"""Claude Code, opencode, Vim, fastfetch, btop and git share the desktop's palette."""
 
 import json
 import os
@@ -28,7 +28,7 @@ ANSI_AND_PALETTE = PALETTE | {"#8ff0a4", "#99c1f1", "#7bdff4", "#dc8add", "#ffc2
 class PackageRegistrationTests(unittest.TestCase):
     def test_new_packages_are_default_stow_packages(self):
         defaults = (ROOT / "Makefile").read_text().split("PACKAGES :=", 1)[1].splitlines()[0].split()
-        for package in ("fastfetch", "btop", "yazi", "claude", "opencode"):
+        for package in ("fastfetch", "btop", "claude", "opencode"):
             with self.subTest(package=package):
                 self.assertIn(package, defaults)
                 self.assertTrue((PACKAGES / package).is_dir())
@@ -180,38 +180,6 @@ class EditorAndToolThemeTests(unittest.TestCase):
             self.assertIn(module, types)
         disk = next(m for m in config["modules"] if isinstance(m, dict) and m["type"] == "disk")
         self.assertIn("/", disk["hideFolders"].split(":"), "read-only overlay root is noise")
-
-    def test_yazi_theme_parses_and_uses_the_palette(self):
-        directory = PACKAGES / "yazi/.config/yazi"
-        theme = tomllib.loads((directory / "theme.toml").read_text())
-        tomllib.loads((directory / "yazi.toml").read_text())
-        self.assertEqual(theme["tabs"]["active"]["bg"], "#ff7800")
-        self.assertEqual(theme["mgr"]["hovered"]["bg"], "#4b4b50")
-        self.assertEqual(theme["mgr"]["cwd"]["fg"], "#ff9c5b")
-        text = (directory / "theme.toml").read_text().lower()
-        for color in re.findall(r"#[0-9a-f]{6}", text):
-            self.assertIn(color, ANSI_AND_PALETTE, color)
-
-    def test_yazi_icons_replace_the_builtin_rainbow_table(self):
-        # yazi's preset icons use 221 colors outside the palette. Redefining every list keeps
-        # the preset from leaking back in; each rule must carry a palette color of its own.
-        theme = tomllib.loads((PACKAGES / "yazi/.config/yazi/theme.toml").read_text())
-        icons = theme["icon"]
-        for kind in ("dirs", "files", "exts", "conds"):
-            with self.subTest(kind=kind):
-                self.assertTrue(icons[kind], kind)
-                for rule in icons[kind]:
-                    self.assertIn(rule["fg"], ANSI_AND_PALETTE, rule)
-                    self.assertTrue(rule["text"], rule)
-        # Anything unlisted must still get a generic icon instead of none.
-        conditions = {rule["if"] for rule in icons["conds"]}
-        self.assertLessEqual({"dir", "!dir", "exec", "link"}, conditions)
-
-    def test_shell_wrapper_changes_directory_on_quit_in_bash_and_zsh(self):
-        for name in (".bashrc", ".zshrc"):
-            text = (PACKAGES / "shell-container" / name).read_text()
-            self.assertIn("--cwd-file", text, name)
-            self.assertIn("command -v yazi", text, name)
 
     def test_gitconfig_has_no_stale_temporary_credential_helper(self):
         for line in (PACKAGES / "git/.gitconfig").read_text().splitlines():

@@ -3,10 +3,10 @@ SHELL := /bin/bash
 
 TEST_PYTHON ?= python3
 
-PACKAGES := git shell-container starship vi fastfetch btop yazi claude opencode ghostty niri waybar mako fuzzel desktop gnome
+PACKAGES := git shell-container starship vi fastfetch btop claude opencode ghostty niri waybar mako fuzzel desktop gnome
 SCRIPT_FILES := bootstrap-dotfiles.sh $(wildcard scripts/*.sh) \
 	$(wildcard packages/niri/.config/niri/scripts/*) \
-	packages/desktop/.local/bin/dotfiles-appearance packages/yazi/.local/bin/yazi-smb \
+	packages/desktop/.local/bin/dotfiles-appearance \
 	$(filter-out packages/fuzzel/.config/fuzzel/scripts/clipboard-history packages/fuzzel/.config/fuzzel/scripts/wifi packages/fuzzel/.config/fuzzel/scripts/picker,$(shell find packages/fuzzel/.config/fuzzel/scripts -maxdepth 1 -type f)) \
 	$(wildcard packages/waybar/.config/waybar/scripts/*) \
 	$(wildcard packages/claude/.claude/*.sh packages/claude/.claude/hooks/*)
@@ -25,7 +25,6 @@ check: ## Run non-mutating repository syntax checks
 	@if command -v zsh >/dev/null 2>&1; then zsh -n packages/shell-container/.zshrc; fi
 	@python3 -c 'import pathlib, tomllib; tomllib.loads(pathlib.Path("packages/starship/.config/starship.toml").read_text())'
 	@python3 -m json.tool packages/waybar/.config/waybar/config.jsonc >/dev/null
-	@python3 -c 'import pathlib, tomllib; [tomllib.loads(p.read_text()) for p in pathlib.Path("packages/yazi/.config/yazi").glob("*.toml")]'
 	@for file in packages/fastfetch/.config/fastfetch/config.jsonc packages/claude/.claude/settings.json packages/opencode/.config/opencode/opencode.json packages/opencode/.config/opencode/cli.json packages/opencode/.config/opencode/themes/*.json; do python3 -m json.tool "$$file" >/dev/null || exit 1; done
 	@python3 -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text()) for p in "$(PYTHON_FILES)".split()]'
 	@PYTHONDONTWRITEBYTECODE=1 "$(TEST_PYTHON)" -m unittest discover -s tests -p 'test_*.py'

@@ -44,22 +44,11 @@ class NiriKeybindTests(unittest.TestCase):
         self.assertNotIn("Ctrl+B", table)
         self.assertIn("fuzzel/scripts/bluetooth", table["Mod+Shift+B"])
 
-    def test_files_shortcut_opens_yazi_with_the_app_id_the_float_rule_matches(self):
+    def test_files_shortcut_opens_thunar_with_the_app_id_the_float_rule_matches(self):
         bind = binds()["Mod+E"]
-        self.assertIn('"yazi"', bind)
-        self.assertIn("--class=org.dotfiles.Yazi", bind)
-        self.assertIn("--confirm-close-surface=false", bind)
-        self.assertNotIn("thunar", bind.lower())
+        self.assertIn('spawn "thunar"', bind)
         rules = (ROOT / "packages/niri/.config/niri/rules.kdl").read_text()
-        self.assertIn(r'app-id=r#"^org\.dotfiles\.Yazi$"#', rules)
-
-    def test_yazi_desktop_entry_is_the_folder_handler_with_the_same_app_id(self):
-        entry = (ROOT / "packages/desktop/.local/share/applications/yazi.desktop").read_text()
-        self.assertIn("MimeType=inode/directory;", entry)
-        self.assertIn("--class=org.dotfiles.Yazi", entry)
-        self.assertIn("StartupWMClass=org.dotfiles.Yazi", entry)
-        self.assertIn("--confirm-close-surface=false", entry)
-        self.assertIn("-e yazi", entry)
+        self.assertIn('app-id=r#"^[Tt]hunar$"#', rules)
 
     def test_every_subsystem_menu_has_a_direct_shortcut(self):
         table = binds()

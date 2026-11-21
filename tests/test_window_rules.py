@@ -20,7 +20,7 @@ def matching_rules(app_id, title=""):
 class WindowRuleTests(unittest.TestCase):
     def test_installed_utilities_float_at_the_chosen_logical_size(self):
         cases = {
-            ("org.dotfiles.Yazi", "Files"): (1000, 720),
+            ("thunar", "Files"): (1000, 720),
             ("io.github.peazip.PeaZip", ""): (1000, 720),
             ("xarchiver", ""): (1000, 720),
             ("org.gnome.Calculator", ""): (440, 600),
@@ -84,8 +84,8 @@ class WindowRuleTests(unittest.TestCase):
         for forbidden in ("open-floating", "default-column-width", "default-window-height"):
             self.assertNotIn(forbidden, rules)
 
-    def test_only_the_dedicated_yazi_app_id_floats_not_every_ghostty_window(self):
-        for app in ("com.mitchellh.ghostty", "org.dotfiles.Yazi.other", "thunar", "Thunar"):
+    def test_only_the_thunar_app_id_floats_not_every_ghostty_window(self):
+        for app in ("com.mitchellh.ghostty", "thunar.other", "thunar-settings"):
             with self.subTest(app=app):
                 self.assertEqual(list(matching_rules(app, "Files")), [])
 

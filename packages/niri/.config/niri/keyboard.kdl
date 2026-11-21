@@ -12,9 +12,8 @@ binds {
 
     // Launch
     Mod+Return repeat=false hotkey-overlay-title="Terminal" { spawn "ghostty"; }
-    // Yazi in its own Ghostty app-id so rules.kdl can float it like the other utilities.
-    // No close confirmation: yazi is a running process, so Mod+Q would otherwise always ask.
-    Mod+E repeat=false hotkey-overlay-title="Files" { spawn "ghostty" "--class=org.dotfiles.Yazi" "--title=Files" "--confirm-close-surface=false" "-e" "yazi"; }
+    // Thunar's Wayland app-id is "thunar"; rules.kdl floats it like the other utilities.
+    Mod+E repeat=false hotkey-overlay-title="Files" { spawn "thunar"; }
     Mod+D repeat=false hotkey-overlay-title="Applications" {
       spawn-sh "${XDG_CONFIG_HOME:-$HOME/.config}/fuzzel/scripts/launcher"
     }

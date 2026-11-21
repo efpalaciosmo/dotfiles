@@ -9,12 +9,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class SessionConfigTests(unittest.TestCase):
-    def test_directory_association_check_uses_yazi(self):
+    def test_directory_association_check_uses_thunar(self):
         doctor = (ROOT / "scripts/desktop-check.py").read_text()
-        self.assertIn("association != 'yazi.desktop'", doctor)
-        self.assertIn("xdg-mime default yazi.desktop inode/directory", doctor)
+        self.assertIn("association != 'thunar.desktop'", doctor)
+        self.assertIn("xdg-mime default thunar.desktop inode/directory", doctor)
         self.assertNotIn("Nautilus.desktop", doctor)
-        self.assertNotIn("thunar", doctor.lower())
 
     def test_portals_route_to_the_configured_desktop_backends(self):
         config = configparser.ConfigParser()

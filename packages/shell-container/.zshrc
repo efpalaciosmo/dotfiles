@@ -71,19 +71,6 @@ if command -v pnpm >/dev/null 2>&1; then
     alias npx="pnpm dlx"
 fi
 
-# Yazi: `y` opens it and, on quit, changes this shell to the directory you ended in.
-if command -v yazi >/dev/null 2>&1; then
-    y() {
-        local tmp cwd
-        tmp=$(mktemp -t yazi-cwd.XXXXXX) || return
-        yazi "$@" --cwd-file="$tmp"
-        if cwd=$(<"$tmp") && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-            builtin cd -- "$cwd"
-        fi
-        rm -f -- "$tmp"
-    }
-fi
-
 if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init zsh)"
 fi

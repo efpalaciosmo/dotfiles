@@ -37,19 +37,6 @@ if command -v pnpm >/dev/null 2>&1; then
     alias npx="pnpm dlx"
 fi
 
-# Yazi: `y` opens it and, on quit, changes this shell to the directory you ended in.
-if command -v yazi >/dev/null 2>&1; then
-    y() {
-        local tmp cwd
-        tmp=$(mktemp -t yazi-cwd.XXXXXX) || return
-        yazi "$@" --cwd-file="$tmp"
-        if cwd=$(<"$tmp") && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-            builtin cd -- "$cwd"
-        fi
-        rm -f -- "$tmp"
-    }
-fi
-
 # Native developer prompt: location, Git state, virtual environment and errors.
 __prompt_command() {
     local exit_code=$?

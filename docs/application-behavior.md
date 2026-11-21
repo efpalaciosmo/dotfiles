@@ -15,7 +15,7 @@ opening rules. `Super+V` still toggles any window between floating and tiled.
 
 | Installed app | Starting size | Reason |
 | --- | --- | --- |
-| Yazi (`Super+E`, `yazi.desktop`) | 1000×720 | Quick file browsing/copying over the current task; enough space for three panes. Matched by the Ghostty app-id `org.dotfiles.Yazi`, so other terminals, including `y` in a shell, stay tiled. |
+| Thunar (`Super+E`, `thunar.desktop`) | 1000×720 | Quick file browsing/copying over the current task. Matched by its Wayland app-id `thunar`. |
 | PeaZip, native Xarchiver | 1000×720 | Archive browsing and extraction. |
 | Calculator | 440×600 | Compact keypad; resizable for advanced modes. |
 | BudsLink | 480×640 | Earbud controls. Applies to either installed copy. |
@@ -62,11 +62,11 @@ application minimum sizes. `Super+F` maximizes a column. No blanket
 
 ## Appearance
 
-Yazi is the default file manager: `xdg-mime query default inode/directory` returns
-`yazi.desktop`, which the `desktop` package links into `~/.local/share/applications`. If it
-reports another handler, run `xdg-mime default yazi.desktop inode/directory`. The doctor and
-recovery documentation use that same association. File chooser dialogs still use the GTK
-portal, not Yazi; this is independent of the folder-opening default.
+Thunar is the default file manager: `xdg-mime query default inode/directory` returns
+`thunar.desktop`, provided by the system package. If it reports another handler, run
+`xdg-mime default thunar.desktop inode/directory`. The doctor and recovery documentation use
+that same association. File chooser dialogs still use the GTK portal, not Thunar; this is
+independent of the folder-opening default.
 
 Run `~/.local/bin/dotfiles-appearance` to reapply dark preferences. Native GTK 3
 uses **Adwaita + prefer-dark**, avoiding the missing standalone `Adwaita-dark`

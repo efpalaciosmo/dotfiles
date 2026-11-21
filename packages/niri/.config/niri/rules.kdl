@@ -30,10 +30,8 @@ window-rule {
 // Do not force productive apps tiled: their parented dialogs should still float.
 
 // File/archive browsing is usually a temporary task over the current workspace.
-// Yazi runs in Ghostty; Super+E and yazi.desktop give it this app-id, so terminals
-// started any other way (including the `y` shell function) keep tiling normally.
 window-rule {
-    match app-id=r#"^org\.dotfiles\.Yazi$"#
+    match app-id=r#"^[Tt]hunar$"#
     match app-id=r#"^(io\.github\.peazip\.PeaZip|[Pp]ea[Zz]ip|[Xx]archiver)$"#
     open-floating true
     default-column-width { fixed 1000; }
