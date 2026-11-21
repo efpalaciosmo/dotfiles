@@ -1,7 +1,10 @@
 // Niri starts these processes only inside its own session.
 spawn-at-startup "waybar"
 spawn-at-startup "mako"
-spawn-at-startup "/usr/libexec/kf6/polkit-kde-authentication-agent-1"
+// Gniri supervises the agent as gniri-polkit-agent.service (restart on failure,
+// stops with the graphical session). Start it directly only where that unit is
+// absent, so two agents never race to register.
+spawn-sh-at-startup "systemctl --user cat gniri-polkit-agent.service >/dev/null 2>&1 || exec /usr/libexec/kf6/polkit-kde-authentication-agent-1"
 spawn-sh-at-startup "${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/session-idle"
 spawn-sh-at-startup "${XDG_CONFIG_HOME:-$HOME/.config}/niri/scripts/float-browser-popups"
 spawn-sh-at-startup "swaybg -i \"${XDG_CONFIG_HOME:-$HOME/.config}/niri/backgrounds/bluesky.png\" -m fill"

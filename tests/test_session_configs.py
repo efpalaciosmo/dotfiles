@@ -29,7 +29,8 @@ class SessionConfigTests(unittest.TestCase):
     def test_kde_polkit_agent_is_started_directly_and_checked_by_doctor(self):
         agent = "/usr/libexec/kf6/polkit-kde-authentication-agent-1"
         startup = (ROOT / "packages/niri/.config/niri/autostart.kdl").read_text()
-        self.assertIn(f'spawn-at-startup "{agent}"', startup)
+        self.assertIn(f'|| exec {agent}"', startup)
+        self.assertIn("systemctl --user cat gniri-polkit-agent.service", startup)
         self.assertIn(agent, (ROOT / "scripts/doctor.sh").read_text())
         self.assertNotIn("polkit-gnome", startup)
 

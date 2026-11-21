@@ -66,8 +66,9 @@ schemas; see [GNOME prerequisites](docs/gnome.md).
 
 The desktop uses Niri, Waybar, Fuzzel, Mako, Ghostty, Swaybg, Swaylock, Swayidle,
 wl-clipboard, Playerctl, PipeWire/WirePlumber, NetworkManager, BlueZ, a polkit
-agent and the GNOME/GTK portals. Niri starts the KDE polkit agent at
-`/usr/libexec/kf6/polkit-kde-authentication-agent-1`; ensure it is installed there.
+agent and the GNOME/GTK portals. The KDE polkit agent at
+`/usr/libexec/kf6/polkit-kde-authentication-agent-1` must be installed. On Gniri it runs as
+`gniri-polkit-agent.service`; elsewhere Niri starts it directly.
 GNOME Settings provides desktop integration. Yazi (a terminal file manager running in
 Ghostty) is the default file manager: `Super+E` opens it and `yazi.desktop`, linked by the
 `desktop` package, handles `inode/directory`. Install the tools and
