@@ -140,7 +140,7 @@ window-rule {
 // panel and keep it out of screen recordings and screen sharing.
 // To adjust: `niri msg pick-window` on the open pop-out shows its app-id/title.
 window-rule {
-    match app-id=r#"^(app\.zen_browser\.zen|zen|org\.mozilla\.firefox|firefox|com\.brave\.Browser|brave-browser|Brave-browser)$"# title="^Bitwarden( [—–-] .*)?$"
+    match app-id=r#"^(app\.zen_browser\.zen|zen|org\.mozilla\.firefox|firefox|com\.brave\.Browser|brave-browser|Brave-browser|com\.microsoft\.Edge|microsoft-edge|Microsoft-edge)$"# title="^Bitwarden( [—–-] .*)?$"
     open-floating true
     open-focused true
     default-column-width { fixed 420; }

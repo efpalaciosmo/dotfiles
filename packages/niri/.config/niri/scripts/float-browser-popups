@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Float browser pop-up windows from Zen, Brave and Edge.
+# Browsers set the window title after the window maps, and niri only evaluates
+# `open-floating` at map time, so title-based window rules cannot float them.
+# This watches the event stream and floats the window once its title is known.
+#
+# Kinds (see the `kind` mapping in $filter):
+#   bitwarden  Bitwarden pop-out and its extension prompts   420x680, centered
+#   extension  Other "Extension: ..." permission prompts      520x420, centered
+#   pip        Picture-in-Picture video window                480x270, bottom right
+#   auth       Google/Microsoft sign-in pop-ups               520x720, centered
+# `auth` matches ordinary page titles, so it only applies within a few seconds of
+# a window opening (after this script started); a tab that later navigates to a
+# login page is never floated. To add a kind, extend $filter and the `case` below.
+set -euo pipefail
+
+margin=12
+
+# Prints "<event> <id> <floating> <kind>" for every browser window event, with kind
+# "none" for ordinary titles. event is "open" for a new/changed window and "list"
+# for the startup snapshot.
+filter='
+  def kind:
+    if test("^Extension: .*Bitwarden|^Bitwarden") then "bitwarden"
+    elif test("^Extension: ") then "extension"
+    elif test("^Picture[ -]in[ -]picture"; "i") then "pip"
+    elif test("Google Accounts|Cuentas de Google|^Sign in to your account|^Iniciar sesión en tu cuenta") then "auth"
+    else "none" end;
+  (
+    (.WindowOpenedOrChanged.window? | select(. != null) | ["open", .]),
+    (.WindowsChanged.windows[]? | ["list", .])
+  )
+  | . as [$event, $w]
+  | $w
+  | select((.app_id // "") | test("^(app\\.zen_browser\\.zen|zen|com\\.brave\\.Browser|[Bb]rave-browser|com\\.microsoft\\.Edge|[Mm]icrosoft-edge)$"))
+  | ((.title // "") | kind) as $kind
+  | "\($event) \(.id) \(.is_floating) \($kind)"'
+
+auth_window=5 # seconds after opening during which an auth title floats the window
+
+declare -A seen=() opened_at=()
+
+output_size() {
+    niri msg --json focused-output | jq -r '"\(.logical.width) \(.logical.height)"'
+}
+
+float() { # id width height
+    niri msg action move-window-to-floating --id "$1"
+    niri msg action set-window-width --id "$1" "$2"
+    niri msg action set-window-height --id "$1" "$3"
+}
+
+niri msg --json event-stream | jq --unbuffered -r "$filter" | while read -r event id floating kind; do
+    # Track first sight: windows in the startup snapshot are never "new".
+    if [[ -z ${seen[$id]:-} ]]; then
+        seen[$id]=1
+        if [[ $event == open ]]; then opened_at[$id]=$SECONDS; fi
+    fi
+    [[ $floating == false && $kind != none ]] || continue
+
+    case $kind in
+        bitwarden) float "$id" 420 680; niri msg action center-window --id "$id" ;;
+        extension) float "$id" 520 420; niri msg action center-window --id "$id" ;;
+        auth)
+            [[ -n ${opened_at[$id]:-} ]] && ((SECONDS - opened_at[$id] <= auth_window)) || continue
+            float "$id" 520 720; niri msg action center-window --id "$id" ;;
+        pip)
+            read -r out_w out_h < <(output_size)
+            float "$id" 480 270
+            niri msg action move-floating-window --id "$id" \
+                --x $((out_w - 480 - margin)) --y $((out_h - 270 - margin)) ;;
+    esac
+done

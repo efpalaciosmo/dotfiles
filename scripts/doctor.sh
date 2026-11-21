@@ -78,7 +78,7 @@ else
     failures=$((failures + 1))
 fi
 
-for relative in niri/scripts/lock-screen niri/scripts/session-idle; do
+for relative in niri/scripts/lock-screen niri/scripts/session-idle niri/scripts/float-browser-popups; do
     if [[ -x $HOME/.config/$relative ]]; then
         printf 'OK   executable ~/.config/%s\n' "$relative"
     else
