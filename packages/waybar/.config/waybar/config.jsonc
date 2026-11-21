@@ -8,7 +8,7 @@
     "margin-right": 12,
     "modules-left": ["niri/workspaces", "niri/window"],
     "modules-center": ["custom/media"],
-    "modules-right": ["tray", "privacy", "custom/dnd", "idle_inhibitor", "custom/sep1", "bluetooth", "custom/network-speed", "pulseaudio", "custom/cpu", "memory", "custom/sep2", "clock", "custom/power"],
+    "modules-right": ["tray", "privacy", "custom/dnd", "idle_inhibitor", "custom/sep1", "bluetooth", "custom/network-speed", "pulseaudio", "pulseaudio#mic", "custom/cpu", "memory", "custom/sep2", "clock", "custom/power"],
 
 
     "custom/sep1": { "format": "│", "tooltip": false },
@@ -113,8 +113,22 @@
         "format-icons": { "headphone": "", "default": ["", "", ""] },
         "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ -l 1.0",
         "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-",
-        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "tooltip-format": "{desc}\nClick: choose output · middle: mute\nScroll: volume · right-click: terminal mixer",
+        "on-click": "~/.config/fuzzel/scripts/audio sink",
+        "on-click-middle": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
         "on-click-right": "~/.config/waybar/scripts/terminal-tool audio"
+    },
+    "pulseaudio#mic": {
+        "format": "{format_source}",
+        "format-bluetooth": "{format_source}",
+        "format-muted": "{format_source}",
+        "format-source": "<span color='#c0bfbc'>󰍬</span>  {volume}%",
+        "format-source-muted": "<span color='#a8a7a4'>󰍭</span>  muted",
+        "tooltip-format": "{source_desc}\nClick: choose microphone · middle: mute\nScroll: volume",
+        "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 0.05+ -l 1.0",
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 0.05-",
+        "on-click": "~/.config/fuzzel/scripts/audio source",
+        "on-click-middle": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
     },
     "custom/cpu": {
         "exec": "~/.config/waybar/scripts/cpu-status",

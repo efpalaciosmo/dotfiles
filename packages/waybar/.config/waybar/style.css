@@ -95,6 +95,9 @@ tooltip label { padding: 8px; color: @text; }
 #bluetooth.connected { color: @blue; }
 #custom-network-speed.disconnected { color: @error; }
 #pulseaudio.muted { color: @dim; }
+/* The mic module reuses the pulseaudio widget: its own mute state is .source-muted. */
+#pulseaudio.mic.muted { color: @text; }
+#pulseaudio.mic.source-muted { color: @dim; }
 #custom-cpu.warning { color: @warning; background: @raised; }
 #custom-cpu.critical, #memory.critical { color: #1d1d20; background: @error; }
 

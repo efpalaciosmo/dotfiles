@@ -101,3 +101,49 @@ esac
         self.assertTrue(re.fullmatch(r"\d+%", data["text"]))
         self.assertEqual(data["alt"], data["class"])
         self.assertIn(data["alt"], CONFIG["custom/cpu"]["format-icons"])
+
+
+class AudioPickerTests(unittest.TestCase):
+    SCRIPT = ROOT / "packages/fuzzel/.config/fuzzel/scripts/audio"
+
+    def test_waybar_opens_the_output_and_microphone_pickers(self):
+        self.assertIn("pulseaudio#mic", CONFIG["modules-right"])
+        self.assertTrue(CONFIG["pulseaudio"]["on-click"].endswith("scripts/audio sink"))
+        self.assertTrue(CONFIG["pulseaudio#mic"]["on-click"].endswith("scripts/audio source"))
+        self.assertIn("@DEFAULT_AUDIO_SINK@", CONFIG["pulseaudio"]["on-click-middle"])
+        self.assertIn("@DEFAULT_AUDIO_SOURCE@", CONFIG["pulseaudio#mic"]["on-click-middle"])
+
+    def test_picker_marks_current_device_hides_pro_outputs_and_sets_default(self):
+        nodes = json.dumps([
+            {"id": i, "type": "PipeWire:Interface:Node", "info": {"props": {
+                "media.class": "Audio/Sink", "node.name": name, "node.description": desc}}}
+            for i, name, desc in (
+                (45, "alsa_output.pci-1.pro-output-3", "Pro 3"),
+                (57, "alsa_output.pci-2.analog-stereo", "Analog"),
+                (61, "alsa_output.pci-3.hdmi-stereo", "Monitor HDMI"))])
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            stubs = {
+                "pw-dump": f"cat <<'JSON'\n{nodes}\nJSON\n",
+                "fuzzel": 'cat >"$ROOT/menu"\ngrep Monitor "$ROOT/menu"\n',
+                "pactl": 'case "$1" in get-default-sink) echo alsa_output.pci-2.analog-stereo;; '
+                         'list) ;; esac\n',
+                "wpctl": 'echo "$@" >"$ROOT/wpctl"\n',
+                "notify-send": "exit 0\n",
+            }
+            for command, body in stubs.items():
+                stub = root / command
+                stub.write_text("#!/bin/sh\n" + body)
+                stub.chmod(0o755)
+            env = {**os.environ, "PATH": f"{root}:{os.environ['PATH']}", "ROOT": directory}
+            result = subprocess.run([str(self.SCRIPT), "sink"], env=env, text=True,
+                                    capture_output=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            menu = (root / "menu").read_text().splitlines()
+            self.assertEqual(menu, ["●  Analog", "   Monitor HDMI"])
+            self.assertEqual((root / "wpctl").read_text().strip(), "set-default 61")
+
+    def test_picker_rejects_unknown_mode(self):
+        result = subprocess.run([str(self.SCRIPT), "bogus"], text=True,
+                                capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 2)

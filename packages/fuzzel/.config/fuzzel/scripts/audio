@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Pick the default audio output (sink) or microphone (source) with fuzzel.
+# Usage: audio sink|source   (launched from the Waybar pulseaudio modules)
+# AUDIO_SHOW_ALL=1 also lists the PipeWire pro-audio outputs hidden by default.
+set -euo pipefail
+
+script_dir=${BASH_SOURCE[0]%/*}
+# shellcheck source=common
+. "$script_dir/common"
+
+missing_commands fuzzel pw-dump pactl wpctl jq || exit 1
+
+case ${1:-} in
+    sink)
+        title="Output" class="Audio/Sink" default_cmd="get-default-sink"
+        move_list="sink-inputs" move_cmd="move-sink-input"
+        ;;
+    source)
+        title="Microphone" class="Audio/Source" default_cmd="get-default-source"
+        move_list="source-outputs" move_cmd="move-source-output"
+        ;;
+    *)
+        printf 'Usage: %s sink|source\n' "${0##*/}" >&2
+        exit 2
+        ;;
+esac
+
+audio_error() {
+    notify_user "Audio" "$1"
+    printf 'Audio: %s\n' "$1" >&2
+    exit 1
+}
+
+current=$(pactl "$default_cmd" 2>/dev/null || true)
+
+# One line per device: id <TAB> node name <TAB> description.
+# Every Radeon HDMI port exposes several "pro-output" nodes that clutter the list.
+nodes=$(pw-dump 2>/dev/null | jq -r --arg class "$class" --arg current "$current" \
+    --arg all "${AUDIO_SHOW_ALL:-}" '
+    .[] | select(.type == "PipeWire:Interface:Node")
+        | .info.props as $p
+        | select($p["media.class"] == $class)
+        | select($all != "" or $p["node.name"] == $current
+                 or (($p["node.name"] | test("\\.pro-(output|input)-")) | not))
+        | [.id, $p["node.name"], ($p["node.description"] // $p["node.nick"] // $p["node.name"])]
+        | @tsv') || audio_error "Could not read the PipeWire devices."
+
+[[ -n $nodes ]] || audio_error "No ${title,,} devices found."
+
+ids=() names=() options=()
+while IFS=$'\t' read -r id name description; do
+    [[ -n $id ]] || continue
+    mark="   "
+    [[ $name == "$current" ]] && mark="●  "
+    ids+=("$id")
+    names+=("$name")
+    options+=("${mark}${description}")
+done <<<"$nodes"
+
+choice=$(menu "$title" "${options[@]}" || true)
+[[ -n $choice ]] || exit 0
+
+index=-1
+for i in "${!options[@]}"; do
+    if [[ ${options[$i]} == "$choice" ]]; then
+        index=$i
+        break
+    fi
+done
+((index >= 0)) || exit 0
+
+wpctl set-default "${ids[$index]}" || audio_error "Could not switch the ${title,,}."
+
+# Streams that already play/record follow the new default only when they have no
+# explicit target, so move them too; failures here are harmless.
+while read -r stream _; do
+    [[ -n $stream ]] || continue
+    pactl "$move_cmd" "$stream" "${names[$index]}" >/dev/null 2>&1 || true
+done < <(pactl list short "$move_list" 2>/dev/null)
+
+notify_user -t 2000 "Audio" "${title}: ${choice:3}"
