@@ -23,7 +23,7 @@ class ShellConfigTests(unittest.TestCase):
         zshrc = (ROOT / "packages/shell-container/.zshrc").read_text()
         self.assertIn("starship init zsh", zshrc)
         self.assertIn("autoload -Uz compinit", zshrc)
-        self.assertIn("alias fedora='distrobox enter fedora -- zsh'", zshrc)
+        self.assertIn("alias dev='distrobox enter fedora -- zsh'", zshrc)
         # Entering the container must never start a multiplexer on its own.
         self.assertNotIn("tmux", zshrc)
         fedora_terminal = ROOT / "packages/shell-container/.local/bin/fedora-terminal"

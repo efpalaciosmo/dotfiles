@@ -88,7 +88,7 @@ if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init zsh)"
 fi
 
-alias fedora='distrobox enter fedora -- zsh'
+alias dev='distrobox enter fedora -- zsh'
 
 # Syntax highlighting from the distribution, only when Oh My Zsh did not already load it.
 if (( !$+functions[_zsh_highlight] )) && [ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
